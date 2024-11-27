@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: "postgres:16-alpine3.20"
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 15s
+      start_period: 15s
+  app:
+    build:
+      context: ./
+    ports:
+      - 3000:3000
+      - 9230:9230
+      - 9231:9231
+    volumes:
+      - ./:/app
+    command: >
+      sh -c "npm install && npm run dev"
+    environment:
+      NODE_OPTIONS: "--inspect=0.0.0.0:9230"
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: postgres
+      SPACES_KEY: ${SPACES_KEY}
+      SPACES_SECRET: ${SPACES_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+volumes:
+  postgres_data:
