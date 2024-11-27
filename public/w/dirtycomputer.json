@@ -1,0 +1,803 @@
+{
+  "metadata": {
+    "transaction_key": "deprecated",
+    "request_id": "12f0cbab-c784-4be8-b180-a99d4d9a40c6",
+    "sha256": "147bb89ad47f56a08aacb713f00399ed2ad744186d724410d760961b322fd170",
+    "created": "2025-02-14T03:12:12.348Z",
+    "duration": 119.745316,
+    "channels": 1,
+    "models": ["c6481769-89cd-447f-be27-1e6e9dac3616"],
+    "model_info": {
+      "c6481769-89cd-447f-be27-1e6e9dac3616": {
+        "name": "medium-whisper",
+        "version": "2022-09-21.5",
+        "arch": "whisper"
+      }
+    }
+  },
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "transcript": "Dirty computer walking by If you look closer you'll recognize I'm not that special, I'm broken tight Crashing slowly The bugs are in me Dirty computer Breaking down Picking my face up Off the ground I'll love you in this space and time Cause baby all I'll ever be Here's your dirty computer Dirty computer Searching for someone to fix my ride Text message got up in the sky Oh if you love me won't you please reply Oh can't you see that it's only me? You dirty computer Dirty computer I'll love you in the space and time I'll love you in the space and time",
+            "confidence": 0.96087116,
+            "words": [
+              {
+                "word": "dirty",
+                "start": 0.39999998,
+                "end": 0.9,
+                "confidence": 0.888448,
+                "punctuated_word": "Dirty"
+              },
+              {
+                "word": "computer",
+                "start": 1.24,
+                "end": 1.74,
+                "confidence": 0.99545836,
+                "punctuated_word": "computer"
+              },
+              {
+                "word": "walking",
+                "start": 3.28,
+                "end": 3.78,
+                "confidence": 0.07667745,
+                "punctuated_word": "walking"
+              },
+              {
+                "word": "by",
+                "start": 4.48,
+                "end": 4.98,
+                "confidence": 0.76441157,
+                "punctuated_word": "by"
+              },
+              {
+                "word": "if",
+                "start": 6.3799996,
+                "end": 6.7799997,
+                "confidence": 0.9917067,
+                "punctuated_word": "If"
+              },
+              {
+                "word": "you",
+                "start": 6.7799997,
+                "end": 7.04,
+                "confidence": 0.99328136,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "look",
+                "start": 7.04,
+                "end": 7.3799996,
+                "confidence": 0.54605854,
+                "punctuated_word": "look"
+              },
+              {
+                "word": "closer",
+                "start": 7.3799996,
+                "end": 7.8799996,
+                "confidence": 0.982928,
+                "punctuated_word": "closer"
+              },
+              {
+                "word": "you'll",
+                "start": 8.94,
+                "end": 9.44,
+                "confidence": 0.9164175,
+                "punctuated_word": "you'll"
+              },
+              {
+                "word": "recognize",
+                "start": 10,
+                "end": 10.5,
+                "confidence": 0.9800577,
+                "punctuated_word": "recognize"
+              },
+              {
+                "word": "i'm",
+                "start": 12.36,
+                "end": 12.719999,
+                "confidence": 0.99923813,
+                "punctuated_word": "I'm"
+              },
+              {
+                "word": "not",
+                "start": 12.719999,
+                "end": 13.099999,
+                "confidence": 0.9993155,
+                "punctuated_word": "not"
+              },
+              {
+                "word": "that",
+                "start": 13.099999,
+                "end": 13.5,
+                "confidence": 0.62914485,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "special",
+                "start": 13.5,
+                "end": 14,
+                "confidence": 0.9580152,
+                "punctuated_word": "special,"
+              },
+              {
+                "word": "i'm",
+                "start": 15.04,
+                "end": 15.36,
+                "confidence": 0.7721471,
+                "punctuated_word": "I'm"
+              },
+              {
+                "word": "broken",
+                "start": 15.36,
+                "end": 15.86,
+                "confidence": 0.7145044,
+                "punctuated_word": "broken"
+              },
+              {
+                "word": "tight",
+                "start": 16.38,
+                "end": 16.88,
+                "confidence": 0.93534845,
+                "punctuated_word": "tight"
+              },
+              {
+                "word": "crashing",
+                "start": 18.78,
+                "end": 19.28,
+                "confidence": 0.99996245,
+                "punctuated_word": "Crashing"
+              },
+              {
+                "word": "slowly",
+                "start": 19.5,
+                "end": 20,
+                "confidence": 0.9740641,
+                "punctuated_word": "slowly"
+              },
+              {
+                "word": "the",
+                "start": 21.24,
+                "end": 21.4,
+                "confidence": 0.9764348,
+                "punctuated_word": "The"
+              },
+              {
+                "word": "bugs",
+                "start": 21.4,
+                "end": 21.9,
+                "confidence": 0.9936598,
+                "punctuated_word": "bugs"
+              },
+              {
+                "word": "are",
+                "start": 21.9,
+                "end": 22.2,
+                "confidence": 0.99678385,
+                "punctuated_word": "are"
+              },
+              {
+                "word": "in",
+                "start": 22.2,
+                "end": 22.54,
+                "confidence": 0.1098581,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "me",
+                "start": 22.54,
+                "end": 23.04,
+                "confidence": 0.9915924,
+                "punctuated_word": "me"
+              },
+              {
+                "word": "dirty",
+                "start": 24.4,
+                "end": 24.9,
+                "confidence": 0.98083854,
+                "punctuated_word": "Dirty"
+              },
+              {
+                "word": "computer",
+                "start": 25.439999,
+                "end": 25.939999,
+                "confidence": 0.9861113,
+                "punctuated_word": "computer"
+              },
+              {
+                "word": "breaking",
+                "start": 27.34,
+                "end": 27.84,
+                "confidence": 0.36266118,
+                "punctuated_word": "Breaking"
+              },
+              {
+                "word": "down",
+                "start": 29.98,
+                "end": 30.4,
+                "confidence": 0.9947443,
+                "punctuated_word": "down"
+              },
+              {
+                "word": "picking",
+                "start": 30.4,
+                "end": 30.9,
+                "confidence": 0.99439985,
+                "punctuated_word": "Picking"
+              },
+              {
+                "word": "my",
+                "start": 31.1,
+                "end": 31.5,
+                "confidence": 0.9643159,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "face",
+                "start": 31.5,
+                "end": 32,
+                "confidence": 0.32476696,
+                "punctuated_word": "face"
+              },
+              {
+                "word": "up",
+                "start": 32.699997,
+                "end": 33.199997,
+                "confidence": 0.99057955,
+                "punctuated_word": "up"
+              },
+              {
+                "word": "off",
+                "start": 33.46,
+                "end": 33.96,
+                "confidence": 0.6395389,
+                "punctuated_word": "Off"
+              },
+              {
+                "word": "the",
+                "start": 34.14,
+                "end": 34.44,
+                "confidence": 0.19281314,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "ground",
+                "start": 34.44,
+                "end": 34.94,
+                "confidence": 0.9982326,
+                "punctuated_word": "ground"
+              },
+              {
+                "word": "i'll",
+                "start": 37.44,
+                "end": 37.86,
+                "confidence": 0.9976417,
+                "punctuated_word": "I'll"
+              },
+              {
+                "word": "love",
+                "start": 37.86,
+                "end": 38.3,
+                "confidence": 0.57695067,
+                "punctuated_word": "love"
+              },
+              {
+                "word": "you",
+                "start": 38.3,
+                "end": 38.7,
+                "confidence": 0.9384915,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "in",
+                "start": 38.7,
+                "end": 38.98,
+                "confidence": 0.9367855,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "this",
+                "start": 38.98,
+                "end": 39.28,
+                "confidence": 0.9817058,
+                "punctuated_word": "this"
+              },
+              {
+                "word": "space",
+                "start": 39.28,
+                "end": 39.78,
+                "confidence": 0.9944284,
+                "punctuated_word": "space"
+              },
+              {
+                "word": "and",
+                "start": 40.16,
+                "end": 40.52,
+                "confidence": 0.7452972,
+                "punctuated_word": "and"
+              },
+              {
+                "word": "time",
+                "start": 40.52,
+                "end": 41.02,
+                "confidence": 0.39209792,
+                "punctuated_word": "time"
+              },
+              {
+                "word": "cause",
+                "start": 42.7,
+                "end": 43.18,
+                "confidence": 0.6672202,
+                "punctuated_word": "Cause"
+              },
+              {
+                "word": "baby",
+                "start": 43.18,
+                "end": 43.68,
+                "confidence": 0.88078094,
+                "punctuated_word": "baby"
+              },
+              {
+                "word": "all",
+                "start": 43.9,
+                "end": 44.4,
+                "confidence": 0.9899697,
+                "punctuated_word": "all"
+              },
+              {
+                "word": "i'll",
+                "start": 45.36,
+                "end": 45.84,
+                "confidence": 0.99691665,
+                "punctuated_word": "I'll"
+              },
+              {
+                "word": "ever",
+                "start": 45.84,
+                "end": 46.34,
+                "confidence": 0.8635192,
+                "punctuated_word": "ever"
+              },
+              {
+                "word": "be",
+                "start": 46.48,
+                "end": 46.98,
+                "confidence": 0.9397962,
+                "punctuated_word": "be"
+              },
+              {
+                "word": "here's",
+                "start": 47.66,
+                "end": 48,
+                "confidence": 0.9721596,
+                "punctuated_word": "Here's"
+              },
+              {
+                "word": "your",
+                "start": 48,
+                "end": 48.34,
+                "confidence": 0.9940063,
+                "punctuated_word": "your"
+              },
+              {
+                "word": "dirty",
+                "start": 48.34,
+                "end": 48.84,
+                "confidence": 0.28718442,
+                "punctuated_word": "dirty"
+              },
+              {
+                "word": "computer",
+                "start": 49.14,
+                "end": 49.64,
+                "confidence": 0.43538085,
+                "punctuated_word": "computer"
+              },
+              {
+                "word": "dirty",
+                "start": 54.3,
+                "end": 54.8,
+                "confidence": 0.96087116,
+                "punctuated_word": "Dirty"
+              },
+              {
+                "word": "computer",
+                "start": 55.14,
+                "end": 55.64,
+                "confidence": 0.81401,
+                "punctuated_word": "computer"
+              },
+              {
+                "word": "searching",
+                "start": 60.3,
+                "end": 60.8,
+                "confidence": 0.99407476,
+                "punctuated_word": "Searching"
+              },
+              {
+                "word": "for",
+                "start": 61.06,
+                "end": 61.46,
+                "confidence": 0.94708455,
+                "punctuated_word": "for"
+              },
+              {
+                "word": "someone",
+                "start": 61.46,
+                "end": 61.96,
+                "confidence": 0.99785525,
+                "punctuated_word": "someone"
+              },
+              {
+                "word": "to",
+                "start": 62.98,
+                "end": 63.42,
+                "confidence": 0.9974751,
+                "punctuated_word": "to"
+              },
+              {
+                "word": "fix",
+                "start": 63.42,
+                "end": 63.92,
+                "confidence": 0.5642057,
+                "punctuated_word": "fix"
+              },
+              {
+                "word": "my",
+                "start": 64.12,
+                "end": 64.62,
+                "confidence": 0.05161794,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "ride",
+                "start": 64.7,
+                "end": 65.2,
+                "confidence": 0.76892513,
+                "punctuated_word": "ride"
+              },
+              {
+                "word": "text",
+                "start": 66.3,
+                "end": 66.74,
+                "confidence": 0.7463919,
+                "punctuated_word": "Text"
+              },
+              {
+                "word": "message",
+                "start": 66.74,
+                "end": 67.24,
+                "confidence": 0.9981591,
+                "punctuated_word": "message"
+              },
+              {
+                "word": "got",
+                "start": 67.44,
+                "end": 67.94,
+                "confidence": 0.9933652,
+                "punctuated_word": "got"
+              },
+              {
+                "word": "up",
+                "start": 69.02,
+                "end": 69.479996,
+                "confidence": 0.99862945,
+                "punctuated_word": "up"
+              },
+              {
+                "word": "in",
+                "start": 69.479996,
+                "end": 69.979996,
+                "confidence": 0.9987519,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "the",
+                "start": 70.1,
+                "end": 70.44,
+                "confidence": 0.42915708,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "sky",
+                "start": 70.44,
+                "end": 70.94,
+                "confidence": 0.9610364,
+                "punctuated_word": "sky"
+              },
+              {
+                "word": "oh",
+                "start": 72.32,
+                "end": 72.82,
+                "confidence": 0.99787426,
+                "punctuated_word": "Oh"
+              },
+              {
+                "word": "if",
+                "start": 72.84,
+                "end": 73.1,
+                "confidence": 0.99605787,
+                "punctuated_word": "if"
+              },
+              {
+                "word": "you",
+                "start": 73.1,
+                "end": 73.44,
+                "confidence": 0.99823123,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "love",
+                "start": 73.44,
+                "end": 73.94,
+                "confidence": 0.6316484,
+                "punctuated_word": "love"
+              },
+              {
+                "word": "me",
+                "start": 74.28,
+                "end": 74.58,
+                "confidence": 0.9955006,
+                "punctuated_word": "me"
+              },
+              {
+                "word": "won't",
+                "start": 74.58,
+                "end": 75,
+                "confidence": 0.99748695,
+                "punctuated_word": "won't"
+              },
+              {
+                "word": "you",
+                "start": 75,
+                "end": 75.32,
+                "confidence": 0.9936609,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "please",
+                "start": 75.32,
+                "end": 75.82,
+                "confidence": 0.57320166,
+                "punctuated_word": "please"
+              },
+              {
+                "word": "reply",
+                "start": 76.16,
+                "end": 76.66,
+                "confidence": 0.8875162,
+                "punctuated_word": "reply"
+              },
+              {
+                "word": "oh",
+                "start": 78.72,
+                "end": 79.08,
+                "confidence": 0.99828917,
+                "punctuated_word": "Oh"
+              },
+              {
+                "word": "can't",
+                "start": 79.08,
+                "end": 79.44,
+                "confidence": 0.99602437,
+                "punctuated_word": "can't"
+              },
+              {
+                "word": "you",
+                "start": 79.44,
+                "end": 79.78,
+                "confidence": 0.39397478,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "see",
+                "start": 79.78,
+                "end": 80.28,
+                "confidence": 0.9607639,
+                "punctuated_word": "see"
+              },
+              {
+                "word": "that",
+                "start": 81.14,
+                "end": 81.42,
+                "confidence": 0.9960813,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "it's",
+                "start": 81.42,
+                "end": 81.86,
+                "confidence": 0.9977825,
+                "punctuated_word": "it's"
+              },
+              {
+                "word": "only",
+                "start": 81.86,
+                "end": 82.36,
+                "confidence": 0.5051465,
+                "punctuated_word": "only"
+              },
+              {
+                "word": "me",
+                "start": 82.38,
+                "end": 82.88,
+                "confidence": 0.45920998,
+                "punctuated_word": "me?"
+              },
+              {
+                "word": "you",
+                "start": 96.1,
+                "end": 96.28,
+                "confidence": 0.99557894,
+                "punctuated_word": "You"
+              },
+              {
+                "word": "dirty",
+                "start": 96.28,
+                "end": 96.78,
+                "confidence": 0.39314896,
+                "punctuated_word": "dirty"
+              },
+              {
+                "word": "computer",
+                "start": 97.1,
+                "end": 97.6,
+                "confidence": 0.86217904,
+                "punctuated_word": "computer"
+              },
+              {
+                "word": "dirty",
+                "start": 102.36,
+                "end": 102.86,
+                "confidence": 0.9931536,
+                "punctuated_word": "Dirty"
+              },
+              {
+                "word": "computer",
+                "start": 103.1,
+                "end": 103.6,
+                "confidence": 0.8755213,
+                "punctuated_word": "computer"
+              },
+              {
+                "word": "i'll",
+                "start": 109.4,
+                "end": 109.9,
+                "confidence": 0.99519914,
+                "punctuated_word": "I'll"
+              },
+              {
+                "word": "love",
+                "start": 109.94,
+                "end": 110.3,
+                "confidence": 0.9531923,
+                "punctuated_word": "love"
+              },
+              {
+                "word": "you",
+                "start": 110.3,
+                "end": 110.68,
+                "confidence": 0.851615,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "in",
+                "start": 110.68,
+                "end": 110.94,
+                "confidence": 0.97078526,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "the",
+                "start": 110.94,
+                "end": 111.22,
+                "confidence": 0.978293,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "space",
+                "start": 111.22,
+                "end": 111.32445,
+                "confidence": 0.9700696,
+                "punctuated_word": "space"
+              },
+              {
+                "word": "and",
+                "start": 111.32445,
+                "end": 111.428894,
+                "confidence": 0.458531,
+                "punctuated_word": "and"
+              },
+              {
+                "word": "time",
+                "start": 111.428894,
+                "end": 111.53333,
+                "confidence": 0.82198244,
+                "punctuated_word": "time"
+              },
+              {
+                "word": "i'll",
+                "start": 111.53333,
+                "end": 111.63778,
+                "confidence": 0.9534688,
+                "punctuated_word": "I'll"
+              },
+              {
+                "word": "love",
+                "start": 111.63778,
+                "end": 111.742226,
+                "confidence": 0.9340358,
+                "punctuated_word": "love"
+              },
+              {
+                "word": "you",
+                "start": 111.742226,
+                "end": 111.84667,
+                "confidence": 0.85450554,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "in",
+                "start": 111.84667,
+                "end": 111.95111,
+                "confidence": 0.96796685,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "the",
+                "start": 111.95111,
+                "end": 112.05556,
+                "confidence": 0.9526617,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "space",
+                "start": 112.05556,
+                "end": 112.16,
+                "confidence": 0.979459,
+                "punctuated_word": "space"
+              },
+              {
+                "word": "and",
+                "start": 112.16,
+                "end": 112.46,
+                "confidence": 0.021580633,
+                "punctuated_word": "and"
+              },
+              {
+                "word": "time",
+                "start": 112.46,
+                "end": 112.96,
+                "confidence": 0.5490046,
+                "punctuated_word": "time"
+              }
+            ],
+            "paragraphs": {
+              "transcript": "\nDirty computer walking by If you look closer you'll recognize I'm not that special, I'm broken tight Crashing slowly The bugs are in me Dirty computer Breaking down Picking my face up Off the ground I'll love you in this space and time Cause baby all I'll ever be Here's your dirty computer Dirty computer Searching for someone to fix my ride Text message got up in the sky Oh if you love me won't you please reply Oh can't you see that it's only me? You dirty computer Dirty computer I'll love you in the space and time I'll love you in the space and time",
+              "paragraphs": [
+                {
+                  "sentences": [
+                    {
+                      "text": "Dirty computer walking by If you look closer you'll recognize I'm not that special, I'm broken tight Crashing slowly The bugs are in me Dirty computer Breaking down Picking my face up Off the ground I'll love you in this space and time Cause baby all I'll ever be Here's your dirty computer Dirty computer Searching for someone to fix my ride Text message got up in the sky Oh if you love me won't you please reply Oh can't you see that it's only me?",
+                      "start": 0.39999998,
+                      "end": 82.88
+                    },
+                    {
+                      "text": "You dirty computer Dirty computer I'll love you in the space and time I'll love you in the space and time",
+                      "start": 96.1,
+                      "end": 112.96
+                    }
+                  ],
+                  "num_words": 107,
+                  "start": 0.39999998,
+                  "end": 112.96
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
