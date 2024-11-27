@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+:root {
+  --color-blue-100: oklch(72.53% 0.1033 230.67);
+  --color-red-100: oklch(48.12% 0.1674 23.04);
+  --color-white: oklch(96% 0 329.29 / 95.05%);
+}
+
+@layer utilities {
+  .text-fluid {
+    font-size: clamp(0.25rem, 3.5vw, 12rem);
+  }
+
+  .scrollbar-transparent::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  .scrollbar-transparent::-webkit-scrollbar-track {
+    background-color: rgba(0, 0, 0, 0.001);
+  }
+
+  .scrollbar-transparent::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .scrollbar-transparent::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .scrollbar-transparent {
+    scrollbar-color: rgba(0, 0, 0, 0.001) transparent;
+  }
+}
+
+html {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+}
+
+body {
+  @apply bg-linear-to-r/oklch from-purple-500 to-pink-500;
+  @apply text-purple-800;
+  overflow-y: hidden;
+  height: 100%;
+  margin: 0;
+}
+
+hr {
+  @apply border-gray-700;
+}
+
+.font-smoothing-none {
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.rainbow {
+  @apply bg-linear-to-r/oklch from-red-500  via-purple-500 to-pink-500 text-transparent;
+  @apply bg-clip-text;
+}
+
+.neon {
+  @apply bg-linear-to-r/oklch from-lime-400 via-orange-400 to-fuchsia-400 text-transparent;
+  @apply bg-clip-text;
+  text-shadow:
+    0 0 5px rgba(255, 255, 255, 0.5),
+    0 0 10px rgba(0, 255, 255, 0.5),
+    0 0 20px rgba(0, 255, 255, 0.9);
+}
+
+.line-through {
+  text-decoration-line: line-through;
+}
+
+.text-white {
+  color: var(--color-white);
+}
+
+.text-blue-100 {
+  color: var(--color-blue-100);
+}
+
+.text-red-100 {
+  color: var(--color-red-100);
+}
+
+.text-white {
+  color: var(--color-white);
+}
+
+blockquote {
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: normal;
+  display: inline-flex;
+}
+
+.md {
+  p {
+    margin: 0.625rem 0;
+    line-height: 1.25rem;
+  }
+}
+
+@keyframes run-text {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
