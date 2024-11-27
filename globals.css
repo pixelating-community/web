@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  height: 100%;
+  overflow: hidden;
+  margin: 0;
+}
+
+body {
+  @apply bg-gradient-to-r from-purple-500 to-pink-500;
+  @apply text-purple-700;
+  overflow-y: hidden;
+  height: 100%;
+  margin: 0;
+}
+
+a {
+  font-size: 0.6rem;
+  text-decoration: underline;
+}
+
+hr {
+  @apply border-gray-700;
+}
+
+blockquote {
+  font-size: 0.75rem;
+  font-style: italic;
+  line-height: normal;
+  display: inline-flex;
+}
+
+.md {
+  p {
+    margin: 0.625rem 0;
+    line-height: 1.25rem;
+  }
+}
