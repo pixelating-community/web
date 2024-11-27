@@ -1,0 +1,50 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "description": "@pixelating-community",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbo",
+    "build": "next build",
+    "build:image": "sh docker-image.sh",
+    "start": "next start",
+    "lint": "next lint",
+    "prettier:check": "npx prettier . --check",
+    "prettier": "npx prettier"
+  },
+  "author": "pixelat-ing",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.758.0",
+    "@mdx-js/loader": "^3.1.0",
+    "@mdx-js/react": "^3.1.0",
+    "@next/mdx": "^15.2.1",
+    "@tailwindcss/forms": "^0.5.10",
+    "@tailwindcss/postcss": "^4.0.11",
+    "@types/mdx": "^2.0.13",
+    "@types/qrcode": "^1.5.5",
+    "autoprefixer": "^10.4.20",
+    "next": "^15.2.1",
+    "next-mdx-remote": "^5.0.0",
+    "postcss": "^8.5.3",
+    "postgres": "^3.4.5",
+    "qrcode": "^1.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.0.1",
+    "remark-gfm": "^4.0.1",
+    "sharp": "^0.33.5",
+    "tailwindcss": "^4.0.11",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.13.9",
+    "@types/react": "19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "9.21.0",
+    "eslint-config-next": "15.2.1",
+    "eslint-config-prettier": "^10.0.2",
+    "prettier": "3.5.3",
+    "typescript": "5.8.2"
+  }
+}
