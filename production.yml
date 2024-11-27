@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: "postgres:16-alpine3.20"
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 15s
+      start_period: 30s
+  migrations:
+    image: "ghcr.io/pixelating-community/migrations:latest"
+    pull_policy: always
+    command: node migrate.mjs
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: postgres
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 15s
+      start_period: 15s
+  app:
+    image: "ghcr.io/pixelating-community/web:latest"
+    pull_policy: always
+    restart: always
+    ports:
+      - 3000:3000
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: postgres
+      EL_KEY: ${EL_KEY}
+      SPACES_KEY: ${SPACES_KEY}
+      SPACES_SECRET: ${SPACES_SECRET}
+      BUCKET_NAME: ${BUCKET_NAME}
+      BUCKET_URL: ${BUCKET_URL}
+      BUCKET_REGION: ${BUCKET_REGION}
+      NEXT_PUBLIC_URL: ${NEXT_PUBLIC_URL}
+      NEXT_PUBLIC_CDN_URL: ${NEXT_PUBLIC_CDN_URL}
+      NEXT_PUBLIC_PIXEL_SIZE: ${NEXT_PUBLIC_PIXEL_SIZE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        restart: true
+volumes:
+  postgres_data:

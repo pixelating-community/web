@@ -1,0 +1,35 @@
+# dependencies
+node_modules
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+
+# production
+build
+server.js*
+
+# misc
+.vscode
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+
+# env files
+*.env*
+!.env.sample
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# hurl
+*.hurl
