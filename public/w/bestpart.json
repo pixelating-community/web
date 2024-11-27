@@ -1,0 +1,1585 @@
+{
+  "metadata": {
+    "transaction_key": "deprecated",
+    "request_id": "d44f8d74-7c69-48a2-b0fb-4ab0ad335704",
+    "sha256": "3168f9ab6cb58dca7d95cc6691e8a65bef1a9053628661921db67989103e5fc1",
+    "created": "2025-02-08T13:45:22.224Z",
+    "duration": 243.18256,
+    "channels": 1,
+    "models": ["c6481769-89cd-447f-be27-1e6e9dac3616"],
+    "model_info": {
+      "c6481769-89cd-447f-be27-1e6e9dac3616": {
+        "name": "medium-whisper",
+        "version": "2022-09-21.5",
+        "arch": "whisper"
+      }
+    }
+  },
+  "results": {
+    "channels": [
+      {
+        "alternatives": [
+          {
+            "transcript": "You kiss me slowly, it's the sweetest thing And it don't change If I had it my way You would know that you are You're the coffee that I need in the morning You're my sunshine in the rain when it's pouring Won't you give yourself to me? Give it all, oh I just wanna see I just wanna see how beautiful you are You know that I see it, I know you're a star Where you go I'll follow, No matter how far If life is a movie Oh, you're the best part Oh, You're the best part, oh, best part Is this sunrise and those brown eyes, yes you're the 1 that I desire When we wake up and then we make love It makes me feel so nice You're my water when I'm stuck in the desert You're the talent all I take when my head hurts You're the sunshine of my life I just wanna see how beautiful you are You know that I see it, I know you're a star Where you go, I'll follow No matter how far If life is a movie Then you're the best part Oh, you're the best part Oh, best part You're the best part if you love me won't you leave? I won't you leave",
+            "confidence": 0.9752969,
+            "words": [
+              {
+                "word": "you",
+                "start": 30.32,
+                "end": 30.6,
+                "confidence": 0.99703574,
+                "punctuated_word": "You"
+              },
+              {
+                "word": "kiss",
+                "start": 30.6,
+                "end": 30.88,
+                "confidence": 0.9724663,
+                "punctuated_word": "kiss"
+              },
+              {
+                "word": "me",
+                "start": 30.88,
+                "end": 31.18,
+                "confidence": 0.595759,
+                "punctuated_word": "me"
+              },
+              {
+                "word": "slowly",
+                "start": 31.18,
+                "end": 31.68,
+                "confidence": 0.9023589,
+                "punctuated_word": "slowly,"
+              },
+              {
+                "word": "it's",
+                "start": 32.06,
+                "end": 32.3,
+                "confidence": 0.9948462,
+                "punctuated_word": "it's"
+              },
+              {
+                "word": "the",
+                "start": 32.3,
+                "end": 32.54,
+                "confidence": 0.99982375,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "sweetest",
+                "start": 32.54,
+                "end": 33.04,
+                "confidence": 0.99371654,
+                "punctuated_word": "sweetest"
+              },
+              {
+                "word": "thing",
+                "start": 33.12,
+                "end": 33.62,
+                "confidence": 0.14615686,
+                "punctuated_word": "thing"
+              },
+              {
+                "word": "and",
+                "start": 36.92,
+                "end": 37.16,
+                "confidence": 0.99145365,
+                "punctuated_word": "And"
+              },
+              {
+                "word": "it",
+                "start": 37.16,
+                "end": 37.38,
+                "confidence": 0.9993625,
+                "punctuated_word": "it"
+              },
+              {
+                "word": "don't",
+                "start": 37.38,
+                "end": 37.76,
+                "confidence": 0.9985587,
+                "punctuated_word": "don't"
+              },
+              {
+                "word": "change",
+                "start": 37.76,
+                "end": 38.26,
+                "confidence": 0.5648336,
+                "punctuated_word": "change"
+              },
+              {
+                "word": "if",
+                "start": 39.760002,
+                "end": 40.12,
+                "confidence": 0.98128283,
+                "punctuated_word": "If"
+              },
+              {
+                "word": "i",
+                "start": 40.12,
+                "end": 40.28,
+                "confidence": 0.9927066,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "had",
+                "start": 40.28,
+                "end": 40.48,
+                "confidence": 0.99860257,
+                "punctuated_word": "had"
+              },
+              {
+                "word": "it",
+                "start": 40.48,
+                "end": 40.739998,
+                "confidence": 0.9988341,
+                "punctuated_word": "it"
+              },
+              {
+                "word": "my",
+                "start": 40.739998,
+                "end": 41.059998,
+                "confidence": 0.78281,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "way",
+                "start": 41.059998,
+                "end": 41.559998,
+                "confidence": 0.8710823,
+                "punctuated_word": "way"
+              },
+              {
+                "word": "you",
+                "start": 43.36,
+                "end": 43.58,
+                "confidence": 0.998771,
+                "punctuated_word": "You"
+              },
+              {
+                "word": "would",
+                "start": 43.58,
+                "end": 43.82,
+                "confidence": 0.9957274,
+                "punctuated_word": "would"
+              },
+              {
+                "word": "know",
+                "start": 43.82,
+                "end": 44.16,
+                "confidence": 0.61005366,
+                "punctuated_word": "know"
+              },
+              {
+                "word": "that",
+                "start": 44.16,
+                "end": 44.66,
+                "confidence": 0.6292225,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "you",
+                "start": 44.96,
+                "end": 45.32,
+                "confidence": 0.5734748,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "are",
+                "start": 45.32,
+                "end": 45.82,
+                "confidence": 0.6328466,
+                "punctuated_word": "are"
+              },
+              {
+                "word": "you're",
+                "start": 48.78,
+                "end": 49.08,
+                "confidence": 0.9018529,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "the",
+                "start": 49.08,
+                "end": 49.3,
+                "confidence": 0.96438384,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "coffee",
+                "start": 49.3,
+                "end": 49.72,
+                "confidence": 0.9711184,
+                "punctuated_word": "coffee"
+              },
+              {
+                "word": "that",
+                "start": 49.72,
+                "end": 50.02,
+                "confidence": 0.9393919,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "i",
+                "start": 50.02,
+                "end": 50.22,
+                "confidence": 0.9692105,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "need",
+                "start": 50.22,
+                "end": 50.56,
+                "confidence": 0.9969438,
+                "punctuated_word": "need"
+              },
+              {
+                "word": "in",
+                "start": 50.56,
+                "end": 50.76,
+                "confidence": 0.91512865,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "the",
+                "start": 50.76,
+                "end": 50.98,
+                "confidence": 0.5264757,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "morning",
+                "start": 50.98,
+                "end": 51.48,
+                "confidence": 0.9960866,
+                "punctuated_word": "morning"
+              },
+              {
+                "word": "you're",
+                "start": 52.06,
+                "end": 52.34,
+                "confidence": 0.98675054,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "my",
+                "start": 52.34,
+                "end": 52.58,
+                "confidence": 0.92894495,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "sunshine",
+                "start": 52.58,
+                "end": 53.08,
+                "confidence": 0.9569433,
+                "punctuated_word": "sunshine"
+              },
+              {
+                "word": "in",
+                "start": 53.1,
+                "end": 53.260002,
+                "confidence": 0.5366036,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "the",
+                "start": 53.260002,
+                "end": 53.46,
+                "confidence": 0.90173054,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "rain",
+                "start": 53.46,
+                "end": 53.8,
+                "confidence": 0.95502204,
+                "punctuated_word": "rain"
+              },
+              {
+                "word": "when",
+                "start": 53.8,
+                "end": 54,
+                "confidence": 0.99628204,
+                "punctuated_word": "when"
+              },
+              {
+                "word": "it's",
+                "start": 54,
+                "end": 54.239998,
+                "confidence": 0.27410877,
+                "punctuated_word": "it's"
+              },
+              {
+                "word": "pouring",
+                "start": 54.239998,
+                "end": 54.739998,
+                "confidence": 0.89391524,
+                "punctuated_word": "pouring"
+              },
+              {
+                "word": "won't",
+                "start": 55.260002,
+                "end": 55.52,
+                "confidence": 0.99436885,
+                "punctuated_word": "Won't"
+              },
+              {
+                "word": "you",
+                "start": 55.52,
+                "end": 55.72,
+                "confidence": 0.99585754,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "give",
+                "start": 55.72,
+                "end": 55.98,
+                "confidence": 0.99921525,
+                "punctuated_word": "give"
+              },
+              {
+                "word": "yourself",
+                "start": 55.98,
+                "end": 56.4,
+                "confidence": 0.9984688,
+                "punctuated_word": "yourself"
+              },
+              {
+                "word": "to",
+                "start": 56.4,
+                "end": 56.6,
+                "confidence": 0.3701228,
+                "punctuated_word": "to"
+              },
+              {
+                "word": "me",
+                "start": 56.6,
+                "end": 57.1,
+                "confidence": 0.814377,
+                "punctuated_word": "me?"
+              },
+              {
+                "word": "give",
+                "start": 57.46,
+                "end": 57.82,
+                "confidence": 0.9963971,
+                "punctuated_word": "Give"
+              },
+              {
+                "word": "it",
+                "start": 57.82,
+                "end": 58.12,
+                "confidence": 0.3957189,
+                "punctuated_word": "it"
+              },
+              {
+                "word": "all",
+                "start": 58.12,
+                "end": 58.62,
+                "confidence": 0.67267203,
+                "punctuated_word": "all,"
+              },
+              {
+                "word": "oh",
+                "start": 59.8,
+                "end": 60.3,
+                "confidence": 0.9970106,
+                "punctuated_word": "oh"
+              },
+              {
+                "word": "i",
+                "start": 60.52,
+                "end": 60.72,
+                "confidence": 0.8546664,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "just",
+                "start": 60.72,
+                "end": 60.98,
+                "confidence": 0.99733573,
+                "punctuated_word": "just"
+              },
+              {
+                "word": "wanna",
+                "start": 60.98,
+                "end": 61.32,
+                "confidence": 0.3457382,
+                "punctuated_word": "wanna"
+              },
+              {
+                "word": "see",
+                "start": 61.32,
+                "end": 61.82,
+                "confidence": 0.98087573,
+                "punctuated_word": "see"
+              },
+              {
+                "word": "i",
+                "start": 62.66,
+                "end": 62.9,
+                "confidence": 0.9754817,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "just",
+                "start": 62.9,
+                "end": 63.4,
+                "confidence": 0.9980305,
+                "punctuated_word": "just"
+              },
+              {
+                "word": "wanna",
+                "start": 63.48,
+                "end": 63.98,
+                "confidence": 0.5062335,
+                "punctuated_word": "wanna"
+              },
+              {
+                "word": "see",
+                "start": 64.02,
+                "end": 64.52,
+                "confidence": 0.8861881,
+                "punctuated_word": "see"
+              },
+              {
+                "word": "how",
+                "start": 64.92,
+                "end": 65.42,
+                "confidence": 0.9831319,
+                "punctuated_word": "how"
+              },
+              {
+                "word": "beautiful",
+                "start": 65.76,
+                "end": 66.26,
+                "confidence": 0.99211943,
+                "punctuated_word": "beautiful"
+              },
+              {
+                "word": "you",
+                "start": 66.98,
+                "end": 67.44,
+                "confidence": 0.04109027,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "are",
+                "start": 67.44,
+                "end": 67.94,
+                "confidence": 0.75906473,
+                "punctuated_word": "are"
+              },
+              {
+                "word": "you",
+                "start": 68.86,
+                "end": 69.32,
+                "confidence": 0.9979153,
+                "punctuated_word": "You"
+              },
+              {
+                "word": "know",
+                "start": 69.32,
+                "end": 69.72,
+                "confidence": 0.9840603,
+                "punctuated_word": "know"
+              },
+              {
+                "word": "that",
+                "start": 69.72,
+                "end": 70.14,
+                "confidence": 0.9983816,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "i",
+                "start": 70.14,
+                "end": 70.42,
+                "confidence": 0.9912115,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "see",
+                "start": 70.42,
+                "end": 70.92,
+                "confidence": 0.64783674,
+                "punctuated_word": "see"
+              },
+              {
+                "word": "it",
+                "start": 71.32,
+                "end": 71.82,
+                "confidence": 0.98777395,
+                "punctuated_word": "it,"
+              },
+              {
+                "word": "i",
+                "start": 72.04,
+                "end": 72.479996,
+                "confidence": 0.9758267,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "know",
+                "start": 72.479996,
+                "end": 72.9,
+                "confidence": 0.9948143,
+                "punctuated_word": "know"
+              },
+              {
+                "word": "you're",
+                "start": 72.9,
+                "end": 73.36,
+                "confidence": 0.9948037,
+                "punctuated_word": "you're"
+              },
+              {
+                "word": "a",
+                "start": 73.36,
+                "end": 73.68,
+                "confidence": 0.34823176,
+                "punctuated_word": "a"
+              },
+              {
+                "word": "star",
+                "start": 73.68,
+                "end": 74.18,
+                "confidence": 0.9911576,
+                "punctuated_word": "star"
+              },
+              {
+                "word": "where",
+                "start": 75.26,
+                "end": 75.74,
+                "confidence": 0.9813184,
+                "punctuated_word": "Where"
+              },
+              {
+                "word": "you",
+                "start": 75.74,
+                "end": 76.16,
+                "confidence": 0.6121137,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "go",
+                "start": 76.16,
+                "end": 76.619995,
+                "confidence": 0.92426807,
+                "punctuated_word": "go"
+              },
+              {
+                "word": "i'll",
+                "start": 76.619995,
+                "end": 77.119995,
+                "confidence": 0.9992848,
+                "punctuated_word": "I'll"
+              },
+              {
+                "word": "follow",
+                "start": 77.54,
+                "end": 78.04,
+                "confidence": 0.94476956,
+                "punctuated_word": "follow,"
+              },
+              {
+                "word": "no",
+                "start": 78.56,
+                "end": 79.02,
+                "confidence": 0.9982174,
+                "punctuated_word": "No"
+              },
+              {
+                "word": "matter",
+                "start": 79.02,
+                "end": 79.52,
+                "confidence": 0.9989479,
+                "punctuated_word": "matter"
+              },
+              {
+                "word": "how",
+                "start": 79.74,
+                "end": 80.08,
+                "confidence": 0.06556842,
+                "punctuated_word": "how"
+              },
+              {
+                "word": "far",
+                "start": 80.08,
+                "end": 80.58,
+                "confidence": 0.9392698,
+                "punctuated_word": "far"
+              },
+              {
+                "word": "if",
+                "start": 81.74,
+                "end": 82.2,
+                "confidence": 0.9044071,
+                "punctuated_word": "If"
+              },
+              {
+                "word": "life",
+                "start": 82.2,
+                "end": 82.68,
+                "confidence": 0.99381644,
+                "punctuated_word": "life"
+              },
+              {
+                "word": "is",
+                "start": 82.68,
+                "end": 83.02,
+                "confidence": 0.99199086,
+                "punctuated_word": "is"
+              },
+              {
+                "word": "a",
+                "start": 83.02,
+                "end": 83.26,
+                "confidence": 0.10101999,
+                "punctuated_word": "a"
+              },
+              {
+                "word": "movie",
+                "start": 83.26,
+                "end": 83.76,
+                "confidence": 0.9729547,
+                "punctuated_word": "movie"
+              },
+              {
+                "word": "oh",
+                "start": 84.9,
+                "end": 85.3,
+                "confidence": 0.9837046,
+                "punctuated_word": "Oh,"
+              },
+              {
+                "word": "you're",
+                "start": 85.3,
+                "end": 85.68,
+                "confidence": 0.99817467,
+                "punctuated_word": "you're"
+              },
+              {
+                "word": "the",
+                "start": 85.68,
+                "end": 86.14,
+                "confidence": 0.99948955,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "best",
+                "start": 86.14,
+                "end": 86.64,
+                "confidence": 0.081135936,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 87.26,
+                "end": 87.76,
+                "confidence": 0.89998084,
+                "punctuated_word": "part"
+              },
+              {
+                "word": "oh",
+                "start": 91.3,
+                "end": 91.66,
+                "confidence": 0.58334273,
+                "punctuated_word": "Oh,"
+              },
+              {
+                "word": "you're",
+                "start": 91.66,
+                "end": 92.14,
+                "confidence": 0.98586756,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "the",
+                "start": 92.14,
+                "end": 92.54,
+                "confidence": 0.9959896,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "best",
+                "start": 92.54,
+                "end": 93.04,
+                "confidence": 0.36841968,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 94,
+                "end": 94.5,
+                "confidence": 0.5521653,
+                "punctuated_word": "part,"
+              },
+              {
+                "word": "oh",
+                "start": 94.9,
+                "end": 95.4,
+                "confidence": 0.4611687,
+                "punctuated_word": "oh,"
+              },
+              {
+                "word": "best",
+                "start": 98.78,
+                "end": 99.28,
+                "confidence": 0.05312107,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 99.3,
+                "end": 99.8,
+                "confidence": 0.81790507,
+                "punctuated_word": "part"
+              },
+              {
+                "word": "is",
+                "start": 101.06,
+                "end": 101.32,
+                "confidence": 0.9500134,
+                "punctuated_word": "Is"
+              },
+              {
+                "word": "this",
+                "start": 101.32,
+                "end": 101.7,
+                "confidence": 0.4228778,
+                "punctuated_word": "this"
+              },
+              {
+                "word": "sunrise",
+                "start": 101.7,
+                "end": 102.2,
+                "confidence": 0.99775,
+                "punctuated_word": "sunrise"
+              },
+              {
+                "word": "and",
+                "start": 104.24,
+                "end": 104.46,
+                "confidence": 0.9984106,
+                "punctuated_word": "and"
+              },
+              {
+                "word": "those",
+                "start": 104.46,
+                "end": 104.8,
+                "confidence": 0.994974,
+                "punctuated_word": "those"
+              },
+              {
+                "word": "brown",
+                "start": 104.8,
+                "end": 105.26,
+                "confidence": 0.55871046,
+                "punctuated_word": "brown"
+              },
+              {
+                "word": "eyes",
+                "start": 105.26,
+                "end": 105.76,
+                "confidence": 0.93467116,
+                "punctuated_word": "eyes,"
+              },
+              {
+                "word": "yes",
+                "start": 105.979996,
+                "end": 106.479996,
+                "confidence": 0.9482507,
+                "punctuated_word": "yes"
+              },
+              {
+                "word": "you're",
+                "start": 107.46,
+                "end": 107.7,
+                "confidence": 0.9969482,
+                "punctuated_word": "you're"
+              },
+              {
+                "word": "the",
+                "start": 107.7,
+                "end": 108,
+                "confidence": 0.98862666,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "1",
+                "start": 108,
+                "end": 108.46,
+                "confidence": 0.995433,
+                "punctuated_word": "1"
+              },
+              {
+                "word": "that",
+                "start": 108.46,
+                "end": 108.78,
+                "confidence": 0.9739448,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "i",
+                "start": 108.78,
+                "end": 109.02,
+                "confidence": 0.031123618,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "desire",
+                "start": 109.02,
+                "end": 109.52,
+                "confidence": 0.4764087,
+                "punctuated_word": "desire"
+              },
+              {
+                "word": "when",
+                "start": 113.8,
+                "end": 114.06,
+                "confidence": 0.9988912,
+                "punctuated_word": "When"
+              },
+              {
+                "word": "we",
+                "start": 114.06,
+                "end": 114.34,
+                "confidence": 0.9986071,
+                "punctuated_word": "we"
+              },
+              {
+                "word": "wake",
+                "start": 114.34,
+                "end": 114.84,
+                "confidence": 0.48480302,
+                "punctuated_word": "wake"
+              },
+              {
+                "word": "up",
+                "start": 114.88,
+                "end": 115.38,
+                "confidence": 0.985993,
+                "punctuated_word": "up"
+              },
+              {
+                "word": "and",
+                "start": 116.76,
+                "end": 117,
+                "confidence": 0.99649245,
+                "punctuated_word": "and"
+              },
+              {
+                "word": "then",
+                "start": 117,
+                "end": 117.24,
+                "confidence": 0.99904853,
+                "punctuated_word": "then"
+              },
+              {
+                "word": "we",
+                "start": 117.24,
+                "end": 117.479996,
+                "confidence": 0.99676174,
+                "punctuated_word": "we"
+              },
+              {
+                "word": "make",
+                "start": 117.479996,
+                "end": 117.9,
+                "confidence": 0.4260975,
+                "punctuated_word": "make"
+              },
+              {
+                "word": "love",
+                "start": 117.9,
+                "end": 118.4,
+                "confidence": 0.99656916,
+                "punctuated_word": "love"
+              },
+              {
+                "word": "it",
+                "start": 120.36,
+                "end": 120.64,
+                "confidence": 0.9907568,
+                "punctuated_word": "It"
+              },
+              {
+                "word": "makes",
+                "start": 120.64,
+                "end": 121.14,
+                "confidence": 0.99323446,
+                "punctuated_word": "makes"
+              },
+              {
+                "word": "me",
+                "start": 121.14,
+                "end": 121.4,
+                "confidence": 0.9947634,
+                "punctuated_word": "me"
+              },
+              {
+                "word": "feel",
+                "start": 121.4,
+                "end": 121.76,
+                "confidence": 0.9868241,
+                "punctuated_word": "feel"
+              },
+              {
+                "word": "so",
+                "start": 121.76,
+                "end": 122.12,
+                "confidence": 0.028889215,
+                "punctuated_word": "so"
+              },
+              {
+                "word": "nice",
+                "start": 122.12,
+                "end": 122.62,
+                "confidence": 0.04923199,
+                "punctuated_word": "nice"
+              },
+              {
+                "word": "you're",
+                "start": 125.6,
+                "end": 125.9,
+                "confidence": 0.9965888,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "my",
+                "start": 125.9,
+                "end": 126.16,
+                "confidence": 0.95964366,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "water",
+                "start": 126.16,
+                "end": 126.5,
+                "confidence": 0.9855629,
+                "punctuated_word": "water"
+              },
+              {
+                "word": "when",
+                "start": 126.5,
+                "end": 126.76,
+                "confidence": 0.9979424,
+                "punctuated_word": "when"
+              },
+              {
+                "word": "i'm",
+                "start": 126.76,
+                "end": 127.02,
+                "confidence": 0.9978276,
+                "punctuated_word": "I'm"
+              },
+              {
+                "word": "stuck",
+                "start": 127.02,
+                "end": 127.48,
+                "confidence": 0.9875371,
+                "punctuated_word": "stuck"
+              },
+              {
+                "word": "in",
+                "start": 127.48,
+                "end": 127.66,
+                "confidence": 0.99704367,
+                "punctuated_word": "in"
+              },
+              {
+                "word": "the",
+                "start": 127.66,
+                "end": 127.86,
+                "confidence": 0.07837931,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "desert",
+                "start": 127.86,
+                "end": 128.36,
+                "confidence": 0.735552,
+                "punctuated_word": "desert"
+              },
+              {
+                "word": "you're",
+                "start": 128.9,
+                "end": 129.16,
+                "confidence": 0.996051,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "the",
+                "start": 129.16,
+                "end": 129.36,
+                "confidence": 0.71648633,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "talent",
+                "start": 129.36,
+                "end": 129.82,
+                "confidence": 0.993722,
+                "punctuated_word": "talent"
+              },
+              {
+                "word": "all",
+                "start": 129.82,
+                "end": 130.04,
+                "confidence": 0.9939824,
+                "punctuated_word": "all"
+              },
+              {
+                "word": "i",
+                "start": 130.04,
+                "end": 130.2,
+                "confidence": 0.59893006,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "take",
+                "start": 130.2,
+                "end": 130.6,
+                "confidence": 0.9971982,
+                "punctuated_word": "take"
+              },
+              {
+                "word": "when",
+                "start": 130.6,
+                "end": 130.86,
+                "confidence": 0.99914396,
+                "punctuated_word": "when"
+              },
+              {
+                "word": "my",
+                "start": 130.86,
+                "end": 131.1,
+                "confidence": 0.9725104,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "head",
+                "start": 131.1,
+                "end": 131.42,
+                "confidence": 0.05896823,
+                "punctuated_word": "head"
+              },
+              {
+                "word": "hurts",
+                "start": 131.42,
+                "end": 131.92,
+                "confidence": 0.09925475,
+                "punctuated_word": "hurts"
+              },
+              {
+                "word": "you're",
+                "start": 133.1,
+                "end": 133.32,
+                "confidence": 0.9972289,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "the",
+                "start": 133.32,
+                "end": 133.62,
+                "confidence": 0.9801134,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "sunshine",
+                "start": 133.62,
+                "end": 134.12,
+                "confidence": 0.99928373,
+                "punctuated_word": "sunshine"
+              },
+              {
+                "word": "of",
+                "start": 134.44,
+                "end": 134.7,
+                "confidence": 0.9966696,
+                "punctuated_word": "of"
+              },
+              {
+                "word": "my",
+                "start": 134.7,
+                "end": 135.2,
+                "confidence": 0.08478804,
+                "punctuated_word": "my"
+              },
+              {
+                "word": "life",
+                "start": 138.5,
+                "end": 139,
+                "confidence": 0.9752969,
+                "punctuated_word": "life"
+              },
+              {
+                "word": "i",
+                "start": 139.36,
+                "end": 139.78,
+                "confidence": 0.58281076,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "just",
+                "start": 139.78,
+                "end": 140.26,
+                "confidence": 0.99052596,
+                "punctuated_word": "just"
+              },
+              {
+                "word": "wanna",
+                "start": 140.26,
+                "end": 140.76,
+                "confidence": 0.9213984,
+                "punctuated_word": "wanna"
+              },
+              {
+                "word": "see",
+                "start": 140.94,
+                "end": 141.44,
+                "confidence": 0.9398829,
+                "punctuated_word": "see"
+              },
+              {
+                "word": "how",
+                "start": 141.68,
+                "end": 142.18,
+                "confidence": 0.9875639,
+                "punctuated_word": "how"
+              },
+              {
+                "word": "beautiful",
+                "start": 142.48,
+                "end": 142.98,
+                "confidence": 0.9955804,
+                "punctuated_word": "beautiful"
+              },
+              {
+                "word": "you",
+                "start": 143.78,
+                "end": 144.28,
+                "confidence": 0.60455793,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "are",
+                "start": 144.28,
+                "end": 144.78,
+                "confidence": 0.95889354,
+                "punctuated_word": "are"
+              },
+              {
+                "word": "you",
+                "start": 145.66,
+                "end": 146,
+                "confidence": 0.9933241,
+                "punctuated_word": "You"
+              },
+              {
+                "word": "know",
+                "start": 146,
+                "end": 146.5,
+                "confidence": 0.97960246,
+                "punctuated_word": "know"
+              },
+              {
+                "word": "that",
+                "start": 146.52,
+                "end": 146.98,
+                "confidence": 0.9961584,
+                "punctuated_word": "that"
+              },
+              {
+                "word": "i",
+                "start": 146.98,
+                "end": 147.32,
+                "confidence": 0.9903724,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "see",
+                "start": 147.32,
+                "end": 147.82,
+                "confidence": 0.68813115,
+                "punctuated_word": "see"
+              },
+              {
+                "word": "it",
+                "start": 148.24,
+                "end": 148.74,
+                "confidence": 0.97012067,
+                "punctuated_word": "it,"
+              },
+              {
+                "word": "i",
+                "start": 148.96,
+                "end": 149.3,
+                "confidence": 0.96226966,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "know",
+                "start": 149.3,
+                "end": 149.7,
+                "confidence": 0.99218595,
+                "punctuated_word": "know"
+              },
+              {
+                "word": "you're",
+                "start": 149.7,
+                "end": 150.18,
+                "confidence": 0.94358295,
+                "punctuated_word": "you're"
+              },
+              {
+                "word": "a",
+                "start": 150.18,
+                "end": 150.48,
+                "confidence": 0.018126804,
+                "punctuated_word": "a"
+              },
+              {
+                "word": "star",
+                "start": 150.48,
+                "end": 150.98,
+                "confidence": 0.960322,
+                "punctuated_word": "star"
+              },
+              {
+                "word": "where",
+                "start": 152.08,
+                "end": 152.56,
+                "confidence": 0.9712341,
+                "punctuated_word": "Where"
+              },
+              {
+                "word": "you",
+                "start": 152.56,
+                "end": 152.92,
+                "confidence": 0.53895944,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "go",
+                "start": 152.92,
+                "end": 153.42,
+                "confidence": 0.9865108,
+                "punctuated_word": "go,"
+              },
+              {
+                "word": "i'll",
+                "start": 153.44,
+                "end": 153.7,
+                "confidence": 0.9977875,
+                "punctuated_word": "I'll"
+              },
+              {
+                "word": "follow",
+                "start": 153.7,
+                "end": 154.2,
+                "confidence": 0.9974946,
+                "punctuated_word": "follow"
+              },
+              {
+                "word": "no",
+                "start": 155.3,
+                "end": 155.76,
+                "confidence": 0.9534908,
+                "punctuated_word": "No"
+              },
+              {
+                "word": "matter",
+                "start": 155.76,
+                "end": 156.26,
+                "confidence": 0.99451786,
+                "punctuated_word": "matter"
+              },
+              {
+                "word": "how",
+                "start": 156.6,
+                "end": 156.96,
+                "confidence": 0.018007476,
+                "punctuated_word": "how"
+              },
+              {
+                "word": "far",
+                "start": 156.96,
+                "end": 157.46,
+                "confidence": 0.37207556,
+                "punctuated_word": "far"
+              },
+              {
+                "word": "if",
+                "start": 158.46,
+                "end": 158.96,
+                "confidence": 0.9961027,
+                "punctuated_word": "If"
+              },
+              {
+                "word": "life",
+                "start": 159,
+                "end": 159.44,
+                "confidence": 0.9951916,
+                "punctuated_word": "life"
+              },
+              {
+                "word": "is",
+                "start": 159.44,
+                "end": 159.88,
+                "confidence": 0.9982078,
+                "punctuated_word": "is"
+              },
+              {
+                "word": "a",
+                "start": 159.88,
+                "end": 160.08,
+                "confidence": 0.496043,
+                "punctuated_word": "a"
+              },
+              {
+                "word": "movie",
+                "start": 160.08,
+                "end": 160.58,
+                "confidence": 0.99464405,
+                "punctuated_word": "movie"
+              },
+              {
+                "word": "then",
+                "start": 161.68,
+                "end": 162.12,
+                "confidence": 0.9980388,
+                "punctuated_word": "Then"
+              },
+              {
+                "word": "you're",
+                "start": 162.12,
+                "end": 162.54,
+                "confidence": 0.99612635,
+                "punctuated_word": "you're"
+              },
+              {
+                "word": "the",
+                "start": 162.54,
+                "end": 162.98,
+                "confidence": 0.9989604,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "best",
+                "start": 162.98,
+                "end": 163.48,
+                "confidence": 0.50798005,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 164.28,
+                "end": 164.78,
+                "confidence": 0.6741955,
+                "punctuated_word": "part"
+              },
+              {
+                "word": "oh",
+                "start": 168.04,
+                "end": 168.14,
+                "confidence": 0.6158586,
+                "punctuated_word": "Oh,"
+              },
+              {
+                "word": "you're",
+                "start": 168.14,
+                "end": 168.64,
+                "confidence": 0.9980869,
+                "punctuated_word": "you're"
+              },
+              {
+                "word": "the",
+                "start": 168.95999,
+                "end": 169.34,
+                "confidence": 0.9995912,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "best",
+                "start": 169.34,
+                "end": 169.84,
+                "confidence": 0.62969,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 170.78,
+                "end": 171.28,
+                "confidence": 0.665359,
+                "punctuated_word": "part"
+              },
+              {
+                "word": "oh",
+                "start": 171.7,
+                "end": 172.2,
+                "confidence": 0.7547297,
+                "punctuated_word": "Oh,"
+              },
+              {
+                "word": "best",
+                "start": 177.46571,
+                "end": 177.96571,
+                "confidence": 0.87066895,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 183.23143,
+                "end": 183.73143,
+                "confidence": 0.85434425,
+                "punctuated_word": "part"
+              },
+              {
+                "word": "you're",
+                "start": 188.99713,
+                "end": 189.49713,
+                "confidence": 0.97327965,
+                "punctuated_word": "You're"
+              },
+              {
+                "word": "the",
+                "start": 194.76285,
+                "end": 195.26285,
+                "confidence": 0.99643886,
+                "punctuated_word": "the"
+              },
+              {
+                "word": "best",
+                "start": 200.52856,
+                "end": 201.02856,
+                "confidence": 0.002098617,
+                "punctuated_word": "best"
+              },
+              {
+                "word": "part",
+                "start": 206.29428,
+                "end": 206.79428,
+                "confidence": 0.84781295,
+                "punctuated_word": "part"
+              },
+              {
+                "word": "if",
+                "start": 212.06,
+                "end": 212.26,
+                "confidence": 0.9889043,
+                "punctuated_word": "if"
+              },
+              {
+                "word": "you",
+                "start": 212.26,
+                "end": 212.46,
+                "confidence": 0.99378705,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "love",
+                "start": 212.46,
+                "end": 212.7,
+                "confidence": 0.31619278,
+                "punctuated_word": "love"
+              },
+              {
+                "word": "me",
+                "start": 212.7,
+                "end": 212.86,
+                "confidence": 0.9960536,
+                "punctuated_word": "me"
+              },
+              {
+                "word": "won't",
+                "start": 212.86,
+                "end": 213.14,
+                "confidence": 0.96530193,
+                "punctuated_word": "won't"
+              },
+              {
+                "word": "you",
+                "start": 213.14,
+                "end": 213.5,
+                "confidence": 0.47655255,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "leave",
+                "start": 213.5,
+                "end": 214,
+                "confidence": 0.06277752,
+                "punctuated_word": "leave?"
+              },
+              {
+                "word": "i",
+                "start": 214.3,
+                "end": 214.46,
+                "confidence": 0.9997235,
+                "punctuated_word": "I"
+              },
+              {
+                "word": "won't",
+                "start": 214.46,
+                "end": 214.74,
+                "confidence": 0.7470386,
+                "punctuated_word": "won't"
+              },
+              {
+                "word": "you",
+                "start": 214.74,
+                "end": 214.98,
+                "confidence": 0.17085788,
+                "punctuated_word": "you"
+              },
+              {
+                "word": "leave",
+                "start": 214.98,
+                "end": 215.48,
+                "confidence": 0.9763131,
+                "punctuated_word": "leave"
+              }
+            ],
+            "paragraphs": {
+              "transcript": "\nYou kiss me slowly, it's the sweetest thing And it don't change If I had it my way You would know that you are You're the coffee that I need in the morning You're my sunshine in the rain when it's pouring Won't you give yourself to me? Give it all, oh I just wanna see I just wanna see how beautiful you are You know that I see it, I know you're a star Where you go I'll follow, No matter how far If life is a movie Oh, you're the best part Oh, You're the best part, oh, best part Is this sunrise and those brown eyes, yes you're the 1 that I desire When we wake up and then we make love It makes me feel so nice You're my water when I'm stuck in the desert You're the talent all I take when my head hurts You're the sunshine of my life I just wanna see how beautiful you are You know that I see it, I know you're a star Where you go, I'll follow No matter how far If life is a movie Then you're the best part Oh, you're the best part Oh, best part You're the best part if you love me won't you leave?\n\nI won't you leave",
+              "paragraphs": [
+                {
+                  "sentences": [
+                    {
+                      "text": "You kiss me slowly, it's the sweetest thing And it don't change If I had it my way You would know that you are You're the coffee that I need in the morning You're my sunshine in the rain when it's pouring Won't you give yourself to me?",
+                      "start": 30.32,
+                      "end": 57.1
+                    },
+                    {
+                      "text": "Give it all, oh I just wanna see I just wanna see how beautiful you are You know that I see it, I know you're a star Where you go I'll follow, No matter how far If life is a movie Oh, you're the best part Oh, You're the best part, oh, best part Is this sunrise and those brown eyes, yes you're the 1 that I desire When we wake up and then we make love It makes me feel so nice You're my water when I'm stuck in the desert You're the talent all I take when my head hurts You're the sunshine of my life I just wanna see how beautiful you are You know that I see it, I know you're a star Where you go, I'll follow No matter how far If life is a movie Then you're the best part Oh, you're the best part Oh, best part You're the best part if you love me won't you leave?",
+                      "start": 57.46,
+                      "end": 214
+                    }
+                  ],
+                  "num_words": 213,
+                  "start": 30.32,
+                  "end": 214
+                },
+                {
+                  "sentences": [
+                    {
+                      "text": "I won't you leave",
+                      "start": 214.3,
+                      "end": 215.48
+                    }
+                  ],
+                  "num_words": 4,
+                  "start": 214.3,
+                  "end": 215.48
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
