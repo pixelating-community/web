@@ -1,25 +1,26 @@
 "use server";
 
 import { sql } from "@/lib/db";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { UUID } from "crypto";
 
-export async function isLocked({ topicId }: { topicId: string }) {
+export const isLocked = async ({ id }: { id: UUID }) => {
   try {
     const schema = z.object({
-      topic_id: z.string().min(1),
+      id: z.uuid(),
     });
     const data = schema.parse({
-      topic_id: topicId,
+      id,
     });
 
-    const [isLocked] =
-      await sql`SELECT lock FROM topics WHERE topic_id=${data.topic_id}`.values();
-    if (isLocked) {
-      return !!isLocked[0];
+    const res = await sql`SELECT locked FROM topics WHERE id = ${data.id};`;
+    if (res[0]) {
+      const locked = res[0].locked;
+      return !!locked;
     }
 
-    return true;
+    return null;
   } catch (e) {
-    console.log(e, { message: "Failed to get lock status, or DNE" });
+    console.error(e, { message: "Failed to get lock" });
   }
-}
+};

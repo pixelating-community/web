@@ -2,6 +2,7 @@ const allowedClasses = new Set([
   "rainbow",
   "neon",
   "line-through",
+  "text-gradient",
   "text-white",
   "text-blue-100",
   "text-red-100",

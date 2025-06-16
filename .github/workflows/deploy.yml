@@ -78,7 +78,12 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             cd /var/www/html/web
-            git fetch origin main
-            git reset --hard  origin/main
             docker pull ghcr.io/pixelating-community/web:latest
-            docker compose -f production.yml up --no-deps -d --pull="always" --force-recreate app
+            echo "🚨 Dropping and recreating production database..."
+            docker compose -f production.yml exec -T postgres \
+              psql -U postgres -d template1 \
+              -c "DROP DATABASE IF EXISTS postgres; CREATE DATABASE postgres;"
+            docker compose -f production.yml up --no-deps -d --pull="always" app
+            docker image prune -f
+            echo "📜 Running migrations..."
+            docker compose -f production.yml run --rm migrations

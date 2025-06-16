@@ -4,10 +4,11 @@ import { useState } from "react";
 import { createToken } from "@/actions/createToken";
 import { Submit } from "@/components/Submit";
 
-export function WriteToken({ topicId }) {
+export function WriteToken({ id, name }) {
   async function formAction(formData: FormData) {
     await createToken(
-      topicId,
+      id,
+      name,
       formData.get("token") as string,
       formData.get("tokenKey") as string,
       lock

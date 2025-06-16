@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/EmptyState";
 
 export async function GetPerspectives({
   topicId,
-  forward = false,
+  forward = true,
 }: {
   topicId: string;
   forward?: boolean;

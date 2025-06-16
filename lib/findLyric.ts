@@ -1,9 +1,9 @@
 import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
 
 export const findLyric = (
-  lyrics: { timestamp: string; text: string }[],
+  lyrics: { timestamp: string }[],
   currentSeconds: number
-): number => {
+): number | null => {
   const BUFFER = 0.05;
 
   for (let i = 0; i < lyrics.length; i++) {
@@ -21,5 +21,5 @@ export const findLyric = (
     }
   }
 
-  return -1;
+  return null;
 };

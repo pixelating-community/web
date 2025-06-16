@@ -1,6 +1,9 @@
 export const parseTimestampToSeconds = (
   timestamp: string
 ): number | undefined => {
+  if (typeof timestamp === "number") {
+    return timestamp;
+  }
   const parts = timestamp.split(/[:.]/).map(Number);
 
   if (parts.some(isNaN)) return undefined;

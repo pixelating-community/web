@@ -7,7 +7,7 @@
 ```sh
 brew install --cask docker
 open -a Docker
-docker compose build --no-cache app
+COMPOSE_BAKE=true docker compose build --no-cache app
 ```
 
 or
@@ -20,7 +20,7 @@ orb
 ## migrate
 
 ```sh
-docker compose -f production.yml up --build migrations
+COMPOSE_BAKE=true docker compose -f production.yml up --build migrations
 ```
 
 ## dev

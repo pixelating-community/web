@@ -11,7 +11,7 @@ export const LyricsList = ({
   lyrics: {
     id?: string;
     timestamp: string;
-    text: string;
+    lyric: string;
     style?: string;
     url?: string;
   }[];
@@ -86,13 +86,13 @@ export const LyricsList = ({
                       : ""
                   }`}
                 >
-                  {line.text}
+                  {line.lyric}
                   {index === currentLineIndex &&
-                    line.text !== "1" &&
-                    line.text !== "2" &&
-                    line.text !== "3" &&
-                    line.text !== "4" &&
-                    line.text !== "5" && (
+                    line.lyric !== "1" &&
+                    line.lyric !== "2" &&
+                    line.lyric !== "3" &&
+                    line.lyric !== "4" &&
+                    line.lyric !== "5" && (
                       <span
                         className="absolute inset-0 text-red-500 overflow-hidden text-shadow bg-purple-500/40"
                         style={{

@@ -2,20 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
-import { z } from "zod";
+import { z } from "zod/v4";
+import { UUID } from "crypto";
 
 export async function addLyric({
-  trackId,
+  editId,
   formData,
 }: {
-  trackId: string;
+  editId: UUID;
   formData: FormData;
 }) {
   try {
     const schema = z.object({
+      editId: z.uuid(),
       lyric: z.string().min(1),
-      trackId: z.string().min(1),
-      editId: z.string().min(1),
       startAt: z.string().min(1),
       style: z.string().nullish(),
       url: z.string().nullish(),
@@ -24,9 +24,8 @@ export async function addLyric({
       height: z.string().nullish(),
     });
     const data = schema.parse({
+      editId,
       lyric: formData.get("lyric"),
-      trackId,
-      editId: formData.get("edit_id"),
       startAt: formData.get("start_at"),
       style: formData.get("style"),
       url: formData.get("url"),
@@ -36,23 +35,23 @@ export async function addLyric({
     });
 
     let result = [];
-    if (data.url) {
-      const media = await sql`
-      INSERT INTO media (url,  track_id, edit_id, description, width, height)
-      VALUES (${data.url}, ${data.trackId}, ${data.editId}, ${data.description}, ${data.width}, ${data.height});
-      `;
+    let objective_id: UUID;
 
-      if (media) {
-        const mediaId = media[0].id;
-        result = await sql`
-          INSERT INTO lyrics (lyric, track_id, edit_id, start_at, style, media_id)
-          VALUES (${data.lyric}, ${data.trackId}, ${data.editId}, ${data.startAt}, ${data.style}, ${mediaId});
+    if (data.url) {
+      objective_id = await sql`
+          INSERT INTO objectives(src)
+          VALUES (${data.url});
+          RETURNING id;
+      `[0].id;
+      result = await sql`
+          INSERT INTO lyrics (lyric, objective_id, edit_id, start_at, style)
+          VALUES (${data.lyric}, ${objective_id}, ${data.editId}, ${data.startAt}, ${data.style});
+          WHERE edit_id = ${data.editId}
           `;
-      }
     } else {
       result = await sql`
-          INSERT INTO lyrics (lyric, track_id, edit_id, start_at, style)
-          VALUES (${data.lyric}, ${data.trackId}, ${data.editId}, ${data.startAt}, ${data.style});
+          INSERT INTO lyrics (lyric, edit_id, start_at, style)
+          VALUES (${data.lyric}, ${data.editId}, ${data.startAt}, ${data.style});
           `;
     }
 
