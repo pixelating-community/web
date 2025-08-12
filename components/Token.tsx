@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { setCookie } from "@/actions/setCookie";
 
-export function Token({ topicId, perspectiveId }) {
+export const Token = ({ name, topicId, perspectiveId }) => {
   const [token, setToken] = useState(null);
 
   return (
@@ -32,11 +32,11 @@ export function Token({ topicId, perspectiveId }) {
         name="save"
         type="button"
         onClick={() => {
-          setCookie({ token, topicId, perspectiveId });
+          setCookie({ token, topicName: name, topicId, perspectiveId });
         }}
       >
         💾
       </button>
     </div>
   );
-}
+};

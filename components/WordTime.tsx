@@ -3,18 +3,17 @@
 import { startTransition, useCallback, useEffect, useRef } from "react";
 import { addLyric } from "@/actions/addLyric";
 import { formatTime } from "@/lib/formatTime";
+import { UUID } from "crypto";
 
 export const WordTime = ({
   words,
   addOptimisticLyricsAction,
-  trackId,
   editId,
   audioRef,
 }: {
   words?: string[];
   addOptimisticLyricsAction: (verse: string) => void;
-  trackId: string;
-  editId: string;
+  editId: UUID;
   audioRef: React.RefObject<HTMLAudioElement>;
 }) => {
   const activeNotes = useRef(new Set<number>());
@@ -64,12 +63,12 @@ export const WordTime = ({
 
       startTransition(async () => {
         addOptimisticLyricsAction(verseRef.current.join(" "));
-        await addLyric({ trackId, formData });
+        await addLyric({ editId, formData });
       });
 
       verseRef.current = [];
     }
-  }, [addOptimisticLyricsAction, editId, trackId]);
+  }, [addOptimisticLyricsAction, editId]);
 
   const handleNote = useCallback(
     ({ key, note }: { key?: string; note?: number }) => {

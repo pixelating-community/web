@@ -10,16 +10,18 @@ export const Audio = ({
   playbackRate,
   setPlaybackRate,
   ref,
+  norepeat,
 }: {
   audioSrc: string;
   startTime?: number;
   endTime?: number;
   s?: boolean;
-  isPlaying: boolean;
-  setIsPlaying: (isPlaying: boolean) => void;
-  playbackRate: number;
-  setPlaybackRate: (playbackRate: number) => void;
+  isPlaying?: boolean;
+  setIsPlaying?: (isPlaying: boolean) => void;
+  playbackRate?: number;
+  setPlaybackRate?: (playbackRate: number) => void;
   ref: React.RefObject<HTMLAudioElement>;
+  norepeat?: boolean;
 }) => {
   const handleTimeUpdate = useCallback(() => {
     if (!ref.current) return;
@@ -38,9 +40,11 @@ export const Audio = ({
     ) {
       ref.current.pause();
       ref.current.currentTime = startTime;
-      ref.current.play();
+      if (!norepeat) {
+        ref.current.play();
+      }
     }
-  }, [ref, setIsPlaying, startTime, endTime]);
+  }, [ref, setIsPlaying, startTime, endTime, norepeat]);
 
   useEffect(() => {
     if (!audioSrc || !ref.current) return;
@@ -96,9 +100,9 @@ export const Audio = ({
           ref={ref}
           src={audioSrc}
           controlsList={s ? "nodownload" : "nodownload noplaybackrate"}
-          loop
+          loop={!norepeat}
+          autoPlay={!norepeat}
           preload="auto"
-          autoPlay
           onTimeUpdate={handleTimeUpdate}
         >
           <track kind="captions" srcLang="en" default />

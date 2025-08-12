@@ -2,6 +2,8 @@
 
 import { useMemo } from "react";
 import { Video } from "@/components/Video";
+import { WordGradientSVG } from "@/components/WordGradientSVG";
+import { UUID } from "crypto";
 
 export const WriteLyricsList = ({
   lyrics,
@@ -11,19 +13,20 @@ export const WriteLyricsList = ({
   timeUntilNextLyric,
   lyricId,
   optimisticLyric,
+  font,
 }: {
   lyrics: {
-    id?: string;
+    id?: UUID;
     timestamp: string;
-    text: string;
+    lyric: string;
     style?: string;
     url?: string;
   }[];
   currentLineIndex: number;
   handleLyricClick: (line: {
-    id?: string;
+    id?: UUID;
     timestamp: string;
-    text: string;
+    lyric: string;
     style?: string;
     url?: string;
   }) => void;
@@ -31,12 +34,15 @@ export const WriteLyricsList = ({
   timeUntilNextLyric: number;
   lyricId?: string;
   optimisticLyric?: string;
+  font?: string;
 }) => {
   const currentLineUrl = useMemo(() => {
-    const line = lyrics[currentLineIndex];
-    return line?.url?.endsWith(".webm") ? line.url : null;
+    if (lyrics) {
+      const line = lyrics[currentLineIndex];
+      return line?.url?.endsWith(".webm") ? line.url : null;
+    }
+    return;
   }, [lyrics, currentLineIndex]);
-
   return (
     <>
       <Video url={currentLineUrl} />
@@ -49,6 +55,7 @@ export const WriteLyricsList = ({
               line.style.includes("animate-pulse")
                 ? "animate-pulse"
                 : "";
+            const fontClass = font ? `font-${font}` : "";
 
             return (
               <li key={`${index}_${line.id}`}>
@@ -62,7 +69,7 @@ export const WriteLyricsList = ({
                       lineRef.current[index] = el;
                     }
                   }}
-                  className={`${animatePulseClass} flex flex-col justify-center items-center relative overflow-visible`}
+                  className={`${animatePulseClass} ${fontClass} flex flex-col justify-center items-center relative overflow-visible`}
                 >
                   {line.url && !line.url.endsWith(".webm") && (
                     <div className="max-h-96 max-w-80 lg:max-w-96">
@@ -84,13 +91,29 @@ export const WriteLyricsList = ({
                         : ""
                     }`}
                   >
-                    {line.id === lyricId ? optimisticLyric : line.text}
+                    {(() => {
+                      const displayText =
+                        line.id === lyricId ? optimisticLyric : line.lyric;
+                      return line.style === "text-gradient" &&
+                        index === currentLineIndex ? (
+                        <WordGradientSVG
+                          text={displayText}
+                          fontSize={72}
+                          gradientStops={[
+                            { offset: "0%", color: "#ec4899" },
+                            { offset: "100%", color: "#facc15" },
+                          ]}
+                        />
+                      ) : (
+                        displayText
+                      );
+                    })()}
                     {index === currentLineIndex &&
-                      line.text !== "1" &&
-                      line.text !== "2" &&
-                      line.text !== "3" &&
-                      line.text !== "4" &&
-                      line.text !== "5" && (
+                      line.lyric !== "1" &&
+                      line.lyric !== "2" &&
+                      line.lyric !== "3" &&
+                      line.lyric !== "4" &&
+                      line.lyric !== "5" && (
                         <span
                           className="absolute inset-0 text-red-500 overflow-hidden text-shadow bg-purple-500/40"
                           style={{

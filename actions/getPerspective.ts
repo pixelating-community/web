@@ -1,7 +1,7 @@
 "use server";
 
 import { sql } from "@/lib/db";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export async function getPerspective(id: string) {
   try {

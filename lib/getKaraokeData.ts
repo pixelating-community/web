@@ -1,6 +1,9 @@
 import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
 import { getQRCode } from "@/actions/getQRCode";
 import { getLyrics } from "@/actions/getLyrics";
+import { getEditByName } from "@/actions/getEditByName";
+import { addEdit } from "@/actions/addEdit";
+import { getTrackByName } from "@/actions/getTrackByName";
 
 export const getKaraokeData = async ({
   params,
@@ -39,22 +42,38 @@ export const getKaraokeData = async ({
     text: `${process.env.NEXT_PUBLIC_URL}/k/${slug}/${id}${queryString ? "?" + queryString : ""}`,
   });
 
-  const editableLyrics = (await getLyrics({ trackId: slug, editId: id })) || [];
-  const partTimeLyrics = await Promise.all(
-    partArray.map(
-      async (partId) =>
-        (await getLyrics({ trackId: slug, editId: partId })) || []
-    )
-  );
+  const edit = await getEditByName({ name: id });
+  const track = await getTrackByName({ name: slug });
 
-  const lyrics = [editableLyrics, ...partTimeLyrics];
+  if (edit) {
+    const editableLyrics = (await getLyrics({ editId: edit?.id })) || [];
+    const partTimeLyrics = await Promise.all(
+      partArray.map(async (partName) => {
+        const partEdit = await getEditByName({ name: partName });
+        await getLyrics({ editId: partEdit.id });
+      })
+    );
+    const lyrics = [editableLyrics, ...partTimeLyrics];
 
-  return {
-    link,
-    lyrics,
-    startTime,
-    endTime,
-    slug,
-    id,
-  };
+    return {
+      link,
+      lyrics,
+      startTime,
+      endTime,
+      trackId: track.id,
+      src: track.src,
+      editId: edit?.id,
+    };
+  } else {
+    const editId = await addEdit({ name: id, trackId: track.id });
+    return {
+      link,
+      lyrics: [],
+      startTime,
+      endTime,
+      trackId: track.id,
+      src: track.src,
+      editId,
+    };
+  }
 };

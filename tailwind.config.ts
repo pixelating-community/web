@@ -9,6 +9,9 @@ const config: Config = {
   plugins: [require("@tailwindcss/forms")],
   theme: {
     extend: {
+      backgroundClip: {
+        text: "text",
+      },
       animation: {
         "run-text": "run-text 1s linear forwards",
       },

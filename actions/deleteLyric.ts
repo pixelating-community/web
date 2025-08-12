@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { sql } from "@/lib/db";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 export async function deleteLyric({
   lyricId,

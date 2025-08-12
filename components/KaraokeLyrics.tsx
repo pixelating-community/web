@@ -11,6 +11,7 @@ import { findLyric } from "@/lib/findLyric";
 import { LyricsList } from "@/components/LyricsList";
 import { WriteLyricsList } from "@/components/WriteLyricsList";
 import { Audio } from "@/components/Audio";
+import { UUID } from "crypto";
 
 export const KaraokeLyrics = ({
   trackId,
@@ -21,13 +22,16 @@ export const KaraokeLyrics = ({
   words,
   startTime,
   endTime,
+  font,
+  mini,
+  norepeat,
 }: Readonly<{
-  trackId?: string;
-  editId?: string;
+  trackId?: UUID;
+  editId?: UUID;
   lyrics: {
     id?: string;
     timestamp: string;
-    text: string;
+    lyric: string;
     style?: string;
     url?: string;
   }[][];
@@ -36,6 +40,9 @@ export const KaraokeLyrics = ({
   words?: string[];
   startTime?: number;
   endTime?: number;
+  font?: string;
+  mini?: boolean;
+  norepeat?: boolean;
 }>) => {
   const [studio] = useState(s);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -47,7 +54,7 @@ export const KaraokeLyrics = ({
   const [isLargerScreen, setIsLargerScreen] = useState(false);
   const [isFullImmersion, setIsFullImmersion] = useState(false);
   const [lyric, setLyric] = useState("");
-  const [lyricId, setLyricId] = useState("");
+  const [lyricId, setLyricId] = useState<UUID>(null);
   const [style, setStyle] = useState("");
   const [url, setUrl] = useState("");
   const [optimisticLyric, addOptimisticLyric] = useOptimistic(lyric);
@@ -55,7 +62,7 @@ export const KaraokeLyrics = ({
     lyrics[0],
     (state, newLyric) => [
       ...state,
-      { id: "", timestamp: "", text: newLyric as string, style: "", url: "" },
+      { id: "", timestamp: "", lyric: newLyric as string, style: "", url: "" },
     ]
   );
   const fullImmersionRef = useRef<HTMLButtonElement | null>(null);
@@ -73,12 +80,13 @@ export const KaraokeLyrics = ({
 
       if (lyricId) {
         addOptimisticLyric(lyric);
-        await editLyric({ lyricId, trackId, formData });
+        formData.append("lyric_id", lyricId);
+        await editLyric({ editId, lyricId, formData });
         resetLyricForm();
       } else {
         const formDataLyric = formData.get("lyric");
         addOptimisticLyrics(formDataLyric);
-        await addLyric({ trackId, formData });
+        await addLyric({ editId, formData });
 
         if (lineRef.current.length - 2 === currentLineIndex) {
           setTimeout(() => {
@@ -99,7 +107,7 @@ export const KaraokeLyrics = ({
     if (lyricRef.current) {
       lyricRef.current.value = "";
     }
-    setLyricId("");
+    setLyricId(null);
     setLyric("");
     setUrl("");
   };
@@ -127,12 +135,15 @@ export const KaraokeLyrics = ({
 
   const updateLyricTiming = useCallback(
     (index: number, currentSeconds: number) => {
-      const currentLyricTime = parseTimestampToSeconds(
-        lyrics[0][index].timestamp
-      );
-      const nextLyricTime = parseTimestampToSeconds(
-        lyrics[0][index + 1]?.timestamp
-      );
+      const currentLyric = lyrics[0][index];
+      const nextLyric = lyrics[0][index + 1];
+
+      if (!currentLyric?.timestamp || !nextLyric?.timestamp) {
+        return;
+      }
+
+      const currentLyricTime = parseTimestampToSeconds(currentLyric.timestamp);
+      const nextLyricTime = parseTimestampToSeconds(nextLyric.timestamp);
 
       if (lastLyricTimeRef.current !== currentLyricTime) {
         lastLyricTimeRef.current = currentLyricTime;
@@ -172,16 +183,16 @@ export const KaraokeLyrics = ({
   };
 
   const handleLyricClick = (lyric: {
-    id?: string;
+    id?: UUID;
     timestamp?: string;
-    text: string;
+    lyric: string;
     style?: string;
     url?: string;
   }) => {
     if (audioRef.current && lyric.timestamp) {
       audioRef.current.currentTime = parseTimestampToSeconds(lyric.timestamp);
-      setLyric(lyric.text || "");
-      setLyricId(lyric.id || "");
+      setLyric(lyric.lyric || "");
+      setLyricId(lyric.id || null);
       setStyle(lyric.style || "");
       setUrl(lyric.url || "");
     }
@@ -254,13 +265,22 @@ export const KaraokeLyrics = ({
         return null;
       })}
       <WriteLyricsList
-        lyrics={optimisticLyrics}
+        lyrics={
+          optimisticLyrics as {
+            id?: UUID;
+            timestamp: string;
+            lyric: string;
+            style?: string;
+            url?: string;
+          }[]
+        }
         currentLineIndex={currentLineIndex}
         handleLyricClick={handleLyricClick}
         lineRef={lineRef}
         timeUntilNextLyric={timeUntilNextLyric}
         lyricId={lyricId}
         optimisticLyric={optimisticLyric}
+        font={font}
       />
       {lyrics.map((lyricGroup, i) => {
         if (i === 1 && lyrics.length === 3) {
@@ -275,7 +295,9 @@ export const KaraokeLyrics = ({
         return null;
       })}
       {audioSrc && (
-        <div className="flex flex-col justify-center w-screen items-center">
+        <div
+          className={`flex flex-col justify-center ${mini ? "w-full" : "w-screen"} items-center`}
+        >
           {!isFullImmersion && isLargerScreen && !s && (
             <button
               ref={fullImmersionRef}
@@ -290,7 +312,6 @@ export const KaraokeLyrics = ({
               <WordTime
                 audioRef={audioRef}
                 words={words}
-                trackId={trackId}
                 editId={editId}
                 addOptimisticLyricsAction={addOptimisticLyrics}
               />
@@ -362,6 +383,7 @@ export const KaraokeLyrics = ({
             playbackRate={playbackRate}
             setPlaybackRate={setPlaybackRate}
             s={studio}
+            norepeat={norepeat}
           />
         </div>
       )}
