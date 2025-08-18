@@ -12,10 +12,8 @@ services:
       interval: 15s
       start_period: 30s
   migrations:
-    image: "migrations:latest"
-    build:
-      dockerfile: ./migrations/Dockerfile
-      context: ./
+    image: "ghcr.io/pixelating-community/migrations:latest"
+    pull_policy: always
     command: node migrate.mjs
     depends_on:
       postgres:
