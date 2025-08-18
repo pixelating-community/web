@@ -50,13 +50,14 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
-
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v59acb6260d9c0ba8f4a2f9d9b48431a222b68e20
+        with:
+          cosign-release: "v2.2.4"
       - name: Sign published images
-        if: ${{ github.event_name != 'pull_request' }}
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
