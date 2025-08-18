@@ -6,9 +6,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { name, key, token } = body;
 
-    await addTopic({ name, key, token });
+    const named = await addTopic({ name, key, token });
 
-    return NextResponse.json({ success: true, message: "Data received" });
+    return NextResponse.json({ success: true, named });
   } catch (error) {
     return NextResponse.json({ success: false, error }, { status: 400 });
   }
