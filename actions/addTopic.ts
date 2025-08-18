@@ -13,7 +13,7 @@ export async function addTopic({
   key: string;
   token: string;
   locked?: boolean;
-}) {
+}): Promise<{ name: string }> {
   const tokenKeys = [process.env.TS_KEY, process.env.EL_KEY];
   try {
     const schema = z.object({
@@ -37,6 +37,8 @@ export async function addTopic({
         crypt(${data.token}::text, gen_salt('bf')),
         ${data.locked}
       ) ON CONFLICT DO NOTHING;`;
+
+      return { name: data.name };
     }
     return;
   } catch (e) {
