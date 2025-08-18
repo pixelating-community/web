@@ -30,7 +30,7 @@ services:
       interval: 15s
       start_period: 15s
   app:
-    image: "ghcr.io/pixelating-community/web:main"
+    image: "ghcr.io/pixelating-community/web:latest"
     pull_policy: always
     restart: always
     ports:
