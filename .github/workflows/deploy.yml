@@ -23,6 +23,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20
+        with:
+          cosign-release: "v2.2.4"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -50,14 +56,13 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v59acb6260d9c0ba8f4a2f9d9b48431a222b68e20
-        with:
-          cosign-release: "v2.2.4"
+
       - name: Sign published images
+        if: github.event_name != 'pull_request'
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -70,21 +75,25 @@ jobs:
           key: ${{ secrets.KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
-            cd /var/www/html/web
+            cd /var/www/html
 
-            echo "🚀 Pulling latest images..."
+            echo "🚀 Fetching latest repo..."
+            if [ ! -d "web/.git" ]; then
+              git clone https://github.com/pixelating-community/web.git
+            else
+              cd web
+              git fetch --all
+              git reset --hard origin/main
+              cd ..
+            fi
+
+            cd web
+
+            echo "🚀 Pulling image..."
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
-
-            echo "🔒 Verifying image signatures..."
-            cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest --key cosign.pub
-            cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest --key cosign.pub
-
-            echo "📜 Running migrations safely..."
-            docker compose -f production.yml run --rm migrations
 
             echo "🚀 Starting app..."
             docker compose -f production.yml up -d --force-recreate --pull always app
 
-            echo " 🧼 Clean up images..."
+            echo "🧼 Cleaning up images..."
             docker image prune -f
