@@ -10,7 +10,7 @@ const encodeSvg = (svg: string): string => {
     .replace(/>\s+</g, "><");
 };
 
-export async function getQRCode({ text }: { text: string }) {
+export const getQRCode = async ({ text }: { text: string }) => {
   try {
     const code = await QRCode.toString(text, {
       errorCorrectionLevel: "H",
@@ -22,8 +22,9 @@ export async function getQRCode({ text }: { text: string }) {
       type: "svg",
     });
 
-    return encodeSvg(code);
+    const base64 = Buffer.from(encodeSvg(code)).toString("base64");
+    return `data:image/svg+xml;base64,${base64}`;
   } catch (err) {
     console.error(err);
   }
-}
+};

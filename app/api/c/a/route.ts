@@ -1,21 +1,21 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { addTopic } from "@/actions/addTopic";
+import { addCollection } from "@/actions/addCollection";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, key, token } = body;
-    const res = await addTopic({ name, key, token });
+    const { id, name, description, total } = body;
+    const res = await addCollection({ id, name, description, total });
 
     if ("name" in res) {
       return NextResponse.json(
-        { success: true, message: `added topic: ${res.name}` },
+        { success: true, message: `added collection: ${res.name}` },
         { status: 201 },
       );
     } else {
       return NextResponse.json({
         success: false,
-        error: res.message,
+        error: res.id,
         status: 400,
       });
     }

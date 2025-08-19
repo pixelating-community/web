@@ -1,9 +1,9 @@
 "use server";
 
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function getSampleLyrics({ id }: { id: string }) {
+export const getSampleLyrics = async ({ id }: { id: string }) => {
   try {
     const schema = z.object({
       id: z.string().min(1),
@@ -35,4 +35,4 @@ export async function getSampleLyrics({ id }: { id: string }) {
   } catch (e) {
     console.log(e, { message: "Failed to get lyrics" });
   }
-}
+};

@@ -1,18 +1,33 @@
 "use server";
 
-import { PutObjectCommandInput, PutObjectCommand } from "@aws-sdk/client-s3";
+import { randomUUID, type UUID } from "node:crypto";
+import {
+  PutObjectCommand,
+  type PutObjectCommandInput,
+} from "@aws-sdk/client-s3";
 import { revalidatePath } from "next/cache";
+import { z } from "zod/v4";
+import { addSample } from "@/actions/addSample";
 import { isLocked } from "@/actions/isLocked";
 import { encrypt } from "@/lib/cryto";
 import { sql } from "@/lib/db";
 import { img } from "@/lib/img";
 import { s3Client } from "@/lib/s3";
-import { z } from "zod/v4";
-import { addSample } from "@/actions/addSample";
-import { randomUUID, UUID } from "crypto";
 
-async function handleFileUpload({ file, data }: { file: File; data: any }) {
-  const pixelSize = parseInt(data.pixelat_ing);
+const handleFileUpload = async ({
+  file,
+  data,
+}: {
+  file: File;
+  data: {
+    description: string | null;
+    pixelat_ing: string | null;
+    perspective: string | null;
+    color: string | null;
+    topicId: string | null;
+  };
+}) => {
+  const pixelSize = parseInt(data.pixelat_ing, 10);
   const fileBuffer = await file.arrayBuffer();
   const { sharpBuffer, width, height, format } = await img({
     fileBuffer,
@@ -30,17 +45,17 @@ async function handleFileUpload({ file, data }: { file: File; data: any }) {
   const insertResult = await sql`
     INSERT INTO objectives (src, description, width, height)
     VALUES (${Key}, ${data.description}, ${width}, ${height})
-    RETURNING objective_id;
+    RETURNING id;
     `;
-  const objective_id = insertResult[0]?.objective_id;
+  const objective_id = insertResult[0]?.id;
   const result = await sql`
-    INSERT INTO perspectives (objective_id)
-    VALUES (${objective_id});
+    INSERT INTO perspectives (objective_id, perspective, color, topic_id)
+    VALUES (${objective_id}, ${data.perspective}, ${data.color} ,${data.topicId});
     `;
   return result;
-}
+};
 
-export async function addPerspective({
+export const addPerspective = async ({
   topicId,
   name,
   formData,
@@ -48,7 +63,7 @@ export async function addPerspective({
   topicId: UUID;
   name: string;
   formData: FormData;
-}) {
+}) => {
   try {
     if (!topicId) {
       throw new Error("Topic not found");
@@ -89,11 +104,20 @@ export async function addPerspective({
     if (isValid.length > 0 && isValid[0]["?column?"] === true) {
       const file = formData.get("file") as File;
       if (file && file.size > 0) {
-        result = await handleFileUpload({ file, data });
+        result = await handleFileUpload({
+          file,
+          data: {
+            description: data.description || null,
+            pixelat_ing: data.pixelat_ing || null,
+            perspective: data.perspective || null,
+            color: data.color || null,
+            topicId: data.topicId || null,
+          },
+        });
       } else {
         await sql`
-          INSERT INTO perspectives (perspective, topic_id,  color)
-          VALUES (${data.perspective}, ${topicId}, ${data.color});
+          INSERT INTO perspectives (perspective, topic_id, color)
+          VALUES (${data.perspective}, ${data.topicId}, ${data.color});
         `;
 
         if (data.sample) {
@@ -108,4 +132,4 @@ export async function addPerspective({
     console.log(e);
     return { message: "Failed to create perspective" };
   }
-}
+};

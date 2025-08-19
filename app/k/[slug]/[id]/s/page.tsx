@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { KaraokeLyrics } from "@/components/KaraokeLyrics";
 import { getKaraokeData } from "@/lib/getKaraokeData";
 
@@ -28,10 +28,9 @@ export default async function Page({ params, searchParams }) {
   return (
     <main className="flex flex-col items-center h-full relative">
       <div className="flex flex-col justify-between w-full h-full overflow-hidden relative">
-        <div
-          className="flex justify-center"
-          dangerouslySetInnerHTML={{ __html: link }}
-        />
+        <div className="flex justify-center relative mx-auto">
+          <img src={link} alt="QR code" />
+        </div>
         <KaraokeLyrics
           trackId={trackId}
           editId={editId}

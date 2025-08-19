@@ -1,10 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function deleteLyric({
+export const deleteLyric = async ({
   lyricId,
   trackId,
   editId,
@@ -12,7 +12,7 @@ export async function deleteLyric({
   lyricId: string;
   trackId: string;
   editId: string;
-}) {
+}) => {
   try {
     const schema = z.object({
       lyricId: z.string().min(1),
@@ -30,4 +30,4 @@ export async function deleteLyric({
   } catch (e) {
     console.log(e, { message: "Failed to delete lyric" });
   }
-}
+};

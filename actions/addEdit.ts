@@ -1,7 +1,7 @@
 "use server";
 
+import type { UUID } from "node:crypto";
 import { sql } from "@/lib/db";
-import { UUID } from "crypto";
 
 export const addEdit = async ({
   name,

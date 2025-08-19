@@ -1,12 +1,12 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { GetPerspectives } from "@/components/GetPerspectives";
 import { getPerspectives } from "@/actions/getPerspectives";
 import { getQRCode } from "@/actions/getQRCode";
-import { isLocked } from "@/actions/isLocked";
 import { getTopic } from "@/actions/getTopic";
-import { WritePerspective } from "@/components/WritePerspective";
+import { isLocked } from "@/actions/isLocked";
+import { GetPerspectives } from "@/components/GetPerspectives";
 import { Token } from "@/components/Token";
+import { WritePerspective } from "@/components/WritePerspective";
 
 export async function generateMetadata({ params }): Promise<Metadata> {
   const { slug } = await params;
@@ -23,14 +23,19 @@ export default async function Page({ params }) {
   const name = topic?.name;
   const token = cookieStore.get(`t_${name}`)?.value;
   const link = await getQRCode({
-    text: `${process.env.NEXT_PUBLIC_URL}/t/${slug}`,
+    text: `${process.env.NEXT_PUBLIC_URL}/t/${slug.join("/")}`,
   });
   let content = <div className="text-center text-2xl">🔒</div>;
   if (id) {
     const locked = await isLocked({ id });
-    const forward = false;
+    const forward = slug[2] === "f";
     const perspectives =
-      (await getPerspectives({ topicId: id, isLocked: locked, token })) || [];
+      (await getPerspectives({
+        topicId: id,
+        isLocked: locked,
+        token,
+        forward,
+      })) || [];
 
     if (!token && slug[1] === "w") {
       content = <Token name={name} topicId={id} perspectiveId={null} />;
@@ -49,7 +54,9 @@ export default async function Page({ params }) {
     } else if (!locked && slug[0]) {
       content = (
         <>
-          <div dangerouslySetInnerHTML={{ __html: link }} />
+          <div className="relative mx-auto">
+            <img src={link} alt="QR code" />
+          </div>
           <GetPerspectives topicId={id} />
         </>
       );

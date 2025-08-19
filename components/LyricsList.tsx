@@ -1,5 +1,3 @@
-/* eslint-disable @next/next/no-img-element */
-
 import { useRef, useState } from "react";
 import { findLyric } from "@/lib/findLyric";
 import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
@@ -27,7 +25,7 @@ export const LyricsList = ({
     setCurrentLineIndex(index);
     if (index + 1 < lyrics.length) {
       const nextLyricTime = parseTimestampToSeconds(
-        lyrics[index + 1]?.timestamp
+        lyrics[index + 1]?.timestamp,
       );
       setTimeUntilNextLyric(nextLyricTime - currentTime);
     }
@@ -56,6 +54,7 @@ export const LyricsList = ({
           return (
             <li key={`${index}_${line.id}`}>
               <button
+                type="button"
                 ref={(el) => {
                   if (el) {
                     if (!lineRef.current) {

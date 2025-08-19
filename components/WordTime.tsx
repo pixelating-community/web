@@ -1,9 +1,9 @@
 "use client";
 
+import type { UUID } from "node:crypto";
 import { startTransition, useCallback, useEffect, useRef } from "react";
 import { addLyric } from "@/actions/addLyric";
 import { formatTime } from "@/lib/formatTime";
-import { UUID } from "crypto";
 
 export const WordTime = ({
   words,
@@ -98,7 +98,7 @@ export const WordTime = ({
       handleRemoveLastWord,
       handleAddWord,
       handleSaveLyric,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export const WordTime = ({
               .slice(indexRef.current, indexRef.current + 9)
               .map((word, i) => (
                 <div
-                  key={`${word}-${i}`}
+                  key={`${word}-${indexRef.current + i}`}
                   className="text-xs text-center p-2 border-0 outline-hidden dark:bg-slate-800/10"
                 >
                   {word}

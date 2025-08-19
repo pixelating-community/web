@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 
 interface WordGradientSVGProps {
   text: string;
@@ -27,10 +27,15 @@ export const WordGradientSVG: React.FC<WordGradientSVGProps> = ({
       viewBox={`0 0 ${svgWidth} ${svgHeight}`}
       preserveAspectRatio="xMinYMid meet"
     >
+      <title>{text}</title>
       <defs>
         <linearGradient id="text-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          {gradientStops.map((stop, i) => (
-            <stop key={i} offset={stop.offset} stopColor={stop.color} />
+          {gradientStops.map((stop) => (
+            <stop
+              key={`${stop.offset}-${stop.color}`}
+              offset={stop.offset}
+              stopColor={stop.color}
+            />
           ))}
         </linearGradient>
       </defs>

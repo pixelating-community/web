@@ -1,15 +1,15 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { addTopic } from "@/actions/addTopic";
+import { addTrack } from "@/actions/addTrack";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, key, token } = body;
-    const res = await addTopic({ name, key, token });
+    const { name, src, key } = body;
+    const res = await addTrack({ name, src, key });
 
     if ("name" in res) {
       return NextResponse.json(
-        { success: true, message: `added topic: ${res.name}` },
+        { success: true, message: `added track: ${res.name}` },
         { status: 201 },
       );
     } else {
