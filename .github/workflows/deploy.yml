@@ -30,7 +30,9 @@ jobs:
           cosign-release: "v2.2.4"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker-container
 
       - name: Log into registry
         uses: docker/login-action@v3
@@ -45,8 +47,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Build & push migrations
         uses: docker/build-push-action@v5
@@ -54,8 +57,9 @@ jobs:
           context: .
           file: ./migrations/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Sign published images
         if: github.event_name != 'pull_request'
@@ -91,27 +95,26 @@ jobs:
 
             echo "📝 Writing .env file..."
             cat <<EOF > .env
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-POSTGRES_DB=mydb
-POSTGRES_PORT=5432
-BUCKET_NAME=${{ secrets.BUCKET_NAME }}
-BUCKET_REGION=${{ secrets.BUCKET_REGION }}
-BUCKET_URL=${{ secrets.BUCKET_URL }}
-SPACES_KEY=${{ secrets.SPACES_KEY }}
-SPACES_SECRET=${{ secrets.SPACES_SECRET }}
-EL_KEY=${{ secrets.EL_KEY }}
-NEXT_PUBLIC_URL=${{ secrets.NEXT_PUBLIC_URL }}
-NEXT_PUBLIC_CDN_URL=${{ secrets.NEXT_PUBLIC_CDN_URL }}
-NEXT_PUBLIC_PIXEL_SIZE=${{ secrets.NEXT_PUBLIC_PIXEL_SIZE }}
-EOF
+            POSTGRES_USERNAME=postgres
+            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+            POSTGRES_DATABASE=${{ secrets.POSTGRES_DATABASE }}
+            BUCKET_NAME=${{ secrets.BUCKET_NAME }}
+            BUCKET_REGION=${{ secrets.BUCKET_REGION }}
+            BUCKET_URL=${{ secrets.BUCKET_URL }}
+            SPACES_KEY=${{ secrets.SPACES_KEY }}
+            SPACES_SECRET=${{ secrets.SPACES_SECRET }}
+            EL_KEY=${{ secrets.EL_KEY }}
+            NEXT_PUBLIC_URL=${{ secrets.NEXT_PUBLIC_URL }}
+            NEXT_PUBLIC_CDN_URL=${{ secrets.NEXT_PUBLIC_CDN_URL }}
+            NEXT_PUBLIC_PIXEL_SIZE=${{ secrets.NEXT_PUBLIC_PIXEL_SIZE }}
+            EOF
 
             echo "🚀 Pulling images..."
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
 
-            echo "🚀 Starting app..."
-            docker compose -f production.yml up -d --force-recreate --pull always app
+            echo "🚀 Starting app & migrations..."
+            docker compose -f production.yml up -d --force-recreate --pull always app migrations
 
             echo "🧼 Cleaning up images..."
             docker image prune -f

@@ -1,10 +1,10 @@
 "use server";
 
+import { z } from "zod/v4";
 import { decrypt } from "@/lib/cryto";
 import { sql } from "@/lib/db";
-import { z } from "zod/v4";
 
-export async function getPerspectives({
+export const getPerspectives = async ({
   topicId,
   isLocked,
   token,
@@ -14,7 +14,7 @@ export async function getPerspectives({
   isLocked?: boolean;
   token?: string;
   forward?: boolean;
-}) {
+}) => {
   try {
     const schema = z.object({
       topic_id: z.string().min(1),
@@ -38,7 +38,7 @@ export async function getPerspectives({
     }
 
     const perspectives =
-      await sql`SELECT p.id, perspective, p.topic_id, color, p.objective_id, o.description, width, height, s.id, e.id, t.id, t.src, s.start_at, s.end_at FROM perspectives as p
+      await sql`SELECT p.id, perspective, p.topic_id, color, o.src, o.description, width, height, s.id, e.id, t.id, t.src, s.start_at, s.end_at, p.collection_id FROM perspectives as p
         LEFT JOIN objectives as o ON p.objective_id = o.id
         LEFT JOIN samples as s ON p.sample_id = s.id
         LEFT JOIN edits as e ON s.edit_id = e.id
@@ -58,7 +58,7 @@ export async function getPerspectives({
     const perspectivesWithLyrics = await Promise.all(
       dedupedPerspectives.map(async (perspective) => {
         const editId = perspective[9];
-        let lyrics: { lyric: any; timestamp: any }[] = [];
+        let lyrics: { lyric: string; timestamp: number }[] = [];
         if (editId) {
           const lyricRows =
             await sql`SELECT id, lyric, start_at AS timestamp, style FROM lyrics WHERE edit_id = ${editId};`.values();
@@ -80,7 +80,7 @@ export async function getPerspectives({
               : perspective[1],
           topic_id: perspective[2],
           color: perspective[3],
-          objective_id: perspective[4],
+          objective_src: perspective[4],
           description: perspective[5],
           width: perspective[6],
           height: perspective[7],
@@ -91,12 +91,13 @@ export async function getPerspectives({
           lyrics: [lyrics],
           start: perspective[12],
           end: perspective[13],
+          collection_id: perspective[14],
         };
-      })
+      }),
     );
 
     return perspectivesWithLyrics;
   } catch (e) {
     console.log(e, { message: "Failed to get perspectives" });
   }
-}
+};

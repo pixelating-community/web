@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback } from "react";
+import type React from "react";
+import { useCallback, useEffect } from "react";
 
 export const Audio = ({
   audioSrc,
@@ -25,23 +26,25 @@ export const Audio = ({
 }) => {
   const handleTimeUpdate = useCallback(() => {
     if (!ref.current) return;
+    const audio = ref.current;
 
-    if (ref.current.paused) {
-      setIsPlaying(false);
-    } else {
-      setIsPlaying(true);
-    }
+    const currentSeconds = audio.currentTime;
+    setIsPlaying(!audio.paused);
 
-    const currentSeconds = ref.current.currentTime;
-    if (
-      startTime &&
-      endTime &&
-      (currentSeconds >= endTime || currentSeconds < startTime)
-    ) {
-      ref.current.pause();
-      ref.current.currentTime = startTime;
-      if (!norepeat) {
-        ref.current.play();
+    if (startTime && endTime && currentSeconds >= endTime - 0.05) {
+      audio.pause();
+
+      if (norepeat) {
+        setTimeout(() => {
+          if (ref.current) ref.current.currentTime = endTime;
+        }, 0);
+      } else {
+        setTimeout(() => {
+          if (ref.current) {
+            ref.current.currentTime = startTime;
+            ref.current.play().catch(() => {});
+          }
+        }, 0);
       }
     }
   }, [ref, setIsPlaying, startTime, endTime, norepeat]);
@@ -56,7 +59,7 @@ export const Audio = ({
     return () => {
       audioElement.removeEventListener("loadedmetadata", handleTimeUpdate);
     };
-  }, [ref, audioSrc, handleTimeUpdate, startTime]);
+  }, [ref, audioSrc, handleTimeUpdate]);
 
   const togglePlayPause = () => {
     if (!ref.current) return;
@@ -87,6 +90,7 @@ export const Audio = ({
       {s && (
         <div className="flex justify-center">
           <button
+            type="button"
             className="block bg-transparent text-[2rem] p-4 mb-1.5 touch-manipulation select-none"
             onClick={seekBackward}
           >
@@ -110,6 +114,7 @@ export const Audio = ({
         {s && (
           <>
             <button
+              type="button"
               className="text-center rainbow text-[1rem] lg:text-[2rem] touch-manipulation select-none"
               onClick={() => {
                 if (ref.current) {
@@ -156,6 +161,7 @@ export const Audio = ({
         )}
         <div className="flex">
           <button
+            type="button"
             className="text-center rainbow text-[2rem] lg:text-[4rem] touch-manipulation select-none"
             onClick={togglePlayPause}
           >
@@ -166,6 +172,7 @@ export const Audio = ({
       {s && (
         <div className="flex justify-center">
           <button
+            type="button"
             className="block bg-transparent text-[2rem] p-4 mb-1.5 touch-manipulation select-none"
             onClick={seekForward}
           >

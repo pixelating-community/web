@@ -1,29 +1,34 @@
 "use server";
 
-import QRCode from "qrcode";
+const cache = new Map<string, string>();
 
-const encodeSvg = (svg: string): string => {
-  return svg
-    .trim()
-    .replace(/[\n\r]/g, "")
-    .replace(/"/g, "'")
-    .replace(/>\s+</g, "><");
-};
+export const getQRCode = async ({ path }: { path: string }) => {
+  const baseUrl = process.env.NEXT_PUBLIC_URL;
+  if (!baseUrl) return "";
 
-export async function getQRCode({ text }: { text: string }) {
+  const url = `${baseUrl}${path}`;
+
+  if (cache.has(url)) {
+    const cached = cache.get(url);
+    if (cached !== undefined) return cached;
+  }
+
   try {
-    const code = await QRCode.toString(text, {
+    const QRCode = (await import("qrcode")).default;
+    const dataUrl = await QRCode.toDataURL(url, {
       errorCorrectionLevel: "H",
-      width: 100,
+      margin: 2,
+      width: 200,
       color: {
         dark: "#6e11b0",
         light: "#0000",
       },
-      type: "svg",
     });
 
-    return encodeSvg(code);
+    cache.set(url, dataUrl);
+    return dataUrl;
   } catch (err) {
-    console.error(err);
+    console.error("QR generation failed:", err);
+    return "";
   }
-}
+};

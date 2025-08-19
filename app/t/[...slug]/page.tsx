@@ -1,12 +1,12 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import { GetPerspectives } from "@/components/GetPerspectives";
 import { getPerspectives } from "@/actions/getPerspectives";
 import { getQRCode } from "@/actions/getQRCode";
-import { isLocked } from "@/actions/isLocked";
 import { getTopic } from "@/actions/getTopic";
-import { WritePerspective } from "@/components/WritePerspective";
+import { isLocked } from "@/actions/isLocked";
+import { GetPerspectives } from "@/components/GetPerspectives";
 import { Token } from "@/components/Token";
+import { WritePerspective } from "@/components/WritePerspective";
 
 export async function generateMetadata({ params }): Promise<Metadata> {
   const { slug } = await params;
@@ -16,29 +16,35 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 }
 
 export default async function Page({ params }) {
-  const { slug } = await params;
+  const { slug = [] } = params;
+  const [topicName = "", action = "", direction = ""] = slug;
   const cookieStore = await cookies();
-  const topic = await getTopic({ name: slug[0] });
+  const topic = await getTopic({ name: topicName });
   const id = topic?.id;
   const name = topic?.name;
-  const token = cookieStore.get(`t_${name}`)?.value;
+  const token = name ? cookieStore.get(`t_${name}`)?.value : undefined;
   const link = await getQRCode({
-    text: `${process.env.NEXT_PUBLIC_URL}/t/${slug}`,
+    path: `/t/${slug.join("/")}`,
   });
   let content = <div className="text-center text-2xl">🔒</div>;
   if (id) {
     const locked = await isLocked({ id });
-    const forward = false;
+    const forward = direction === "f";
     const perspectives =
-      (await getPerspectives({ topicId: id, isLocked: locked, token })) || [];
+      (await getPerspectives({
+        topicId: id,
+        isLocked: locked,
+        token,
+        forward,
+      })) || [];
 
-    if (!token && slug[1] === "w") {
+    if (!token && action === "w") {
       content = <Token name={name} topicId={id} perspectiveId={null} />;
-    } else if (token && slug[1] === "w") {
+    } else if (token && action === "w") {
       content = (
         <WritePerspective
           id={id}
-          name={slug[0]}
+          name={topicName}
           perspectives={perspectives}
           locked={locked}
           token={token}
@@ -46,10 +52,12 @@ export default async function Page({ params }) {
           link={link}
         />
       );
-    } else if (!locked && slug[0]) {
+    } else if (!locked && topicName) {
       content = (
         <>
-          <div dangerouslySetInnerHTML={{ __html: link }} />
+          <div className="relative mx-auto">
+            <img src={link} alt="QR code" />
+          </div>
           <GetPerspectives topicId={id} />
         </>
       );

@@ -17,17 +17,28 @@ brew install orbstack
 orb
 ```
 
-## migrate
+## migrate locally
 
 ```sh
-COMPOSE_BAKE=true docker compose -f production.yml up --build migrations
+docker compose -f production.yml run --rm --build migrations
+```
+
+### ci migrate deploy script
+
+```sh
+echo "🚀 Pulling images..."
+docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+
+
+#echo "🧳 Starting migrations..."
+#docker compose -f production.yml up --rm migrations
 ```
 
 ## dev
 
 ```sh
 # configure .env
-COMPOSE_BAKE=true docker compose up
+docker compose up
 docker compose exec app npm lint
 docker compose exec app npm run prettier:check
 ```

@@ -1,17 +1,16 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
+import type { UUID } from "node:crypto";
 import { useCallback, useEffect, useOptimistic, useRef, useState } from "react";
+import { addLyric } from "@/actions/addLyric";
+import { deleteLyric } from "@/actions/deleteLyric";
+import { editLyric } from "@/actions/editLyric";
+import { Audio } from "@/components/Audio";
+import { LyricsList } from "@/components/LyricsList";
 import { Submit } from "@/components/Submit";
 import { WordTime } from "@/components/WordTime";
-import { addLyric } from "@/actions/addLyric";
-import { editLyric } from "@/actions/editLyric";
-import { deleteLyric } from "@/actions/deleteLyric";
-import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
-import { findLyric } from "@/lib/findLyric";
-import { LyricsList } from "@/components/LyricsList";
 import { WriteLyricsList } from "@/components/WriteLyricsList";
-import { Audio } from "@/components/Audio";
-import { UUID } from "crypto";
+import { findLyric } from "@/lib/findLyric";
+import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
 
 export const KaraokeLyrics = ({
   trackId,
@@ -63,7 +62,7 @@ export const KaraokeLyrics = ({
     (state, newLyric) => [
       ...state,
       { id: "", timestamp: "", lyric: newLyric as string, style: "", url: "" },
-    ]
+    ],
   );
   const fullImmersionRef = useRef<HTMLButtonElement | null>(null);
   const lineRef = useRef<(HTMLButtonElement | null)[]>([]);
@@ -113,7 +112,7 @@ export const KaraokeLyrics = ({
   };
 
   const changeTextareaHandler = async (
-    e: React.ChangeEvent<HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLTextAreaElement>,
   ) => {
     setLyric(e.target.value);
   };
@@ -150,7 +149,7 @@ export const KaraokeLyrics = ({
         setTimeUntilNextLyric(nextLyricTime - currentSeconds);
       }
     },
-    [lyrics]
+    [lyrics],
   );
 
   const handleTimeUpdate = useCallback(() => {
@@ -298,8 +297,9 @@ export const KaraokeLyrics = ({
         <div
           className={`flex flex-col justify-center ${mini ? "w-full" : "w-screen"} items-center`}
         >
-          {!isFullImmersion && isLargerScreen && !s && (
+          {!isFullImmersion && isLargerScreen && !s && !mini && (
             <button
+              type="button"
               ref={fullImmersionRef}
               onClick={handleFullImmersion}
               className="rainbow text-fluid"
@@ -364,7 +364,11 @@ export const KaraokeLyrics = ({
                       className="text-3xl p-[26px] border-0"
                     />
                     {lyric !== "" && (
-                      <button className="p-2" onClick={deleteLyricHandler}>
+                      <button
+                        type="button"
+                        className="p-2"
+                        onClick={deleteLyricHandler}
+                      >
                         🗑️
                       </button>
                     )}

@@ -1,10 +1,10 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function setCookie({
+export const setCookie = async ({
   token,
   topicId,
   topicName,
@@ -14,7 +14,7 @@ export async function setCookie({
   topicId: string;
   topicName: string;
   perspectiveId?: string;
-}) {
+}) => {
   try {
     const schema = z.object({
       token: z.string().min(1),
@@ -58,4 +58,4 @@ export async function setCookie({
     console.log(e);
     return { message: "Failed to set cookie" };
   }
-}
+};

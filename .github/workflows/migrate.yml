@@ -1,0 +1,36 @@
+name: migrate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull services
+        run: docker compose -f production.yml pull postgres migrations
+
+      - name: Start db
+        run: |
+          docker compose -f production.yml up -d postgres
+          sleep 20 # give Postgres time to initialize
+
+      - name: Run migrations
+        run: docker compose -f production.yml run --rm migrations
+
+      - name: Stop db
+        run: docker compose -f production.yml down

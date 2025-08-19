@@ -1,7 +1,7 @@
 import postgres from "postgres";
 
 const sql = postgres(
-  `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@postgres:5432/${process.env.POSTGRES_DATABASE}`
+  `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@postgres:5432/${process.env.POSTGRES_DATABASE}`,
 );
 
 try {
@@ -63,7 +63,8 @@ try {
       color VARCHAR(255) NOT NULL,
       topic_id uuid REFERENCES topics(id) ON DELETE CASCADE,
       sample_id uuid REFERENCES samples(id) ON DELETE CASCADE,
-      objective_id uuid REFERENCES objectives(id) ON DELETE CASCADE
+      objective_id uuid REFERENCES objectives(id) ON DELETE CASCADE,
+      collection_id uuid REFERENCES collections(id) ON DELETE CASCADE
     )
   `;
 
@@ -81,29 +82,37 @@ try {
   `;
 
   await sql`
-    INSERT INTO tracks (name, src) VALUES
-      ('hurt',            'do-you-really-want-to-hurt-me.m4a'),
-      ('ver',             'ver.mp3'),
-      ('readmind',        'readmind.mp3'),
-      ('getthere',        'getthere.m4a'),
-      ('purple',          'purple.m4a'),
-      ('bestpart',        'bestpart.m4a'),
-      ('dirtycomputer',   'dirtycomputer.m4a'),
-      ('nohero',          'nohero.m4a'),
-      ('sleep',           'sleep.m4a'),
-      ('umisays',         'umisays.m4a'),
-      ('aaj',             'aaj.m4a'),
-      ('worldwasonfire',  'worldwasonfire.m4a'),
-      ('takeabow',        'takeabow.m4a'),
-      ('allheroes',       'allheroes.m4a'),
-      ('cult',            'cult.m4a'),
-      ('freeus',          'freeurself.m4a'),
-      ('ai',              'ai.m4a'),
-      ('nothing',         'nothing.m4a'),
-      ('resist',          'resist.m4a')
-    ON CONFLICT (name) DO NOTHING
+    CREATE TABLE IF NOT EXISTS collections (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      name VARCHAR(255) NOT NULL,
+      description VARCHAR(255) NOT NULL,
+      total INTEGER NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    );
   `;
 
+  await sql`
+    CREATE TABLE collected (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+      stripe_charge_id TEXT UNIQUE NOT NULL,
+      amount BIGINT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('succeeded', 'refunded')),
+      created_at TIMESTAMPTZ DEFAULT now(),
+      updated_at TIMESTAMPTZ DEFAULT now()
+    );
+  `;
+
+  await sql`
+    CREATE INDEX idx_collected_collection_status ON collected (collection_id, status);
+  `;
+  await sql`
+    ALTER TABLE perspectives
+    ADD COLUMN IF NOT EXISTS collection_id uuid REFERENCES collections(id) ON DELETE CASCADE;
+  `;
+
+  await sql.end();
   process.exit(0);
 } catch (error) {
   console.error(error);

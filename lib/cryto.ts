@@ -3,7 +3,7 @@ import {
   createDecipheriv,
   pbkdf2Sync,
   randomBytes,
-} from "crypto";
+} from "node:crypto";
 
 const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 16;
