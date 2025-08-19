@@ -23,48 +23,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 #v3.5.0
-        with:
-          cosign-release: "v2.2.4"
-
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226 # v3.0.0
+        uses: docker/setup-buildx-action@v2
 
-      - name: Log into registry ${{ env.REGISTRY }}
-        if: github.event_name != 'pull_request'
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+      - name: Log into registry
+        uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@96383f45573cb7f253c731d3b3ab81c87ef81934 # v5.0.0
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=tag
-            type=sha
-            type=raw,value=latest
-
-      - name: Build and push Docker image
-        id: build-and-push
-        uses: docker/build-push-action@0565240e2d4ab88bba5387d719585280857ece09 # v5.0.0
+      - name: Build & push app
+        uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Sign the published Docker image
+      - name: Build & push migrations
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./migrations/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+
+      - name: Sign published images
         if: ${{ github.event_name != 'pull_request' }}
-        env:
-          TAGS: ${{ steps.meta.outputs.tags }}
-          DIGEST: ${{ steps.build-and-push.outputs.digest }}
-        run: echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+        run: |
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -78,12 +70,20 @@ jobs:
           passphrase: ${{ secrets.PASSPHRASE }}
           script: |
             cd /var/www/html/web
-            docker pull ghcr.io/pixelating-community/web:latest
-            echo "🚨 Dropping and recreating production database..."
-            COMPOSE_BAKE=true docker compose -f production.yml exec -T postgres \
-              psql -U postgres -d template1 \
-              -c "DROP DATABASE IF EXISTS postgres; CREATE DATABASE postgres;"
-            COMPOSE_BAKE=true docker compose -f production.yml up --no-deps -d --pull="always" app
+
+            echo "🚀 Pulling latest images..."
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
+
+            echo "🔒 Verifying image signatures..."
+            cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest --key cosign.pub
+            cosign verify ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest --key cosign.pub
+
+            echo "📜 Running migrations safely..."
+            docker compose -f production.yml run --rm migrations
+
+            echo "🚀 Starting app..."
+            docker compose -f production.yml up -d --force-recreate --pull always app
+
+            echo " 🧼 Clean up images..."
             docker image prune -f
-            echo "📜 Running migrations..."
-            COMPOSE_BAKE=true docker compose -f production.yml up --build migrations
