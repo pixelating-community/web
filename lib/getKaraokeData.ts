@@ -1,9 +1,9 @@
-import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
-import { getQRCode } from "@/actions/getQRCode";
-import { getLyrics } from "@/actions/getLyrics";
-import { getEditByName } from "@/actions/getEditByName";
 import { addEdit } from "@/actions/addEdit";
+import { getEditByName } from "@/actions/getEditByName";
+import { getLyrics } from "@/actions/getLyrics";
+import { getQRCode } from "@/actions/getQRCode";
 import { getTrackByName } from "@/actions/getTrackByName";
+import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
 
 export const getKaraokeData = async ({
   params,
@@ -39,7 +39,7 @@ export const getKaraokeData = async ({
 
   const queryString = urlParams.toString();
   const link = await getQRCode({
-    text: `${process.env.NEXT_PUBLIC_URL}/k/${slug}/${id}${queryString ? "?" + queryString : ""}`,
+    path: `/k/${slug}/${id}${queryString ? `?${queryString}` : ""}`,
   });
 
   const edit = await getEditByName({ name: id });
@@ -51,7 +51,7 @@ export const getKaraokeData = async ({
       partArray.map(async (partName) => {
         const partEdit = await getEditByName({ name: partName });
         await getLyrics({ editId: partEdit.id });
-      })
+      }),
     );
     const lyrics = [editableLyrics, ...partTimeLyrics];
 

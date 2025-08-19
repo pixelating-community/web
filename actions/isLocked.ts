@@ -1,8 +1,8 @@
 "use server";
 
-import { sql } from "@/lib/db";
+import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
-import { UUID } from "crypto";
+import { sql } from "@/lib/db";
 
 export const isLocked = async ({ id }: { id: UUID }) => {
   try {

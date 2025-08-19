@@ -17,8 +17,8 @@ export const generateSampleUrl = ({
     const SITE_URL = process.env.NEXT_PUBLIC_URL || "https://pixelat.ing";
 
     const u = new URL(
-      `${trackName}/${editName}?start=${formatTime(start)}&end=${formatTime(end)}`,
-      SITE_URL
+      `k/${trackName}/${editName}?start=${formatTime(start)}&end=${formatTime(end)}`,
+      SITE_URL,
     );
     return u.toString();
   } catch {

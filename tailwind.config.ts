@@ -9,6 +9,9 @@ const config: Config = {
   plugins: [require("@tailwindcss/forms")],
   theme: {
     extend: {
+      fontFamily: {
+        rr: ["var(--font-rr)", "sans-serif"],
+      },
       backgroundClip: {
         text: "text",
       },

@@ -1,5 +1,5 @@
+import { type NextRequest, NextResponse } from "next/server";
 import { addTopic } from "@/actions/addTopic";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     if ("name" in res) {
       return NextResponse.json(
         { success: true, message: `added topic: ${res.name}` },
-        { status: 201 }
+        { status: 201 },
       );
     } else {
       return NextResponse.json({

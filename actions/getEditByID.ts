@@ -1,16 +1,20 @@
 "use server";
 
-import { sql } from "@/lib/db";
-import { UUID } from "crypto";
+import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function getEditById({ id }: { id: UUID }): Promise<{
+export const getEditById = async ({
+  id,
+}: {
+  id: UUID;
+}): Promise<{
   id: UUID;
   name: string;
   src: string;
   track_id: UUID;
   track_name: string;
-} | null> {
+} | null> => {
   try {
     const schema = z.object({
       id: z.uuid().min(1),
@@ -42,4 +46,4 @@ export async function getEditById({ id }: { id: UUID }): Promise<{
   } catch (e) {
     console.log(e, { message: "Failed to get edit" });
   }
-}
+};

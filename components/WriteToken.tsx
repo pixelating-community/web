@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { createToken } from "@/actions/createToken";
+import { addToken } from "@/actions/addToken";
 import { Submit } from "@/components/Submit";
 
 export function WriteToken({ id, name }) {
   async function formAction(formData: FormData) {
-    await createToken(
+    await addToken(
       id,
       name,
       formData.get("token") as string,
       formData.get("tokenKey") as string,
-      lock
+      lock,
     );
   }
 

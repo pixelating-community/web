@@ -1,9 +1,9 @@
 "use server";
 
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function getTrackByName({ name }: { name: string }) {
+export const getTrackByName = async ({ name }: { name: string }) => {
   try {
     const schema = z.object({
       name: z.string().min(1),
@@ -21,4 +21,4 @@ export async function getTrackByName({ name }: { name: string }) {
   } catch (e) {
     console.log(e, { message: "Failed to get track" });
   }
-}
+};

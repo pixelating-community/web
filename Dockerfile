@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM public.ecr.aws/docker/library/node:24-alpine AS base
 RUN apk add --no-cache libc6-compat
 
 FROM base AS deps
@@ -16,7 +16,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_SHARP_PATH=/tmp/node_modules/sharp
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN npm run build && npm prune --production
 
 FROM base AS runner
 WORKDIR /app

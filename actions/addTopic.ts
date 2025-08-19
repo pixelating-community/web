@@ -1,9 +1,9 @@
 "use server";
 
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function addTopic({
+export const addTopic = async ({
   name,
   key,
   token,
@@ -13,7 +13,7 @@ export async function addTopic({
   key: string;
   token: string;
   locked?: boolean;
-}): Promise<{ name: string } | { message: string }> {
+}): Promise<{ name: string } | { message: string }> => {
   const tokenKeys = [process.env.TS_KEY, process.env.EL_KEY];
   try {
     const schema = z.object({
@@ -44,4 +44,4 @@ export async function addTopic({
   } catch (e) {
     console.log(e, { message: "Failed to add topic" });
   }
-}
+};

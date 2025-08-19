@@ -1,12 +1,13 @@
 "use client";
 
-import { UUID } from "crypto";
+import type { UUID } from "node:crypto";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { Collect } from "@/components/Collect";
 import { KaraokeLyrics } from "@/components/KaraokeLyrics";
 
-export function Perspectives({ perspectives }) {
+export const Perspectives = ({ perspectives }) => {
   const CDN_URL =
     process.env.NEXT_PUBLIC_CDN_URL ||
     "https://pixelating.nyc3.cdn.digitaloceanspaces.com";
@@ -14,13 +15,14 @@ export function Perspectives({ perspectives }) {
     <ul className="flex w-screen overflow-x-auto overflow-y-hidden snap-x snap-mandatory grow">
       {perspectives.map(
         (p: {
-          id: string;
+          id: UUID;
           perspective: string;
           topic?: string;
           description?: string;
-          sample_id: string;
+          sample_id: UUID;
+          collection_id: UUID;
           lyrics: {
-            id?: string;
+            id?: UUID;
             timestamp: string;
             lyric: string;
             style?: string;
@@ -30,7 +32,7 @@ export function Perspectives({ perspectives }) {
           track_id: UUID;
           track_src: string;
           color: string;
-          objective_key?: string;
+          objective_src?: string;
           audioSrc?: string;
           start: number;
           end: number;
@@ -41,17 +43,25 @@ export function Perspectives({ perspectives }) {
             id={p.id}
             className="flex justify-center min-w-[80vw] snap-center p-4"
           >
-            <div className="flex flex-col justify-center w-full">
-              {p.objective_key && CDN_URL && (
+            <div className="flex flex-col justify-center w-full items-center">
+              {p.objective_src && CDN_URL && (
                 <div className="relative w-3/4 h-1/2 mx-auto">
                   <Image
                     unoptimized={true}
-                    src={`${CDN_URL}/${p.objective_key}`}
+                    src={`${CDN_URL}/${p.objective_src}`}
                     alt={p?.description || ""}
                     fill
                     style={{
                       objectFit: "contain",
                     }}
+                  />
+                </div>
+              )}
+              {p.collection_id && (
+                <div className="flex w-full">
+                  <Collect
+                    collectionId={p.collection_id}
+                    perspectiveId={p.id}
                   />
                 </div>
               )}
@@ -69,20 +79,20 @@ export function Perspectives({ perspectives }) {
                   />
                 </div>
               )}
-              {!p.perspective.includes("track_id") && (
-                <div
-                  style={{ color: `${p.color}` }}
-                  className={`flex flex-col justify-center ${p.objective_key ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
-                >
+              <div
+                style={{ color: `${p.color}` }}
+                className={`flex flex-col w-full center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
+              >
+                <div className="flex">
                   <Markdown remarkPlugins={[remarkGfm]}>
                     {p.perspective}
                   </Markdown>
                 </div>
-              )}
+              </div>
             </div>
           </li>
-        )
+        ),
       )}
     </ul>
   );
-}
+};

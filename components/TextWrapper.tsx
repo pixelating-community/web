@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
 import localFont from "next/font/local";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 const font = localFont({
   src: "../public/RocketRinder-yV5d.woff2",

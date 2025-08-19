@@ -1,15 +1,19 @@
 "use server";
 
-import { sql } from "@/lib/db";
-import { UUID } from "crypto";
+import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function getEditByName({ name }: { name: string }): Promise<{
+export const getEditByName = async ({
+  name,
+}: {
+  name: string;
+}): Promise<{
   src: string | null;
   id: UUID;
   name: string;
   track_id: UUID;
-} | null> {
+} | null> => {
   try {
     const schema = z.object({
       name: z.string().min(1),
@@ -50,4 +54,4 @@ export async function getEditByName({ name }: { name: string }): Promise<{
     console.error(e, { message: "Failed to get edit by name" });
     return null;
   }
-}
+};

@@ -1,11 +1,10 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { KaraokeLyrics } from "@/components/KaraokeLyrics";
 import { getKaraokeData } from "@/lib/getKaraokeData";
 
-const CDN_URL =
-  typeof process !== "undefined" && process.env.NEXT_PUBLIC_CDN_URL
-    ? process.env.NEXT_PUBLIC_CDN_URL
-    : "https://pixelating.nyc3.cdn.digitaloceanspaces.com";
+const CDN_URL = process.env.NEXT_PUBLIC_CDN_URL
+  ? process.env.NEXT_PUBLIC_CDN_URL
+  : "https://pixelating.nyc3.cdn.digitaloceanspaces.com";
 
 export async function generateMetadata({ params }): Promise<Metadata> {
   const { slug, id } = await params;
@@ -28,10 +27,9 @@ export default async function Page({ params, searchParams }) {
   return (
     <main className="flex flex-col items-center h-full relative">
       <div className="flex flex-col justify-between w-full h-full overflow-hidden relative">
-        <div
-          className="flex justify-center"
-          dangerouslySetInnerHTML={{ __html: link }}
-        />
+        <div className="flex justify-center relative mx-auto">
+          <img src={link} alt="QR code" />
+        </div>
         <KaraokeLyrics
           trackId={trackId}
           editId={editId}

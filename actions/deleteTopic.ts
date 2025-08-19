@@ -1,10 +1,10 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
-export async function deleteTopic(topicId: string, tokenKey: string) {
+export const deleteTopic = async (topicId: string, tokenKey: string) => {
   const tokenKeys = [process.env.TS_KEY, process.env.EL_KEY];
   try {
     const schema = z.object({
@@ -26,4 +26,4 @@ export async function deleteTopic(topicId: string, tokenKey: string) {
   } catch (e) {
     console.log(e, { message: "Failed to delete topic" });
   }
-}
+};

@@ -1,13 +1,13 @@
 "use server";
 
+import type { UUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { z } from "zod/v4";
+import { getEditById } from "@/actions/getEditByID";
 import { sql } from "@/lib/db";
 import { validateStyle } from "@/lib/validateStyle";
-import { z } from "zod/v4";
-import { UUID } from "crypto";
-import { getEditById } from "@/actions/getEditByID";
 
-export async function editLyric({
+export const editLyric = async ({
   editId,
   lyricId,
   formData,
@@ -15,7 +15,7 @@ export async function editLyric({
   editId: UUID;
   lyricId: UUID;
   formData: FormData;
-}) {
+}) => {
   try {
     const schema = z.object({
       editId: z.uuid(),
@@ -83,4 +83,4 @@ export async function editLyric({
   } catch (e) {
     console.log(e, { message: "Failed to edit lyric" });
   }
-}
+};

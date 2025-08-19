@@ -4,11 +4,14 @@ import { sql } from "@/lib/db";
 import { parseSampleUrl } from "@/lib/parseSampleUrl";
 
 export const addSample = async ({ url }: { url: string }) => {
-  const { editName, start, end } = parseSampleUrl(url);
+  const { trackName, editName, start, end } = parseSampleUrl(url);
 
-  if (editName && start && end) {
+  if (trackName && editName && start && end) {
     const result = await sql`
-      SELECT id FROM edits WHERE name = ${editName};
+      SELECT edits.id
+      FROM edits
+      JOIN tracks ON edits.track_id = tracks.id
+      WHERE edits.name = ${editName} AND tracks.name = ${trackName};
     `;
 
     if (result.length === 0) {
