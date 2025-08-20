@@ -1,9 +1,9 @@
 "use server";
 
+import type { UUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
-import { UUID } from "crypto";
+import { sql } from "@/lib/db";
 
 export async function addLyric({
   editId,

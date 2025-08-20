@@ -1,9 +1,7 @@
-/* eslint-disable @next/next/no-img-element */
-
+import type { UUID } from "node:crypto";
 import { useMemo } from "react";
 import { Video } from "@/components/Video";
 import { WordGradientSVG } from "@/components/WordGradientSVG";
-import { UUID } from "crypto";
 
 export const WriteLyricsList = ({
   lyrics,
@@ -60,6 +58,7 @@ export const WriteLyricsList = ({
             return (
               <li key={`${index}_${line.id}`}>
                 <button
+                  type="button"
                   onClick={() => handleLyricClick(line)}
                   ref={(el) => {
                     if (el) {

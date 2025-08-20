@@ -10,7 +10,9 @@ export default async function Page({ params }) {
   });
   return (
     <div className="flex flex-col w-4/5 my-0 mx-auto h-dvh items-center">
-      <div dangerouslySetInnerHTML={{ __html: link }} />
+      <div className="relative mx-auto">
+        <img src={link} alt="QR code" />
+      </div>
       <div className="flex grow-0">
         <div className="fixed -translate-x-2/4 -translate-y-2/4 top-1/2 left-1/2">
           <Perspectives perspectives={perspective} />

@@ -11,7 +11,7 @@ export function WriteToken({ id, name }) {
       name,
       formData.get("token") as string,
       formData.get("tokenKey") as string,
-      lock
+      lock,
     );
   }
 

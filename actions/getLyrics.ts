@@ -1,9 +1,9 @@
 "use server";
 
+import type { UUID } from "node:crypto";
+import { z } from "zod/v4";
 import { sql } from "@/lib/db";
 import { formatTime } from "@/lib/formatTime";
-import { UUID } from "crypto";
-import { z } from "zod/v4";
 
 export async function getLyrics({ editId }: { editId: UUID }) {
   try {

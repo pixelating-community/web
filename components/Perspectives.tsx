@@ -1,6 +1,6 @@
 "use client";
 
-import { UUID } from "crypto";
+import type { UUID } from "node:crypto";
 import Image from "next/image";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -30,7 +30,7 @@ export function Perspectives({ perspectives }) {
           track_id: UUID;
           track_src: string;
           color: string;
-          objective_key?: string;
+          objective_src?: string;
           audioSrc?: string;
           start: number;
           end: number;
@@ -41,12 +41,12 @@ export function Perspectives({ perspectives }) {
             id={p.id}
             className="flex justify-center min-w-[80vw] snap-center p-4"
           >
-            <div className="flex flex-col justify-center w-full">
-              {p.objective_key && CDN_URL && (
+            <div className="flex flex-col justify-center w-full items-center">
+              {p.objective_src && CDN_URL && (
                 <div className="relative w-3/4 h-1/2 mx-auto">
                   <Image
                     unoptimized={true}
-                    src={`${CDN_URL}/${p.objective_key}`}
+                    src={`${CDN_URL}/${p.objective_src}`}
                     alt={p?.description || ""}
                     fill
                     style={{
@@ -72,7 +72,7 @@ export function Perspectives({ perspectives }) {
               {!p.perspective.includes("track_id") && (
                 <div
                   style={{ color: `${p.color}` }}
-                  className={`flex flex-col justify-center ${p.objective_key ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
+                  className={`flex flex-col justify-center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
                 >
                   <Markdown remarkPlugins={[remarkGfm]}>
                     {p.perspective}
@@ -81,7 +81,7 @@ export function Perspectives({ perspectives }) {
               )}
             </div>
           </li>
-        )
+        ),
       )}
     </ul>
   );

@@ -1,6 +1,6 @@
 import { getPerspectives } from "@/actions/getPerspectives";
-import { Perspectives } from "@/components/Perspectives";
 import { EmptyState } from "@/components/EmptyState";
+import { Perspectives } from "@/components/Perspectives";
 
 export async function GetPerspectives({
   topicId,

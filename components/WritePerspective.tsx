@@ -1,22 +1,21 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
-import { UUID } from "crypto";
+import type { UUID } from "node:crypto";
 import Image from "next/image";
 import { useEffect, useOptimistic, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { editPerspective } from "@/actions/editPerspective";
 import { addPerspective } from "@/actions/addPerspective";
-import { Submit } from "@/components/Submit";
+import { editPerspective } from "@/actions/editPerspective";
 import { getSampleLyrics } from "@/actions/getSampleLyrics";
-import { generateSampleUrl } from "@/lib/generateSampleUrl";
 import { KaraokeLyrics } from "@/components/KaraokeLyrics";
+import { Submit } from "@/components/Submit";
+import { generateSampleUrl } from "@/lib/generateSampleUrl";
 
 const CDN_URL =
   process.env.NEXT_PUBLIC_CDN_URL ||
   "https://pixelating.nyc3.cdn.digitaloceanspaces.com";
-const PIXEL_SIZE = parseInt(process.env.NEXT_PUBLIC_PIXEL_SIZE) || 20;
+const PIXEL_SIZE = parseInt(process.env.NEXT_PUBLIC_PIXEL_SIZE, 10) || 20;
 
 export function WritePerspective({
   id,
@@ -84,7 +83,7 @@ export function WritePerspective({
         await addPerspective({ topicId: id, name, formData });
         scrollPerspectivesIntoView();
       }
-      fileRef.current["value"] = "";
+      fileRef.current.value = "";
       setPerspective("");
       setFileDataURL(null);
       setFile(null);
@@ -128,7 +127,7 @@ export function WritePerspective({
     useOptimistic(perspective);
   const [optimisiticPerspectives, addOptimisticPerspectives] = useOptimistic(
     perspectives,
-    (state, newPerspective) => [...state, { perspective: newPerspective }]
+    (state, newPerspective) => [...state, { perspective: newPerspective }],
   );
 
   useEffect(() => {
@@ -151,7 +150,7 @@ export function WritePerspective({
         fileReader.abort();
       }
     };
-  }, [file, fileDataURL, name]);
+  }, [file]);
   return (
     <>
       <div
@@ -163,7 +162,7 @@ export function WritePerspective({
             p: {
               id: string;
               perspective: string;
-              objective_key: string;
+              objective_src: string;
               color: string;
               description: string;
               sample_id: string;
@@ -180,7 +179,7 @@ export function WritePerspective({
               start: number;
               end: number;
             },
-            index: number
+            index: number,
           ) => (
             <div
               key={`${index}_${p.id}`}
@@ -192,12 +191,12 @@ export function WritePerspective({
               }
               className="flex justify-center min-w-[80vw] snap-center p-4"
             >
-              <div className="flex flex-col justify-center w-full">
-                {p.objective_key && CDN_URL && (
+              <div className="flex flex-col justify-center w-full items-center">
+                {p.objective_src && CDN_URL && (
                   <div className="relative w-3/4 h-1/2 mx-auto">
                     <Image
                       unoptimized={true}
-                      src={`${CDN_URL}/${p.objective_key}`}
+                      src={`${CDN_URL}/${p.objective_src}`}
                       alt={p?.description || ""}
                       fill
                       style={{
@@ -230,11 +229,11 @@ export function WritePerspective({
                     setIsLyric(false);
                   }}
                   data-id={p.id}
-                  className={`flex flex-col ${p.objective_key ? "items-center" : ""} w-full text-left`}
+                  className={`flex flex-col ${p.objective_src ? "items-center" : ""} w-full text-left`}
                   style={{ color: `${p.color}` }}
                 >
                   <div
-                    className={`flex flex-col justify-center ${p.objective_key ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
+                    className={`flex flex-col justify-center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
                   >
                     <Markdown remarkPlugins={[remarkGfm]}>
                       {perspectiveId === p.id
@@ -245,12 +244,12 @@ export function WritePerspective({
                 </button>
               </div>
             </div>
-          )
+          ),
         )}
         <div className="flex justify-center min-w-[80vw] snap-center p-4">
           <div className="flex flex-col justify-center w-full">
             <div className="relative mx-auto">
-              <div dangerouslySetInnerHTML={{ __html: link }} />
+              <img src={link} alt="QR code" />
             </div>
           </div>
         </div>

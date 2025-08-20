@@ -1,8 +1,8 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { sql } from "@/lib/db";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
 export async function deleteTopic(topicId: string, tokenKey: string) {
   const tokenKeys = [process.env.TS_KEY, process.env.EL_KEY];

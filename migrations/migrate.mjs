@@ -1,7 +1,7 @@
 import postgres from "postgres";
 
 const sql = postgres(
-  `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@postgres:5432/${process.env.POSTGRES_DATABASE}`
+  `postgres://${process.env.POSTGRES_USERNAME}:${process.env.POSTGRES_PASSWORD}@postgres:5432/${process.env.POSTGRES_DATABASE}`,
 );
 
 try {
@@ -78,30 +78,6 @@ try {
       start_at DOUBLE PRECISION NOT NULL,
       end_at DOUBLE PRECISION
     )
-  `;
-
-  await sql`
-    INSERT INTO tracks (name, src) VALUES
-      ('hurt',            'do-you-really-want-to-hurt-me.m4a'),
-      ('ver',             'ver.mp3'),
-      ('readmind',        'readmind.mp3'),
-      ('getthere',        'getthere.m4a'),
-      ('purple',          'purple.m4a'),
-      ('bestpart',        'bestpart.m4a'),
-      ('dirtycomputer',   'dirtycomputer.m4a'),
-      ('nohero',          'nohero.m4a'),
-      ('sleep',           'sleep.m4a'),
-      ('umisays',         'umisays.m4a'),
-      ('aaj',             'aaj.m4a'),
-      ('worldwasonfire',  'worldwasonfire.m4a'),
-      ('takeabow',        'takeabow.m4a'),
-      ('allheroes',       'allheroes.m4a'),
-      ('cult',            'cult.m4a'),
-      ('freeus',          'freeurself.m4a'),
-      ('ai',              'ai.m4a'),
-      ('nothing',         'nothing.m4a'),
-      ('resist',          'resist.m4a')
-    ON CONFLICT (name) DO NOTHING
   `;
 
   process.exit(0);

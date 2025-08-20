@@ -1,8 +1,8 @@
 "use server";
 
-import { sql } from "@/lib/db";
-import { UUID } from "crypto";
+import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
+import { sql } from "@/lib/db";
 
 export async function getTrackById({ trackId }: { trackId: UUID }) {
   try {

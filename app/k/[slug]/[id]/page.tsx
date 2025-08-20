@@ -17,10 +17,9 @@ export default async function Page({ params, searchParams }) {
   return (
     <main className="flex flex-col items-center h-full">
       <div className="flex flex-col justify-between w-full h-full overflow-hidden relative">
-        <div
-          className="flex justify-center"
-          dangerouslySetInnerHTML={{ __html: link }}
-        />
+        <div className="flex justify-center mx-auto">
+          <img src={link} alt="OR code" />
+        </div>
         <KaraokeLyrics
           trackId={trackId}
           editId={editId}

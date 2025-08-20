@@ -25,7 +25,6 @@ docker compose -f production.yml up --build migrations
 
 ### ci migrate deploy script
 
-
 ```sh
 echo "🚀 Pulling images..."
 docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest

@@ -12,9 +12,9 @@ const parseTimeString = (time: string): number | undefined => {
   const [, min, sec, fracRaw] = match;
   let ms = 0;
   if (fracRaw.length === 1) {
-    ms = parseInt(fracRaw) * 100;
+    ms = parseInt(fracRaw, 10) * 100;
   } else if (fracRaw.length === 2) {
-    ms = parseInt(fracRaw) * 10;
+    ms = parseInt(fracRaw, 10) * 10;
   } else {
     ms = parseInt(fracRaw.padEnd(3, "0").slice(0, 3), 10);
   }
@@ -28,8 +28,8 @@ export const parseSampleUrl = (url: string): ParsedSampleUrl | null => {
     const start = u.searchParams.get("start");
     const end = u.searchParams.get("end");
     return {
-      trackName: path[0],
-      editName: path[1],
+      trackName: path[1],
+      editName: path[2],
       start: start ? parseTimeString(decodeURIComponent(start)) : undefined,
       end: end ? parseTimeString(decodeURIComponent(end)) : undefined,
     };
