@@ -22,15 +22,21 @@ export default async function Page({ params }) {
   const id = topic?.id;
   const name = topic?.name;
   const token = cookieStore.get(`t_${name}`)?.value;
+  debugger;
   const link = await getQRCode({
-    text: `${process.env.NEXT_PUBLIC_URL}/t/${slug}`,
+    text: `${process.env.NEXT_PUBLIC_URL}/t/${slug.join("/")}`,
   });
   let content = <div className="text-center text-2xl">🔒</div>;
   if (id) {
     const locked = await isLocked({ id });
-    const forward = false;
+    const forward = slug[2] === "f";
     const perspectives =
-      (await getPerspectives({ topicId: id, isLocked: locked, token })) || [];
+      (await getPerspectives({
+        topicId: id,
+        isLocked: locked,
+        token,
+        forward,
+      })) || [];
 
     if (!token && slug[1] === "w") {
       content = <Token name={name} topicId={id} perspectiveId={null} />;
