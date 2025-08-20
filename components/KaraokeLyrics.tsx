@@ -298,7 +298,7 @@ export const KaraokeLyrics = ({
         <div
           className={`flex flex-col justify-center ${mini ? "w-full" : "w-screen"} items-center`}
         >
-          {!isFullImmersion && isLargerScreen && !s && (
+          {!isFullImmersion && isLargerScreen && !s && !mini && (
             <button
               ref={fullImmersionRef}
               onClick={handleFullImmersion}

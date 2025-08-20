@@ -28,8 +28,8 @@ export const parseSampleUrl = (url: string): ParsedSampleUrl | null => {
     const start = u.searchParams.get("start");
     const end = u.searchParams.get("end");
     return {
-      trackName: path[0],
-      editName: path[1],
+      trackName: path[1],
+      editName: path[2],
       start: start ? parseTimeString(decodeURIComponent(start)) : undefined,
       end: end ? parseTimeString(decodeURIComponent(end)) : undefined,
     };

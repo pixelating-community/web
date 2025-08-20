@@ -41,7 +41,7 @@ export function Perspectives({ perspectives }) {
             id={p.id}
             className="flex justify-center min-w-[80vw] snap-center p-4"
           >
-            <div className="flex flex-col justify-center w-full">
+            <div className="flex flex-col justify-center w-full items-center">
               {p.objective_key && CDN_URL && (
                 <div className="relative w-3/4 h-1/2 mx-auto">
                   <Image

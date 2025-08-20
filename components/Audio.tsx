@@ -25,23 +25,25 @@ export const Audio = ({
 }) => {
   const handleTimeUpdate = useCallback(() => {
     if (!ref.current) return;
+    const audio = ref.current;
 
-    if (ref.current.paused) {
-      setIsPlaying(false);
-    } else {
-      setIsPlaying(true);
-    }
+    const currentSeconds = audio.currentTime;
+    setIsPlaying(!audio.paused);
 
-    const currentSeconds = ref.current.currentTime;
-    if (
-      startTime &&
-      endTime &&
-      (currentSeconds >= endTime || currentSeconds < startTime)
-    ) {
-      ref.current.pause();
-      ref.current.currentTime = startTime;
-      if (!norepeat) {
-        ref.current.play();
+    if (startTime && endTime && currentSeconds >= endTime - 0.05) {
+      audio.pause();
+
+      if (norepeat) {
+        setTimeout(() => {
+          if (ref.current) ref.current.currentTime = endTime;
+        }, 0);
+      } else {
+        setTimeout(() => {
+          if (ref.current) {
+            ref.current.currentTime = startTime;
+            ref.current.play().catch(() => {});
+          }
+        }, 0);
       }
     }
   }, [ref, setIsPlaying, startTime, endTime, norepeat]);
