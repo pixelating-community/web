@@ -24,5 +24,5 @@ jobs:
             POSTGRES_DATABASE=${{ secrets.POSTGRES_DATABASE }}
             EOF
 
-            echo "📝 Running migrations in fixed container..."
-            docker exec -i web-app node migrations/migrate.mjs
+            echo "🎽 migrations..."
+            docker exec -i app node migrate.mjs
