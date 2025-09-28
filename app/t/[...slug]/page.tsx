@@ -16,7 +16,7 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 }
 
 export default async function Page({ params }) {
-  const { slug = [] } = params;
+  const { slug = [] } = await params;
   const [topicName = "", action = "", direction = ""] = slug;
   const cookieStore = await cookies();
   const topic = await getTopic({ name: topicName });

@@ -6,6 +6,7 @@ import { useEffect, useOptimistic, useRef, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { addPerspective } from "@/actions/addPerspective";
+import { deletePerspective } from "@/actions/deletePerspective";
 import { editPerspective } from "@/actions/editPerspective";
 import { getSampleLyrics } from "@/actions/getSampleLyrics";
 import { Collect } from "@/components/Collect";
@@ -49,17 +50,29 @@ export function WritePerspective({
   const scrollPerspectivesIntoView = () => {
     setTimeout(() => {
       requestAnimationFrame(() => {
-        if (perspectivesEndRef.current || perspectivesForwardEndRef.current) {
-          if (!forward) {
-            perspectivesEndRef.current.scrollLeft = 0;
-          } else {
-            perspectivesForwardEndRef.current.scrollIntoView({
-              block: "end",
-            });
-          }
+        if (!forward && perspectivesEndRef.current) {
+          perspectivesEndRef.current.scrollLeft = 0;
+        } else if (forward && perspectivesForwardEndRef.current) {
+          perspectivesForwardEndRef.current.scrollIntoView({
+            block: "end",
+          });
         }
       });
     }, 500);
+  };
+
+  const deletePerspectiveHandler = async () => {
+    if (perspectiveId) {
+      await deletePerspective({ perspectiveId });
+      setPerspectiveId(null);
+      setPerspective("");
+      setSampleId(null);
+      setIsLyric(false);
+      setCharacters(0);
+      if (perspectiveRef.current) {
+        perspectiveRef.current.value = "";
+      }
+    }
   };
 
   async function formAction(formData: FormData) {
@@ -243,7 +256,7 @@ export function WritePerspective({
                   style={{ color: `${p.color}` }}
                 >
                   <div
-                    className={`flex flex-col justify-center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
+                    className={`flex flex-col justify-center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20`}
                   >
                     <Markdown remarkPlugins={[remarkGfm]}>
                       {perspectiveId === p.id
@@ -354,6 +367,13 @@ export function WritePerspective({
                   placeholder="lyric"
                   onChange={(e) => isLyricHandler(e)}
                 />
+              </div>
+              <div className="h-full w-full cursor-pointer">
+                {perspectiveId && (
+                  <button type="button" onClick={deletePerspectiveHandler}>
+                    🗑️
+                  </button>
+                )}
               </div>
             </div>
             <div className="flex h-full flex-grow w-full ml-1 md:w-10/12">

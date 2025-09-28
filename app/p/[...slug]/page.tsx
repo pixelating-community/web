@@ -11,8 +11,8 @@ export async function generateMetadata({ params }): Promise<Metadata> {
 }
 
 export default async function Page({ params }) {
-  const { slug = [] } = params;
-  const [id, status] = slug;
+  const { slug = [] } = await params;
+  const [id, status = ""] = slug;
   const perspective = await getPerspective(id).catch(() => null);
   const link = await getQRCode({
     path: `/p/${id}`,

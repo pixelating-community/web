@@ -1,4 +1,5 @@
 "use client";
+
 import type { UUID } from "node:crypto";
 import { useCallback, useEffect, useOptimistic, useRef, useState } from "react";
 import { addLyric } from "@/actions/addLyric";

@@ -45,7 +45,7 @@ export const getPerspectives = async ({
         LEFT JOIN tracks as t ON e.track_id = t.id
         LEFT JOIN lyrics as l ON e.id = l.edit_id
         WHERE p.topic_id=${data.topic_id}
-        ORDER BY p.created_at ${direction};`.values();
+        ORDER BY p.id ${direction};`.values();
 
     const seenIds = new Set();
     const dedupedPerspectives = perspectives.filter((row) => {
