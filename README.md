@@ -1,8 +1,8 @@
 # 👾
 
-[![ci](https://github.com/pixelating-community/web/actions/workflows/deploy.yml/badge.svg)](https://github.com/pixelating-community/web/actions/workflows/deploy.yml)
+[![ci](https://github.com/pixelating-community/web/actions/workflows/ci.yml/badge.svg)](https://github.com/pixelating-community/web/actions/workflows/ci.yml)
 
-## install
+    ## install
 
 ```sh
 brew install --cask docker
@@ -17,36 +17,34 @@ brew install orbstack
 orb
 ```
 
-## migrate locally
-
-```sh
-docker compose -f production.yml run --rm --build migrations
-```
-
-### ci migrate deploy script
-
-```sh
-echo "🚀 Pulling images..."
-docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
-
-
-#echo "🧳 Starting migrations..."
-#docker compose -f production.yml up --rm migrations
-```
 
 ## dev
 
 ```sh
 # configure .env
+npm install typescript --save-dev
+npm install biome --save-dev
 docker compose up
 docker compose exec app npm lint
-docker compose exec app npm run prettier:check
+docker compose exec app npm lint:fix
+docker compose exec app npm run format
 ```
+
+## dev migrate
+
+```sh
+docker exec -i app sh -c "npm install --no-save postgres && node /app/migrations/migrate.mjs"
+```
+
 
 ## ci
 
 ```
 .github/workflow/deploy.yml
+```
+
+```
+.github/workflow/migrate.yml
 ```
 
 ## use
@@ -58,8 +56,5 @@ http://localhost:3000/
 ## destroy
 
 ```sh
-docker stop $(docker ps -a -q)
-docker rm $(docker ps -a -q)
-docker system prune -a -f
-docker volume prune -f
+docker compose down -v --rmi all --remove-orphans 2>/dev/null || true && docker stop $(docker ps -aq) 2>/dev/null || true && docker rm -f $(docker ps -aq) 2>/dev/null || true && docker system prune -a --volumes -f
 ```

@@ -243,7 +243,7 @@ export function WritePerspective({
                   style={{ color: `${p.color}` }}
                 >
                   <div
-                    className={`flex flex-col justify-center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
+                    className={`flex flex-col justify-center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20`}
                   >
                     <Markdown remarkPlugins={[remarkGfm]}>
                       {perspectiveId === p.id

@@ -144,18 +144,13 @@ const handleFileUpload = async (
   `;
 
   return await sql`
-    UPDATE perspectives SET perspective = ${data.perspective}, color = ${data.color}
+    UPDATE perspectives SET perspective = ${data.perspective}, color = ${data.color}, updated_at = NOW()
     WHERE id = ${id};
   `;
 };
 
-interface PerspectiveData {
-  perspective: string;
-  color: string;
-}
-
 const updatePerspectiveWithoutFile = async (
-  data: PerspectiveData,
+  data: { perspective: string; color: string },
   id: UUID,
 ) => {
   return await sql`

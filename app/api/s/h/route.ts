@@ -1,6 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import type { Stripe } from "stripe";
 import { sql } from "@/lib/db";
+import { generateHash } from "@/lib/generateHash";
 import { getStripe } from "@/lib/getStripe";
 
 export const runtime = "nodejs";
@@ -27,14 +29,27 @@ export const POST = async (req: NextRequest) => {
     if (event.type === "charge.succeeded") {
       const charge = event.data.object;
       const collectionId = charge.metadata.collectionId;
+      const hash = generateHash(charge.id);
       const amount = charge.amount;
 
       await sql`
-      INSERT INTO collected (collection_id, stripe_charge_id, amount, status)
-      VALUES (${collectionId}, ${charge.id}, ${amount}, 'succeeded')
-      ON CONFLICT (stripe_charge_id) DO UPDATE
-        SET status = 'succeeded', amount = ${amount};
-    `;
+        INSERT INTO collected (
+          collection_id,
+          stripe_charge_id,
+          stripe_hash,
+          amount,
+          status
+        )
+        VALUES (
+          ${collectionId},
+          ${charge.id},
+          ${hash},
+          ${amount},
+          'succeeded'
+        )
+        ON CONFLICT (stripe_charge_id) DO UPDATE
+          SET status = 'succeeded', amount = ${amount};
+      `;
     } else if (event.type === "refund.created") {
       const refund = event.data.object;
       const id = refund.charge as string;

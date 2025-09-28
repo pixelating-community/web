@@ -51,21 +51,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build & push migrations
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./migrations/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
       - name: Sign published images
         if: github.event_name != 'pull_request'
         run: |
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
 
   deploy:
     needs: build
@@ -93,11 +82,11 @@ jobs:
 
             cd web
 
-            echo "📝 Writing .env file..."
+            echo "📝 .env..."
             cat <<EOF > .env
-            POSTGRES_USERNAME=postgres
+            POSTGRES_USER=postgres
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DATABASE=${{ secrets.POSTGRES_DATABASE }}
+            POSTGRES_DB=${{ secrets.POSTGRES_DATABASE }}
             BUCKET_NAME=${{ secrets.BUCKET_NAME }}
             BUCKET_REGION=${{ secrets.BUCKET_REGION }}
             BUCKET_URL=${{ secrets.BUCKET_URL }}
@@ -107,14 +96,18 @@ jobs:
             NEXT_PUBLIC_URL=${{ secrets.NEXT_PUBLIC_URL }}
             NEXT_PUBLIC_CDN_URL=${{ secrets.NEXT_PUBLIC_CDN_URL }}
             NEXT_PUBLIC_PIXEL_SIZE=${{ secrets.NEXT_PUBLIC_PIXEL_SIZE }}
+            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY={{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+            NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
+            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
+            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
             EOF
 
-            echo "🚀 Pulling images..."
+            echo "🚀 images..."
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-migrations:latest
 
-            echo "🚀 Starting app & migrations..."
-            docker compose -f production.yml up -d --force-recreate --pull always app migrations
+            echo "🚀 app..."
+            docker compose -f production.yml --project-name web up -d --force-recreate --pull always app
 
-            echo "🧼 Cleaning up images..."
+
+            echo "🧼 images..."
             docker image prune -f

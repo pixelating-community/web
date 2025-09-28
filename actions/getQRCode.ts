@@ -15,15 +15,23 @@ export const getQRCode = async ({ path }: { path: string }) => {
 
   try {
     const QRCode = (await import("qrcode")).default;
-    const dataUrl = await QRCode.toDataURL(url, {
+
+    const svg = await QRCode.toString(url, {
       errorCorrectionLevel: "H",
       margin: 2,
-      width: 200,
+      width: 100,
       color: {
         dark: "#6e11b0",
         light: "#0000",
       },
+      type: "svg",
     });
+
+    const encoded = encodeURIComponent(svg)
+      .replace(/'/g, "%27")
+      .replace(/"/g, "%22");
+
+    const dataUrl = `data:image/svg+xml,${encoded}`;
 
     cache.set(url, dataUrl);
     return dataUrl;
