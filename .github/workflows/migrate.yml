@@ -17,7 +17,7 @@ jobs:
           script: |
             cd /var/www/html/web
 
-            echo "📝 .env"
+            echo "📝 .env..."
             cat <<EOF > .env
             POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -25,4 +25,5 @@ jobs:
             EOF
 
             echo "🎽 migrations..."
-            docker exec -i app node migrate.mjs
+            docker cp migrations app:/app/migrations
+            docker exec -i app sh -c "npm install --no-save postgres && node /app/migrations/migrate.mjs"

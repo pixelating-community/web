@@ -22,7 +22,6 @@ FROM base AS runner
 WORKDIR /app
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 USER nextjs
-COPY --from=builder --chown=nextjs:nodejs /app/migrations/migrate.mjs ./migrate.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone .
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 ENV NODE_ENV=production
