@@ -7,7 +7,7 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     steps:
-      - name: run migrations
+      - name: Run migrate
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
@@ -17,12 +17,13 @@ jobs:
           script: |
             cd /var/www/html/web
 
-            echo "📝 .env"
+            echo "📝 .env..."
             cat <<EOF > .env
             POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
             POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
             POSTGRES_DATABASE=${{ secrets.POSTGRES_DATABASE }}
             EOF
 
-            echo "📝 Running migrations in fixed container..."
-            docker exec -i web-app node migrations/migrate.mjs
+            echo "🎽 migrations..."
+            docker cp migrations app:/app/migrations
+            docker exec -i app sh -c "npm install --no-save postgres && node /app/migrations/migrate.mjs"

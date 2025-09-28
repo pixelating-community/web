@@ -4,8 +4,8 @@ import { addTopic } from "@/actions/addTopic";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, key, token } = body;
-    const res = await addTopic({ name, key, token });
+    const { name, key, token, locked } = body;
+    const res = await addTopic({ name, key, token, locked });
 
     if ("name" in res) {
       return NextResponse.json(

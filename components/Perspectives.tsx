@@ -81,7 +81,7 @@ export const Perspectives = ({ perspectives }) => {
               )}
               <div
                 style={{ color: `${p.color}` }}
-                className={`flex flex-col w-full center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2`}
+                className={`flex flex-col w-full center ${p.objective_src ? "text-center" : ""} whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20`}
               >
                 <div className="flex">
                   <Markdown remarkPlugins={[remarkGfm]}>
