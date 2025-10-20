@@ -75,7 +75,6 @@ try {
       id uuid PRIMARY KEY DEFAULT uuidv7(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       perspective TEXT NOT NULL,
-      color VARCHAR(255) NOT NULL,
       topic_id uuid REFERENCES topics(id) ON DELETE CASCADE,
       sample_id uuid REFERENCES samples(id) ON DELETE CASCADE,
       objective_id uuid REFERENCES objectives(id) ON DELETE CASCADE,

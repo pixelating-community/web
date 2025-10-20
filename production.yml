@@ -1,26 +1,135 @@
 services:
   postgres:
     image: "postgres:18-alpine3.22"
-    container_name: postgres
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    networks:
+      - app_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      update_config:
+        order: stop-first
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 15s
+      test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
       start_period: 30s
+
   app:
-    image: "ghcr.io/pixelating-community/web:latest"
-    container_name: app
-    restart: always
+    image: "ghcr.io/pixelating-community/web:${WEB_SHA}"
+
     ports:
       - "3000:3000"
-    env_file: .env
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
+    networks:
+      - app_network
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+      - BUCKET_NAME
+      - BUCKET_REGION
+      - BUCKET_URL
+      - SPACES_KEY
+      - SPACES_SECRET
+      - EL_KEY
+      - NEXT_PUBLIC_URL
+      - NEXT_PUBLIC_CDN_URL
+      - NEXT_PUBLIC_PIXEL_SIZE
+      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+      - STRIPE_SECRET_KEY
+      - STRIPE_WEBHOOK_SECRET
+    environment:
+      HOSTNAME: "0.0.0.0"
+      NODE_ENV: production
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: ["/entrypoint.sh"]
+    command: ["node", "server.js"]
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+        parallelism: 1
+        delay: 10s
+        failure_action: rollback
+        monitor: 30s
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 384M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+
+networks:
+  app_network:
+    driver: overlay
+    attachable: true
+
+secrets:
+  POSTGRES_USER:
+    external: true
+  POSTGRES_PASSWORD:
+    external: true
+  POSTGRES_DB:
+    external: true
+  NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:
+    external: true
+  BUCKET_NAME:
+    external: true
+  BUCKET_REGION:
+    external: true
+  BUCKET_URL:
+    external: true
+  SPACES_KEY:
+    external: true
+  SPACES_SECRET:
+    external: true
+  EL_KEY:
+    external: true
+  NEXT_PUBLIC_URL:
+    external: true
+  NEXT_PUBLIC_CDN_URL:
+    external: true
+  NEXT_PUBLIC_PIXEL_SIZE:
+    external: true
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
+    external: true
+  STRIPE_SECRET_KEY:
+    external: true
+  STRIPE_WEBHOOK_SECRET:
+    external: true
+
 volumes:
   postgres_data:
+    driver: local

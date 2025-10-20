@@ -26,7 +26,7 @@ export default async function Page({ params }) {
       <div className="flex grow-0">
         <div className="fixed -translate-x-2/4 -translate-y-2/4 top-1/2 left-1/2">
           {!["success", "cancel"].includes(status) && (
-            <Perspectives perspectives={perspective} />
+            <Perspectives perspectives={perspective} link={link} />
           )}
           {status === "success" && (
             <div className="flex flex-col items-center">

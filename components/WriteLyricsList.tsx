@@ -15,7 +15,7 @@ export const WriteLyricsList = ({
 }: {
   lyrics: {
     id?: UUID;
-    timestamp: string;
+    timestamp: number;
     lyric: string;
     style?: string;
     url?: string;
@@ -23,7 +23,7 @@ export const WriteLyricsList = ({
   currentLineIndex: number;
   handleLyricClick: (line: {
     id?: UUID;
-    timestamp: string;
+    timestamp: number;
     lyric: string;
     style?: string;
     url?: string;

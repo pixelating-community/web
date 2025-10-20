@@ -7,7 +7,7 @@ export const Token = ({ name, topicId, perspectiveId }) => {
   const [token, setToken] = useState(null);
 
   return (
-    <div className="flex flex-row">
+    <div className="flex flex-row mt-1 mx-1">
       <label className="sr-only" htmlFor="token">
         token
       </label>
@@ -17,7 +17,7 @@ export const Token = ({ name, topicId, perspectiveId }) => {
         }}
         data-testid="token"
         className="p-2 border-0 dark:bg-slate-800/10 w-full text-black"
-        type="text"
+        type="password"
         id="token"
         name="token"
         placeholder="🔑"

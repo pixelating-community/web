@@ -1,5 +1,6 @@
 "use server";
 
+import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
 import { decrypt } from "@/lib/cryto";
 import { sql } from "@/lib/db";
@@ -10,14 +11,14 @@ export const getPerspectives = async ({
   token,
   forward,
 }: {
-  topicId: string;
+  topicId: UUID;
   isLocked?: boolean;
   token?: string;
   forward?: boolean;
 }) => {
   try {
     const schema = z.object({
-      topic_id: z.string().min(1),
+      topic_id: z.uuidv7(),
       is_locked: z.boolean().nullish(),
       token: z.string().min(1).nullish(),
       forward: z.boolean().nullish(),
@@ -38,7 +39,7 @@ export const getPerspectives = async ({
     }
 
     const perspectives =
-      await sql`SELECT p.id, perspective, p.topic_id, color, o.src, o.description, width, height, s.id, e.id, t.id, t.src, s.start_at, s.end_at, p.collection_id FROM perspectives as p
+      await sql`SELECT p.id, perspective, p.topic_id, o.src, o.description, width, height, s.id, e.id, t.id, t.src, s.start_at, s.end_at, p.collection_id FROM perspectives as p
         LEFT JOIN objectives as o ON p.objective_id = o.id
         LEFT JOIN samples as s ON p.sample_id = s.id
         LEFT JOIN edits as e ON s.edit_id = e.id
@@ -79,19 +80,18 @@ export const getPerspectives = async ({
               ? decrypt(perspective[1], data.token)
               : perspective[1],
           topic_id: perspective[2],
-          color: perspective[3],
-          objective_src: perspective[4],
-          description: perspective[5],
-          width: perspective[6],
-          height: perspective[7],
-          sample_id: perspective[8] ? perspective[8] : null,
-          edit_id: perspective[9],
-          track_id: perspective[10],
-          track_src: perspective[11],
+          objective_src: perspective[3],
+          description: perspective[4],
+          width: perspective[5],
+          height: perspective[6],
+          sample_id: perspective[7] ? perspective[8] : null,
+          edit_id: perspective[8],
+          track_id: perspective[9],
+          track_src: perspective[10],
           lyrics: [lyrics],
-          start: perspective[12],
-          end: perspective[13],
-          collection_id: perspective[14],
+          start: perspective[11],
+          end: perspective[12],
+          collection_id: perspective[13],
         };
       }),
     );

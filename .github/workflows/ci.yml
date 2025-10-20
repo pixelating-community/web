@@ -1,5 +1,4 @@
 name: ci
-
 on:
   push:
     branches: ["main"]
@@ -18,14 +17,19 @@ jobs:
       contents: read
       packages: write
       id-token: write
-
+    outputs:
+      sha: ${{ steps.set-sha.outputs.sha }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Get commit SHA
+        id: set-sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Install cosign
         if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20
+        uses: sigstore/cosign-installer@v2
         with:
           cosign-release: "v2.2.4"
 
@@ -47,31 +51,39 @@ jobs:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.set-sha.outputs.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          secrets: |
+            NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
 
       - name: Sign published images
         if: github.event_name != 'pull_request'
         run: |
+          set -xe
           cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.set-sha.outputs.sha }}
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: deploy
+      - name: Deploy to server over SSH
         uses: appleboy/ssh-action@v1.2.2
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+          port: 22
           script: |
-            cd /var/www/html
+            #!/bin/sh
+            set -e
 
-            echo "🚀 Fetching latest repo..."
+            cd /var/www/html || mkdir -p /var/www/html && cd /var/www/html
             if [ ! -d "web/.git" ]; then
               git clone https://github.com/pixelating-community/web.git
               cd web
@@ -79,33 +91,57 @@ jobs:
               cd web
               git fetch --all
               git reset --hard origin/main
+              git pull origin main
             fi
 
-            echo "📝 .env..."
-            cat <<EOF > .env
-            POSTGRES_USER=postgres
-            POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
-            POSTGRES_DB=${{ secrets.POSTGRES_DB }}
-            BUCKET_NAME=${{ secrets.BUCKET_NAME }}
-            BUCKET_REGION=${{ secrets.BUCKET_REGION }}
-            BUCKET_URL=${{ secrets.BUCKET_URL }}
-            SPACES_KEY=${{ secrets.SPACES_KEY }}
-            SPACES_SECRET=${{ secrets.SPACES_SECRET }}
-            EL_KEY=${{ secrets.EL_KEY }}
-            NEXT_PUBLIC_URL=${{ secrets.NEXT_PUBLIC_URL }}
-            NEXT_PUBLIC_CDN_URL=${{ secrets.NEXT_PUBLIC_CDN_URL }}
-            NEXT_PUBLIC_PIXEL_SIZE=${{ secrets.NEXT_PUBLIC_PIXEL_SIZE }}
-            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
-            NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
-            STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
-            STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
-            EOF
+            if docker config inspect entrypoint >/dev/null 2>&1; then
+              echo "Config 'entrypoint' exists, skipping"
+            else
+              docker config create entrypoint ./entrypoint.sh
+              echo "Created config 'entrypoint'"
+            fi
 
-            echo "🚀 images..."
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            create_secret_if_missing() {
+              name="$1"
+              value="$2"
+              if docker secret inspect "$name" >/dev/null 2>&1; then
+                echo "Secret $name exists, skipping"
+              else
+                printf '%s' "$value" | docker secret create "$name" -
+                echo "Created secret $name"
+              fi
+            }
 
-            echo "🚀 app..."
-            docker compose -f production.yml --project-name web up -d --force-recreate --pull always --remove-orphans app
+            create_secret_if_missing POSTGRES_USER "${{ secrets.POSTGRES_USER }}"
+            create_secret_if_missing POSTGRES_PASSWORD "${{ secrets.POSTGRES_PASSWORD }}"
+            create_secret_if_missing POSTGRES_DB "${{ secrets.POSTGRES_DB }}"
+            create_secret_if_missing BUCKET_NAME "${{ secrets.BUCKET_NAME }}"
+            create_secret_if_missing BUCKET_REGION "${{ secrets.BUCKET_REGION }}"
+            create_secret_if_missing BUCKET_URL "${{ secrets.BUCKET_URL }}"
+            create_secret_if_missing SPACES_KEY "${{ secrets.SPACES_KEY }}"
+            create_secret_if_missing SPACES_SECRET "${{ secrets.SPACES_SECRET }}"
+            create_secret_if_missing EL_KEY "${{ secrets.EL_KEY }}"
+            create_secret_if_missing NEXT_PUBLIC_URL "${{ secrets.NEXT_PUBLIC_URL }}"
+            create_secret_if_missing NEXT_PUBLIC_CDN_URL "${{ secrets.NEXT_PUBLIC_CDN_URL }}"
+            create_secret_if_missing NEXT_PUBLIC_PIXEL_SIZE "${{ secrets.NEXT_PUBLIC_PIXEL_SIZE }}"
+            create_secret_if_missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}"
+            create_secret_if_missing NEXT_SERVER_ACTIONS_ENCRYPTION_KEY "${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}"
+            create_secret_if_missing STRIPE_SECRET_KEY "${{ secrets.STRIPE_SECRET_KEY }}"
+            create_secret_if_missing STRIPE_WEBHOOK_SECRET "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
 
-            echo "🧼 images..."
-            docker image prune -f
+            echo "Pulling image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.sha }}"
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.sha }}
+
+            export WEB_SHA=${{ needs.build.outputs.sha }}
+
+            docker stack deploy -c production.yml web --with-registry-auth
+
+            docker image prune -f || true
+
+      - name: Purge Cloudflare cache
+        if: success()
+        run: |
+          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
+            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data '{"purge_everything":true}'
