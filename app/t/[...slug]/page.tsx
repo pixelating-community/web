@@ -4,15 +4,17 @@ import { getPerspectives } from "@/actions/getPerspectives";
 import { getQRCode } from "@/actions/getQRCode";
 import { getTopic } from "@/actions/getTopic";
 import { isLocked } from "@/actions/isLocked";
-import { GetPerspectives } from "@/components/GetPerspectives";
-import { Token } from "@/components/Token";
+import { EmptyState } from "@/components/EmptyState";
+import { Perspectives } from "@/components/Perspectives";
 import { WritePerspective } from "@/components/WritePerspective";
 
 export async function generateMetadata({ params }): Promise<Metadata> {
   const { slug } = await params;
-  return {
-    title: `${slug}`,
+  const titles = {
+    art: "🎨",
+    collection: "💰",
   };
+  return { title: titles[slug[0]] };
 }
 
 export default async function Page({ params }) {
@@ -29,7 +31,7 @@ export default async function Page({ params }) {
   let content = <div className="text-center text-2xl">🔒</div>;
   if (id) {
     const locked = await isLocked({ id });
-    const forward = direction === "f";
+    const forward = direction === "f" || action === "f";
     const perspectives =
       (await getPerspectives({
         topicId: id,
@@ -38,9 +40,7 @@ export default async function Page({ params }) {
         forward,
       })) || [];
 
-    if (!token && action === "w") {
-      content = <Token name={name} topicId={id} perspectiveId={null} />;
-    } else if (token && action === "w") {
+    if (action === "w") {
       content = (
         <WritePerspective
           id={id}
@@ -53,24 +53,18 @@ export default async function Page({ params }) {
         />
       );
     } else if (!locked && topicName) {
-      content = (
-        <>
-          <div className="relative mx-auto">
-            <img src={link} alt="QR code" />
-          </div>
-          <GetPerspectives topicId={id} />
-        </>
-      );
+      content =
+        perspectives.length > 0 ? (
+          <Perspectives perspectives={perspectives} link={link} />
+        ) : (
+          <EmptyState />
+        );
     }
   }
 
   return (
-    <main className="flex flex-col items-center h-full">
-      <div
-        className={`flex flex-col ${token ? "w-full justify-between" : "justify-center"} h-full`}
-      >
-        {content}
-      </div>
+    <main className="flex flex-col items-center h-[100dvh]">
+      <div className="flex flex-col flex-1">{content}</div>
     </main>
   );
 }

@@ -23,7 +23,6 @@ const schema = z.object({
   name: z.string().min(1),
   token: z.string().min(1),
   perspective: z.string().min(1),
-  color: z.string(),
   description: z.string().nullable(),
   pixelat_ing: z.string().nullish(),
   sample_id: z.uuid().nullish(),
@@ -86,7 +85,6 @@ const parseFormData = (formData: FormData, id: UUID, name: string) => {
     name,
     token: formData.get("token"),
     perspective: formData.get("perspective"),
-    color: formData.get("color"),
     description: formData.get("description"),
     pixelat_ing: formData.get("pixelat_ing"),
     sample: formData.get("sample"),
@@ -115,7 +113,6 @@ const handleFileUpload = async (
   file: File,
   data: {
     perspective: string;
-    color: string;
     description: string | null;
     pixelat_ing?: string | null;
   },
@@ -144,17 +141,17 @@ const handleFileUpload = async (
   `;
 
   return await sql`
-    UPDATE perspectives SET perspective = ${data.perspective}, color = ${data.color}, updated_at = NOW()
+    UPDATE perspectives SET perspective = ${data.perspective}, updated_at = NOW()
     WHERE id = ${id};
   `;
 };
 
 const updatePerspectiveWithoutFile = async (
-  data: { perspective: string; color: string },
+  data: { perspective: string },
   id: UUID,
 ) => {
   return await sql`
-    UPDATE perspectives SET perspective = ${data.perspective}, color = ${data.color}
+    UPDATE perspectives SET perspective = ${data.perspective}
     WHERE id = ${id};
   `;
 };

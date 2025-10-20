@@ -1,6 +1,5 @@
 import { useRef, useState } from "react";
 import { findLyric } from "@/lib/findLyric";
-import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
 
 export const LyricsList = ({
   lyrics,
@@ -8,7 +7,7 @@ export const LyricsList = ({
 }: {
   lyrics: {
     id?: string;
-    timestamp: string;
+    timestamp: number;
     lyric: string;
     style?: string;
     url?: string;
@@ -24,9 +23,7 @@ export const LyricsList = ({
   if (index !== currentLineIndex) {
     setCurrentLineIndex(index);
     if (index + 1 < lyrics.length) {
-      const nextLyricTime = parseTimestampToSeconds(
-        lyrics[index + 1]?.timestamp,
-      );
+      const nextLyricTime = lyrics[index + 1]?.timestamp;
       setTimeUntilNextLyric(nextLyricTime - currentTime);
     }
   }

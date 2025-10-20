@@ -11,7 +11,6 @@ import { Submit } from "@/components/Submit";
 import { WordTime } from "@/components/WordTime";
 import { WriteLyricsList } from "@/components/WriteLyricsList";
 import { findLyric } from "@/lib/findLyric";
-import { parseTimestampToSeconds } from "@/lib/parseTimestampToSeconds";
 
 export const KaraokeLyrics = ({
   trackId,
@@ -30,7 +29,7 @@ export const KaraokeLyrics = ({
   editId?: UUID;
   lyrics: {
     id?: string;
-    timestamp: string;
+    timestamp: number;
     lyric: string;
     style?: string;
     url?: string;
@@ -62,7 +61,7 @@ export const KaraokeLyrics = ({
     lyrics[0],
     (state, newLyric) => [
       ...state,
-      { id: "", timestamp: "", lyric: newLyric as string, style: "", url: "" },
+      { id: "", timestamp: 0, lyric: newLyric as string, style: "", url: "" },
     ],
   );
   const fullImmersionRef = useRef<HTMLButtonElement | null>(null);
@@ -142,8 +141,8 @@ export const KaraokeLyrics = ({
         return;
       }
 
-      const currentLyricTime = parseTimestampToSeconds(currentLyric.timestamp);
-      const nextLyricTime = parseTimestampToSeconds(nextLyric.timestamp);
+      const currentLyricTime = currentLyric.timestamp;
+      const nextLyricTime = nextLyric.timestamp;
 
       if (lastLyricTimeRef.current !== currentLyricTime) {
         lastLyricTimeRef.current = currentLyricTime;
@@ -184,13 +183,13 @@ export const KaraokeLyrics = ({
 
   const handleLyricClick = (lyric: {
     id?: UUID;
-    timestamp?: string;
+    timestamp?: number;
     lyric: string;
     style?: string;
     url?: string;
   }) => {
     if (audioRef.current && lyric.timestamp) {
-      audioRef.current.currentTime = parseTimestampToSeconds(lyric.timestamp);
+      audioRef.current.currentTime = lyric.timestamp;
       setLyric(lyric.lyric || "");
       setLyricId(lyric.id || null);
       setStyle(lyric.style || "");
@@ -268,7 +267,7 @@ export const KaraokeLyrics = ({
         lyrics={
           optimisticLyrics as {
             id?: UUID;
-            timestamp: string;
+            timestamp: number;
             lyric: string;
             style?: string;
             url?: string;

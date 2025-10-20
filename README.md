@@ -15,8 +15,7 @@ npm install typescript --save-dev
 npm install biome --save-dev
 orb
 docker compose up
-docker compose exec app npm lint
-docker compose exec app npm lint:fix
+docker compose exec app npm run lint
 docker compose exec app npm run format
 ```
 
@@ -30,7 +29,7 @@ docker exec -i app sh -c "npm install --no-save postgres && node /app/migrations
 ## ci
 
 ```
-.github/workflow/deploy.yml
+.github/workflow/ci.yml
 ```
 
 ```

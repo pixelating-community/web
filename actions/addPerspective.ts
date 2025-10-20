@@ -23,7 +23,6 @@ const handleFileUpload = async ({
     description: string | null;
     pixelat_ing: string | null;
     perspective: string | null;
-    color: string | null;
     topicId: string | null;
   };
 }) => {
@@ -49,8 +48,8 @@ const handleFileUpload = async ({
     `;
   const objective_id = insertResult[0]?.id;
   const result = await sql`
-    INSERT INTO perspectives (objective_id, perspective, color, topic_id)
-    VALUES (${objective_id}, ${data.perspective}, ${data.color} ,${data.topicId});
+    INSERT INTO perspectives (objective_id, perspective, topic_id)
+    VALUES (${objective_id}, ${data.perspective}, ${data.topicId});
     `;
   return result;
 };
@@ -73,7 +72,6 @@ export const addPerspective = async ({
       perspective: z.string().min(1),
       topicId: z.uuid(),
       name: z.string(),
-      color: z.string().min(1),
       description: z.string().nullish(),
       pixelat_ing: z.string().nullish(),
       sample: z.url().nullish(),
@@ -83,7 +81,6 @@ export const addPerspective = async ({
       perspective: formData.get("perspective"),
       topicId,
       name,
-      color: formData.get("color"),
       description: formData.get("description"),
       pixelat_ing: formData.get("pixelat_ing"),
       sample: (() => {
@@ -110,14 +107,13 @@ export const addPerspective = async ({
             description: data.description || null,
             pixelat_ing: data.pixelat_ing || null,
             perspective: data.perspective || null,
-            color: data.color || null,
             topicId: data.topicId || null,
           },
         });
       } else {
         await sql`
-          INSERT INTO perspectives (perspective, topic_id, color)
-          VALUES (${data.perspective}, ${data.topicId}, ${data.color});
+          INSERT INTO perspectives (perspective, topic_id)
+          VALUES (${data.perspective}, ${data.topicId});
         `;
 
         if (data.sample) {
