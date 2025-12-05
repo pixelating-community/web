@@ -4,7 +4,7 @@
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: false,
   transpilePackages: ["next-mdx-remote"],
   output: "standalone",
   images: {
@@ -20,6 +20,15 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "10mb",
     },
+  },
+  async redirects() {
+    return [
+      {
+        source: "/p/:id/k",
+        destination: "/p/:id?k=true",
+        permanent: false,
+      },
+    ];
   },
   async headers() {
     return [

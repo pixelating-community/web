@@ -1,12 +1,11 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { sql } from "@/lib/db";
 
 export const getCollection = async ({
   collectionId,
 }: {
-  collectionId: UUID;
+  collectionId: string;
 }) => {
   const collected = await sql`
     SELECT

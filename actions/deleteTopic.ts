@@ -18,8 +18,7 @@ export const deleteTopic = async (topicId: string, tokenKey: string) => {
     if (tokenKeys.includes(data.token_key)) {
       const cookieStore = await cookies();
       await sql`DELETE FROM perspectives WHERE topic_id=${data.topic_id};`;
-      await sql`DELETE FROM objectives WHERE topic_id=${data.topic_id};`;
-      await sql`DELETE FROM topics WHERE topic_id=${data.topic_id};`;
+      await sql`DELETE FROM topics WHERE id=${data.topic_id};`;
       cookieStore.set(`t_${data.topic_id}`, "", { maxAge: 0 });
       cookieStore.delete(`t_${data.topic_id}`);
     }

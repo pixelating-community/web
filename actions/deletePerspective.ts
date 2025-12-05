@@ -1,6 +1,5 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { sql } from "@/lib/db";
@@ -8,7 +7,7 @@ import { sql } from "@/lib/db";
 export const deletePerspective = async ({
   perspectiveId,
 }: {
-  perspectiveId: UUID;
+  perspectiveId: string;
 }) => {
   try {
     const schema = z.object({

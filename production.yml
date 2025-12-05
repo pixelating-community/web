@@ -7,6 +7,18 @@ services:
       POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
       POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
       POSTGRES_DB_FILE: /run/secrets/POSTGRES_DB
+    command:
+      - "postgres"
+      - "-c"
+      - "shared_buffers=64MB"
+      - "-c"
+      - "work_mem=4MB"
+      - "-c"
+      - "maintenance_work_mem=32MB"
+      - "-c"
+      - "effective_cache_size=128MB"
+      - "-c"
+      - "max_connections=25"
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
@@ -26,10 +38,10 @@ services:
         order: stop-first
       resources:
         limits:
-          cpus: "0.5"
-          memory: 256M
+          cpus: "0.3"
+          memory: 280M
         reservations:
-          cpus: "0.25"
+          cpus: "0.1"
           memory: 128M
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres || exit 1"]
@@ -52,25 +64,17 @@ services:
       - POSTGRES_PASSWORD
       - POSTGRES_DB
       - NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
-      - BUCKET_NAME
-      - BUCKET_REGION
-      - BUCKET_URL
-      - SPACES_KEY
-      - SPACES_SECRET
       - EL_KEY
       - NEXT_PUBLIC_URL
-      - NEXT_PUBLIC_CDN_URL
-      - NEXT_PUBLIC_PIXEL_SIZE
       - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
       - STRIPE_SECRET_KEY
       - STRIPE_WEBHOOK_SECRET
+      - REFLECTION_ACCESS_SECRET
+      - SSE_BROADCAST_KEY
     environment:
       HOSTNAME: "0.0.0.0"
       NODE_ENV: production
-    volumes:
-      - ./entrypoint.sh:/entrypoint.sh:ro
-    entrypoint: ["/entrypoint.sh"]
-    command: ["node", "server.js"]
+      NODE_OPTIONS: "--max-old-space-size=384"
     deploy:
       replicas: 1
       update_config:
@@ -85,10 +89,10 @@ services:
         max_attempts: 3
       resources:
         limits:
-          cpus: "0.5"
-          memory: 384M
+          cpus: "0.7"
+          memory: 480M
         reservations:
-          cpus: "0.25"
+          cpus: "0.2"
           memory: 256M
 
 networks:
@@ -105,29 +109,19 @@ secrets:
     external: true
   NEXT_SERVER_ACTIONS_ENCRYPTION_KEY:
     external: true
-  BUCKET_NAME:
-    external: true
-  BUCKET_REGION:
-    external: true
-  BUCKET_URL:
-    external: true
-  SPACES_KEY:
-    external: true
-  SPACES_SECRET:
-    external: true
   EL_KEY:
     external: true
   NEXT_PUBLIC_URL:
-    external: true
-  NEXT_PUBLIC_CDN_URL:
-    external: true
-  NEXT_PUBLIC_PIXEL_SIZE:
     external: true
   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:
     external: true
   STRIPE_SECRET_KEY:
     external: true
   STRIPE_WEBHOOK_SECRET:
+    external: true
+  REFLECTION_ACCESS_SECRET:
+    external: true
+  SSE_BROADCAST_KEY:
     external: true
 
 volumes:

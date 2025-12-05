@@ -23,7 +23,7 @@ export type Perspective = {
   collection_id?: UUID;
   start?: number;
   end?: number;
-  lyrics: PerspectiveLyric[][];
+  lyrics?: PerspectiveLyric[][];
 };
 
 export type WritePerspectiveProps = {

@@ -5,7 +5,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 RUN npm install postgres
 
-FROM base AS builder
+FROM base AS runner
 WORKDIR /app
-COPY migrations/migrate.mjs ./
 COPY --from=deps /app/node_modules ./node_modules
+COPY migrate.mjs ./
+CMD ["node", "migrate.mjs"]
