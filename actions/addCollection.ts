@@ -1,6 +1,5 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
 import { sql } from "@/lib/db";
 
@@ -13,7 +12,7 @@ export const addCollection = async ({
   description: string;
   total: number;
 }): Promise<{
-  id: UUID | null;
+  id: string | null;
   name: string;
   description: string;
   total: number | null;
@@ -38,7 +37,7 @@ export const addCollection = async ({
     }
 
     return {
-      id: collection[0].id as UUID,
+      id: collection[0].id as string,
       name: collection[0].name as string,
       description: collection[0].description as string,
       total: collection[0].total as number,

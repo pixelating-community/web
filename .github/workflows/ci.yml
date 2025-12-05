@@ -71,75 +71,51 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to server over SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.KEY }}
-          passphrase: ${{ secrets.PASSPHRASE }}
-          port: 22
-          script: |
-            #!/bin/sh
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.KEY }}" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+
+          echo '#!/bin/sh' > /tmp/askpass.sh
+          echo "echo \"\$SSH_PASSPHRASE\"" >> /tmp/askpass.sh
+          chmod +x /tmp/askpass.sh
+
+          eval $(ssh-agent)
+          SSH_PASSPHRASE="${{ secrets.PASSPHRASE }}" SSH_ASKPASS=/tmp/askpass.sh SSH_ASKPASS_REQUIRE=force ssh-add ~/.ssh/key
+
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
+
+      - name: Copy production.yml
+        run: scp production.yml ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/production.yml
+
+      - name: Deploy
+        run: |
+          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} "
             set -e
+            create_secret() { docker secret inspect \"\$1\" >/dev/null 2>&1 || printf '%s' \"\$2\" | docker secret create \"\$1\" -; }
+            create_secret POSTGRES_USER '${{ secrets.POSTGRES_USER }}'
+            create_secret POSTGRES_PASSWORD '${{ secrets.POSTGRES_PASSWORD }}'
+            create_secret POSTGRES_DB '${{ secrets.POSTGRES_DB }}'
+            create_secret EL_KEY '${{ secrets.EL_KEY }}'
+            create_secret NEXT_PUBLIC_URL '${{ secrets.NEXT_PUBLIC_URL }}'
+            create_secret NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY '${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}'
+            create_secret NEXT_SERVER_ACTIONS_ENCRYPTION_KEY '${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}'
+            create_secret STRIPE_SECRET_KEY '${{ secrets.STRIPE_SECRET_KEY }}'
+            create_secret STRIPE_WEBHOOK_SECRET '${{ secrets.STRIPE_WEBHOOK_SECRET }}'
+            create_secret REFLECTION_ACCESS_SECRET '${{ secrets.REFLECTION_ACCESS_SECRET }}'
+            create_secret SSE_BROADCAST_KEY '${{ secrets.SSE_BROADCAST_KEY }}'
 
-            cd /var/www/html || mkdir -p /var/www/html && cd /var/www/html
-            if [ ! -d "web/.git" ]; then
-              git clone https://github.com/pixelating-community/web.git
-              cd web
-            else
-              cd web
-              git fetch --all
-              git reset --hard origin/main
-              git pull origin main
-            fi
-
-            if docker config inspect entrypoint >/dev/null 2>&1; then
-              echo "Config 'entrypoint' exists, skipping"
-            else
-              docker config create entrypoint ./entrypoint.sh
-              echo "Created config 'entrypoint'"
-            fi
-
-            create_secret_if_missing() {
-              name="$1"
-              value="$2"
-              if docker secret inspect "$name" >/dev/null 2>&1; then
-                echo "Secret $name exists, skipping"
-              else
-                printf '%s' "$value" | docker secret create "$name" -
-                echo "Created secret $name"
-              fi
-            }
-
-            create_secret_if_missing POSTGRES_USER "${{ secrets.POSTGRES_USER }}"
-            create_secret_if_missing POSTGRES_PASSWORD "${{ secrets.POSTGRES_PASSWORD }}"
-            create_secret_if_missing POSTGRES_DB "${{ secrets.POSTGRES_DB }}"
-            create_secret_if_missing BUCKET_NAME "${{ secrets.BUCKET_NAME }}"
-            create_secret_if_missing BUCKET_REGION "${{ secrets.BUCKET_REGION }}"
-            create_secret_if_missing BUCKET_URL "${{ secrets.BUCKET_URL }}"
-            create_secret_if_missing SPACES_KEY "${{ secrets.SPACES_KEY }}"
-            create_secret_if_missing SPACES_SECRET "${{ secrets.SPACES_SECRET }}"
-            create_secret_if_missing EL_KEY "${{ secrets.EL_KEY }}"
-            create_secret_if_missing NEXT_PUBLIC_URL "${{ secrets.NEXT_PUBLIC_URL }}"
-            create_secret_if_missing NEXT_PUBLIC_CDN_URL "${{ secrets.NEXT_PUBLIC_CDN_URL }}"
-            create_secret_if_missing NEXT_PUBLIC_PIXEL_SIZE "${{ secrets.NEXT_PUBLIC_PIXEL_SIZE }}"
-            create_secret_if_missing NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY "${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}"
-            create_secret_if_missing NEXT_SERVER_ACTIONS_ENCRYPTION_KEY "${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}"
-            create_secret_if_missing STRIPE_SECRET_KEY "${{ secrets.STRIPE_SECRET_KEY }}"
-            create_secret_if_missing STRIPE_WEBHOOK_SECRET "${{ secrets.STRIPE_WEBHOOK_SECRET }}"
-
-            echo "Pulling image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.sha }}"
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.sha }}
-
-            export WEB_SHA=${{ needs.build.outputs.sha }}
-
-            docker stack deploy -c production.yml web --with-registry-auth
-
+            cd /tmp && WEB_SHA=${{ needs.build.outputs.sha }} docker stack deploy -c production.yml web --with-registry-auth
+            docker container prune -f || true
             docker image prune -f || true
+          "
 
       - name: Purge Cloudflare cache
-        if: success()
         run: |
           curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
             -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \

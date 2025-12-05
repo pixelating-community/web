@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import localFont from "next/font/local";
 import ServiceWorkerRegister from "@/app/ServiceWorkerRegister";
 import "@/globals.css";
 
@@ -9,7 +8,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#000000",
+  themeColor: "#a855f7",
 };
 
 export const metadata: Metadata = {
@@ -26,25 +25,13 @@ export const metadata: Metadata = {
   },
 };
 
-const rocketRinder = localFont({
-  src: [
-    {
-      path: "../public/RocketRinder-yV5d.woff2",
-      weight: "400",
-      style: "normal",
-    },
-  ],
-  variable: "--font-rr",
-  display: "swap",
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={rocketRinder.variable}>
+    <html lang="en">
       <body>
         {children}
         <ServiceWorkerRegister />
