@@ -1,11 +1,10 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
 import { sql } from "@/lib/db";
 
 export const addToken = async (
-  id: UUID,
+  id: string,
   name: string,
   token: string,
   tokenKey: string,
@@ -37,7 +36,7 @@ export const addToken = async (
     `;
     if (isValid.length === 0 && tokenKeys.includes(data.token_key)) {
       await sql`
-      INSERT INTO topics (name, token, lock)
+      INSERT INTO topics (name, token, locked)
       VALUES (${data.name}, crypt(${data.token}, gen_salt('bf')), ${lock});`;
 
       return { message: "TOKEN CREATED" };

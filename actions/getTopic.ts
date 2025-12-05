@@ -1,3 +1,5 @@
+"use server";
+
 import { z } from "zod/v4";
 import { sql } from "@/lib/db";
 

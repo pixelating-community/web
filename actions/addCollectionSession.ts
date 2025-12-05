@@ -1,14 +1,13 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { getStripe } from "@/lib/getStripe";
 
 export const addCollectionSession = async ({
   collectionId,
   perspectiveId,
 }: {
-  collectionId: UUID;
-  perspectiveId: UUID;
+  collectionId: string;
+  perspectiveId: string;
 }) => {
   const stripe = getStripe();
   const session = await stripe.checkout.sessions.create({
@@ -24,7 +23,7 @@ export const addCollectionSession = async ({
         quantity: 1,
       },
     ],
-    success_url: `${process.env.NEXT_PUBLIC_URL}/p/${perspectiveId}/success`,
+    success_url: `${process.env.NEXT_PUBLIC_URL}/p/${perspectiveId}/success?session_id={CHECKOUT_SESSION_ID}`,
     payment_intent_data: {
       metadata: { collectionId, perspectiveId },
     },

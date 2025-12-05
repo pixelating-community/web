@@ -4,7 +4,7 @@
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
-  productionBrowserSourceMaps: true,
+  productionBrowserSourceMaps: false,
   transpilePackages: ["next-mdx-remote"],
   output: "standalone",
   images: {
