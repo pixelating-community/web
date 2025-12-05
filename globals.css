@@ -5,11 +5,6 @@
   --color-blue-100: oklch(72.53% 0.1033 230.67);
   --color-red-100: oklch(48.12% 0.1674 23.04);
   --color-white: oklch(96% 0 329.29 / 95.05%);
-  --font-rr: "RocketRinder", sans-serif;
-}
-
-.font-rr {
-  font-family: var(--font-rr);
 }
 
 @layer utilities {

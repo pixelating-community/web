@@ -1,6 +1,5 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { z } from "zod/v4";
 import { sql } from "@/lib/db";
 
@@ -8,11 +7,11 @@ export const addPerspectiveCollection = async ({
   id,
   perspectiveId,
 }: {
-  id: UUID;
-  perspectiveId: UUID;
+  id: string;
+  perspectiveId: string;
 }): Promise<{
-  id: UUID;
-  collection: { id: UUID } | null;
+  id: string;
+  collection: { id: string } | null;
 } | null> => {
   try {
     const schema = z.object({
@@ -34,9 +33,9 @@ export const addPerspectiveCollection = async ({
     }
 
     return {
-      id: perspective[0].id as UUID,
+      id: perspective[0].id,
       collection: {
-        id: perspective[0].collection_id as UUID,
+        id: perspective[0].collection_id,
       },
     };
   } catch (error) {

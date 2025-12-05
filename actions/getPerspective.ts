@@ -1,9 +1,8 @@
 "use server";
 
-import type { UUID } from "node:crypto";
 import { z } from "zod";
 
-export const getPerspective = async (id: UUID) => {
+export const getPerspective = async ({ id }: { id: string }) => {
   try {
     const schema = z.object({
       id: z.uuid(),
@@ -17,7 +16,7 @@ export const getPerspective = async (id: UUID) => {
     `;
 
     if (result.length === 0) {
-      throw new Error(`Topic not found: ${data.id}`);
+      return null;
     }
 
     return result;

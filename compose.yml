@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: "postgres:18-alpine3.22"
+    image: postgres:18-alpine3.22
     container_name: postgres
     environment:
       POSTGRES_USER: postgres
@@ -12,23 +12,21 @@ services:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 15s
       start_period: 30s
+
   app:
     container_name: app
     build:
-      context: ./
+      context: .
+      target: dev
     ports:
-      - 3000:3000
-      - 9230:9230
-      - 9231:9231
+      - "3000:3000"
+      - "9229:9229"
     volumes:
       - ./:/app
-    command: >
-      sh -c "npm install && npm run dev"
     env_file: .env
-    environment:
-      NODE_OPTIONS: "--inspect=0.0.0.0:9230"
     depends_on:
       postgres:
         condition: service_healthy
+
 volumes:
   postgres_data:
