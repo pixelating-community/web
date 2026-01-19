@@ -5,6 +5,7 @@ import { getQRCode } from "@/actions/getQRCode";
 import { getTopic } from "@/actions/getTopic";
 import { isLocked } from "@/actions/isLocked";
 import { EmptyState } from "@/components/EmptyState";
+import { PerspectiveReadings } from "@/components/PerspectiveReadings";
 import { Perspectives } from "@/components/Perspectives";
 import { WritePerspective } from "@/components/WritePerspective";
 
@@ -43,6 +44,18 @@ export default async function Page({ params }) {
     if (action === "w") {
       content = (
         <WritePerspective
+          id={id}
+          name={topicName}
+          perspectives={perspectives}
+          locked={locked}
+          token={token}
+          forward={forward}
+          link={link}
+        />
+      );
+    } else if (action === "r") {
+      content = (
+        <PerspectiveReadings
           id={id}
           name={topicName}
           perspectives={perspectives}

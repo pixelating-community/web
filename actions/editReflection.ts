@@ -75,9 +75,7 @@ export const editReflection = async ({
         id: data.id,
         text: data.text,
       });
-    } catch {
-      // best-effort broadcast
-    }
+    } catch {}
     return result[0];
   } catch (error) {
     console.log(`${error}`);

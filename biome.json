@@ -44,6 +44,16 @@
       "includes": ["**/globals.css", "**/*.tailwind.css"],
       "linter": { "enabled": false },
       "formatter": { "enabled": false }
+    },
+    {
+      "includes": ["**/SymbolGrid.tsx", "**/SymbolTrack.tsx"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
     }
   ]
 }

@@ -19,7 +19,7 @@ const safe = async (statement) => {
   try {
     await statement();
   } catch (err) {
-    if (["42P07", "42710"].includes(err.code)) {
+    if (["42P07", "42710", "42701"].includes(err.code)) {
       console.log(`✅ Skipping existing object: ${err.message}`);
     } else {
       throw err;
@@ -28,12 +28,18 @@ const safe = async (statement) => {
 };
 
 const safeConstraint = async (statement, name) => {
+  const existing = await sql`
+    SELECT 1 FROM pg_constraint WHERE conname = ${name} LIMIT 1;
+  `;
+  if (existing.length > 0) {
+    console.log(`✅ Constraint ${name} already exists`);
+    return;
+  }
+
   try {
     await statement();
   } catch (err) {
-    if (err.code === "42710") {
-      console.log(`✅ Constraint ${name} already exists`);
-    } else if (err.code === "23505") {
+    if (err.code === "23505") {
       console.log(`⚠️ Constraint ${name} skipped: duplicate values exist`);
     } else {
       throw err;
@@ -42,13 +48,35 @@ const safeConstraint = async (statement, name) => {
 };
 
 try {
-  await safe(() => sql`CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public;`);
+  await safe(() =>
+    sql.unsafe(`CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public;`),
+  );
 
   await sql.unsafe(`DROP TABLE IF EXISTS tracks CASCADE;`);
   await sql.unsafe(`DROP TABLE IF EXISTS edits CASCADE;`);
   await sql.unsafe(`DROP TABLE IF EXISTS samples CASCADE;`);
   await sql.unsafe(`DROP TABLE IF EXISTS objectives CASCADE;`);
   await sql.unsafe(`DROP TABLE IF EXISTS lyrics CASCADE;`);
+
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS samples (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      name VARCHAR(255) NOT NULL UNIQUE,
+      src TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS edits (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      sample_id uuid NOT NULL REFERENCES samples(id) ON DELETE CASCADE,
+      name VARCHAR(255) NOT NULL,
+      symbols JSONB DEFAULT '[]',
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE(sample_id, name)
+    );
+  `);
 
   await sql.unsafe(`
     CREATE TABLE IF NOT EXISTS topics (
@@ -145,6 +173,27 @@ try {
   );
   await sql.unsafe(
     `ALTER TABLE perspectives DROP COLUMN IF EXISTS objective_id CASCADE;`,
+  );
+
+  await safe(() =>
+    sql.unsafe(
+      `ALTER TABLE perspectives ADD COLUMN IF NOT EXISTS audio_src TEXT;`,
+    ),
+  );
+  await safe(() =>
+    sql.unsafe(
+      `ALTER TABLE perspectives ADD COLUMN IF NOT EXISTS start_time DOUBLE PRECISION;`,
+    ),
+  );
+  await safe(() =>
+    sql.unsafe(
+      `ALTER TABLE perspectives ADD COLUMN IF NOT EXISTS end_time DOUBLE PRECISION;`,
+    ),
+  );
+  await safe(() =>
+    sql.unsafe(
+      `ALTER TABLE perspectives ADD COLUMN IF NOT EXISTS symbols JSONB DEFAULT '[]';`,
+    ),
   );
 
   await sql.end();

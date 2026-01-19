@@ -6,7 +6,7 @@ interface WordGradientSVGProps {
   fontFamily?: string;
   fontWeight?: string | number;
   gradientStops: { offset: string; color: string }[];
-  width?: number; // Optional fixed width
+  width?: number;
 }
 
 export const WordGradientSVG: React.FC<WordGradientSVGProps> = ({
@@ -18,7 +18,7 @@ export const WordGradientSVG: React.FC<WordGradientSVGProps> = ({
   width,
 }) => {
   const estimatedWidth = fontSize * text.length * 0.85;
-  const svgWidth = width ?? estimatedWidth + fontSize * 0.5; // add buffer
+  const svgWidth = width ?? estimatedWidth + fontSize * 0.5;
   const svgHeight = fontSize * 1.5;
   return (
     <svg

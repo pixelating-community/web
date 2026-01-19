@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export const Video = ({ url }: { url: string }) => {
+export const Video = ({ url }: { url: string | null }) => {
   const ref = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -25,6 +25,8 @@ export const Video = ({ url }: { url: string }) => {
 
     playVideo();
   }, [url]);
+
+  if (!url) return null;
 
   return (
     <video

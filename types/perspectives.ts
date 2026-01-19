@@ -1,12 +1,5 @@
 import type { UUID } from "node:crypto";
-
-export type PerspectiveLyric = {
-  id?: UUID;
-  lyric: string;
-  timestamp: number;
-  style?: string;
-  url?: string;
-};
+import type { Cue } from "@/types/symbol";
 
 export type Perspective = {
   id: UUID;
@@ -16,14 +9,11 @@ export type Perspective = {
   description?: string;
   width?: number;
   height?: number;
-  sample_id?: UUID;
-  edit_id?: UUID;
-  track_id?: UUID;
-  track_src?: string;
   collection_id?: UUID;
-  start?: number;
-  end?: number;
-  lyrics?: PerspectiveLyric[][];
+  audio_src?: string;
+  start_time?: number;
+  end_time?: number;
+  symbols?: Cue[];
 };
 
 export type WritePerspectiveProps = {

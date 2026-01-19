@@ -20,10 +20,14 @@ services:
       target: dev
     ports:
       - "3000:3000"
-      - "9229:9229"
+      - "9230:9230"
     volumes:
-      - ./:/app
+      - ./:/app:cached
+      - /app/.pnpm-store
+      - /app/infra/.terraform
     env_file: .env
+    environment:
+      NODE_OPTIONS: --max-old-space-size=4096
     depends_on:
       postgres:
         condition: service_healthy

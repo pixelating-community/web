@@ -1,0 +1,41 @@
+"use server";
+
+import type { UUID } from "node:crypto";
+import { revalidatePath } from "next/cache";
+import { z } from "zod/v4";
+import { sql } from "@/lib/db";
+import type { Cue } from "@/types/symbol";
+
+export const addSymbol = async ({
+  perspectiveId,
+  symbol,
+}: {
+  perspectiveId: UUID;
+  symbol: Cue;
+}) => {
+  try {
+    const schema = z.object({
+      perspectiveId: z.uuid(),
+    });
+
+    schema.parse({ perspectiveId });
+
+    const symbolWithId = {
+      ...symbol,
+      id: symbol.id || crypto.randomUUID(),
+    };
+
+    await sql`
+      UPDATE perspectives
+      SET symbols = COALESCE(symbols, '[]'::jsonb) || ${JSON.stringify([symbolWithId])}::jsonb,
+          updated_at = NOW()
+      WHERE id = ${perspectiveId};
+    `;
+
+    revalidatePath(`/p/${perspectiveId}`);
+    return { id: symbolWithId.id };
+  } catch (e) {
+    console.error(e);
+    return { error: "Failed to add symbol" };
+  }
+};

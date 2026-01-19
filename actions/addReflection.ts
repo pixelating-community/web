@@ -32,8 +32,15 @@ export const addReflection = async ({
     const isElevated = data.elKey && data.elKey === process.env.EL_KEY;
     const parentId = data.reflectionId ?? null;
 
-    // biome-ignore lint/suspicious/noExplicitAny: sql returns dynamic rows
-    let result: any[] = [];
+    type ReflectionRow = {
+      id: string;
+      perspective_id: string;
+      reflection_id: string | null;
+      text: string;
+      updated_at: string;
+      created_at: string;
+    };
+    let result: ReflectionRow[] = [];
     if (isElevated) {
       result = await sql`
         INSERT INTO reflections (perspective_id, reflection_id, text)
@@ -76,15 +83,11 @@ export const addReflection = async ({
       try {
         const cookieStore = await cookies();
         cookieStore.delete(getReflectionWriteCookieName(data.perspectiveId));
-      } catch {
-        // ignore cookie delete failures
-      }
+      } catch {}
     }
     try {
       broadcastSse(data.perspectiveId, result[0]);
-    } catch {
-      // best-effort broadcast
-    }
+    } catch {}
     return result[0];
   } catch (error) {
     console.log(`${error}`);

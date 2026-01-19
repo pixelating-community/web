@@ -92,9 +92,7 @@ export function Reflection({
       await addReflectionAction(reflectionId, replyContent);
       setIsReplying(false);
       setReplyText("");
-    } catch {
-      // ignore reply failure
-    }
+    } catch {}
   };
 
   return (

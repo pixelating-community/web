@@ -16,6 +16,11 @@ export const addPerspective = async ({
   formData: FormData;
 }) => {
   try {
+    const rawAudioSrc = formData.get("audio_src");
+    const audioSrcValue =
+      typeof rawAudioSrc === "string" && rawAudioSrc.trim().length > 0
+        ? rawAudioSrc.trim()
+        : null;
     if (!topicId) {
       throw new Error("Topic not found");
     }
@@ -24,12 +29,14 @@ export const addPerspective = async ({
       perspective: z.string().min(1),
       topicId: z.uuid(),
       name: z.string(),
+      audio_src: z.string().min(1).nullable().optional(),
     });
     const data = schema.parse({
       token: formData.get("token"),
       perspective: formData.get("perspective"),
       topicId,
       name,
+      audio_src: audioSrcValue,
     });
     const isLock = await isLocked({ id: topicId });
     const isValid = await sql`
@@ -43,8 +50,8 @@ export const addPerspective = async ({
 
     if (isValid.length > 0 && isValid[0]["?column?"] === true) {
       await sql`
-          INSERT INTO perspectives (perspective, topic_id)
-          VALUES (${data.perspective}, ${data.topicId});
+          INSERT INTO perspectives (perspective, topic_id, audio_src)
+          VALUES (${data.perspective}, ${data.topicId}, ${data.audio_src});
         `;
     }
 

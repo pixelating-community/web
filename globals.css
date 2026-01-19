@@ -6,6 +6,9 @@
   --color-red-100: oklch(48.12% 0.1674 23.04);
   --color-white: oklch(96% 0 329.29 / 95.05%);
   --color-black: oklch(0% 0 0 / 95.05%);
+  --color-neon-magenta: oklch(62% 0.32 327);
+  --color-neon-teal:    oklch(74% 0.12 195);
+  --color-neon-orange:  oklch(68% 0.21 35);
 }
 
 @layer utilities {
@@ -42,6 +45,7 @@ html {
 body {
   @apply text-purple-900;
   background: transparent;
+  font-size: clamp(0.8rem, 1.8vw, 1.8rem);
   margin: 0;
   padding: 0;
   min-height: 100%;
@@ -57,6 +61,17 @@ body::before {
   @apply bg-linear-to-r/oklch from-purple-500 to-pink-500;
 }
 
+p {
+  font-size: clamp(0.8rem, 1.8vw, 1.8rem);
+}
+
+
+em {
+    font-size: 0.85em;
+    line-height: 10px;
+    display: inline-block;
+}
+
 hr {
   @apply border-gray-700;
 }
@@ -67,17 +82,31 @@ hr {
 }
 
 .rainbow {
-  @apply bg-linear-to-r/oklch from-red-500  via-purple-500 to-pink-500 text-transparent;
+  @apply text-transparent bg-linear-to-r/oklch from-red-500 via-purple-500 to-pink-500;
   @apply bg-clip-text;
 }
 
 .neon {
-  @apply bg-linear-to-r/oklch from-lime-400 via-orange-400 to-fuchsia-400 text-transparent;
+  @apply text-transparent bg-linear-to-r/oklch from-lime-400 via-orange-400 to-fuchsia-400;
   @apply bg-clip-text;
   text-shadow:
     0 0 5px rgba(255, 255, 255, 0.5),
     0 0 10px rgba(0, 255, 255, 0.5),
     0 0 20px rgba(0, 255, 255, 0.9);
+}
+
+.neon-teal {
+  color: var(--color-neon-teal);
+  text-shadow:
+    0 0 6px color-mix(in oklch, var(--color-neon-teal), white 20%),
+    0 0 14px var(--color-neon-teal);
+}
+
+.neon-orange {
+  color: var(--color-neon-orange);
+  text-shadow:
+    0 0 6px color-mix(in oklch, var(--color-neon-orange), white 20%),
+    0 0 14px var(--color-neon-orange);
 }
 
 .line-through {
@@ -115,15 +144,15 @@ a {
 .md {
   p {
     margin: 0.625rem 0;
-    line-height: 1.25rem;
+    line-height: 1.5;
   }
 }
 
 @keyframes run-text {
   from {
-    width: 0%;
+    transform: scalex(0);
   }
   to {
-    width: 100%;
+    transform: scalex(1);
   }
 }

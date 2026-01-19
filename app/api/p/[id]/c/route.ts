@@ -14,9 +14,8 @@ export const POST = async (req: NextRequest, { params }: TParams) => {
     const ip = getClientIp(req.headers);
     const elKey = req.headers.get("x-el-key") ?? undefined;
 
-    // Stricter rate limit when using elKey to prevent brute force
     const limitKey = elKey ? `c:key:${ip}` : `c:${ip}:${id}`;
-    const limit = elKey ? 10 : 30; // 10 attempts/min with key, 30/min without
+    const limit = elKey ? 10 : 30;
     const rate = rateLimit(limitKey, limit, 60 * 1000);
     if (!rate.ok) {
       return NextResponse.json(

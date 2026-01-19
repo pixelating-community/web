@@ -38,7 +38,8 @@ export const getPerspectives = async ({
     }
 
     const perspectives =
-      await sql`SELECT p.id, perspective, p.topic_id, p.collection_id FROM perspectives as p
+      await sql`SELECT p.id, perspective, p.topic_id, p.collection_id, p.audio_src, p.start_time, p.end_time, p.symbols
+        FROM perspectives as p
         WHERE p.topic_id=${data.topic_id}
         ORDER BY p.id ${direction};`;
 
@@ -50,6 +51,26 @@ export const getPerspectives = async ({
           : perspective.perspective,
       topic_id: perspective.topic_id,
       collection_id: perspective.collection_id,
+      audio_src:
+        !data.is_locked ||
+        (isValid.length > 0 && isValid[0]["?column?"] === true)
+          ? (perspective.audio_src ?? null)
+          : null,
+      start_time:
+        !data.is_locked ||
+        (isValid.length > 0 && isValid[0]["?column?"] === true)
+          ? (perspective.start_time ?? null)
+          : null,
+      end_time:
+        !data.is_locked ||
+        (isValid.length > 0 && isValid[0]["?column?"] === true)
+          ? (perspective.end_time ?? null)
+          : null,
+      symbols:
+        !data.is_locked ||
+        (isValid.length > 0 && isValid[0]["?column?"] === true)
+          ? (perspective.symbols ?? [])
+          : [],
     }));
   } catch (e) {
     console.log(e, { message: "Failed to get perspectives" });
