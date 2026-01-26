@@ -16,7 +16,7 @@ export const Perspectives = ({ perspectives, link }) => {
             id={p.id}
             className="flex justify-center min-w-[80vw] snap-center p-4"
           >
-            <div className="flex flex-col justify-center w-full items-center">
+            <div className="flex flex-col items-center justify-center w-full">
               {p.collection_id && (
                 <div className="flex w-full">
                   <Collect
@@ -28,7 +28,7 @@ export const Perspectives = ({ perspectives, link }) => {
               <div
                 className={`flex flex-col w-full center whitespace-pre-line has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20`}
               >
-                <div className="flex">
+                <div className="flex flex-col">
                   <Markdown remarkPlugins={[remarkGfm]}>
                     {p.perspective}
                   </Markdown>

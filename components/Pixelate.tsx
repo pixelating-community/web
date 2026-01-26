@@ -180,11 +180,11 @@ export const Pixelate = () => {
   return (
     <div className="min-h-screen p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="p-4 sm:p-6 mb-6">
+        <div className="p-4 mb-6 sm:p-6">
           <div className="mb-6 text-center">
             <label
               htmlFor="file"
-              className="inline-block text-sm font-medium text-gray-700 mb-3 cursor-pointer"
+              className="inline-block mb-3 text-sm font-medium text-gray-700 cursor-pointer"
             >
               📂
             </label>
@@ -199,7 +199,7 @@ export const Pixelate = () => {
           <div className="mb-6">
             <label
               htmlFor="pixel-size"
-              className="block text-sm font-medium text-gray-700 mb-2 text-center"
+              className="block mb-2 text-sm font-medium text-center text-gray-700"
             >
               🎚️
             </label>
@@ -210,7 +210,7 @@ export const Pixelate = () => {
               max="50"
               value={pixelSize}
               onChange={(e) => setPixelSize(Number(e.target.value))}
-              className="w-full h-3 bg-[#ededed] rounded-lg appearance-none cursor-pointer accent-purple-500"
+              className="w-full appearance-none cursor-pointer bg-orange-500 h-1 rounded-lg accent-[#6e11b0]"
             />
           </div>
           {hasImage && (

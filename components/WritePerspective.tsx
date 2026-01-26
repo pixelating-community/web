@@ -132,7 +132,7 @@ export function WritePerspective({
             }
             className="flex justify-center min-w-[80vw] snap-center p-4"
           >
-            <div className="flex flex-col justify-center w-full items-center">
+            <div className="flex flex-col items-center justify-center w-full">
               {p.collection_id && (
                 <div className="flex w-full">
                   <Collect
@@ -251,7 +251,7 @@ export function WritePerspective({
         )}
       </div>
 
-      <div className="flex flex-col items-center w-4/5 mx-auto py-2 shrink-0">
+      <div className="flex flex-col items-center w-4/5 py-2 mx-auto shrink-0">
         <div className="flex flex-col items-center w-full mb-2">
           <div className="flex w-full h-full">
             <div className="flex flex-col h-full">
@@ -270,8 +270,8 @@ export function WritePerspective({
                   </button>
                 ))}
             </div>
-            <div className="flex h-full grow w-full ml-1 md:w-10/12">
-              <div className="ml-2 w-4 h-4">
+            <div className="flex w-full h-full ml-1 grow md:w-10/12">
+              <div className="w-4 h-4 ml-2">
                 {focus && characters > MAX_LENGTH / 4 && (
                   <span className="text-xs text-shadow-2xs text-shadow-neutral-200/20">
                     {characters}/{MAX_LENGTH}
@@ -287,14 +287,7 @@ export function WritePerspective({
             onClick={handleSubmit}
             disabled={!perspectiveText}
             data-testid="submit"
-            className="
-              inline-flex items-center justify-center
-              mt-1 p-2
-              dark:bg-slate-300/10
-              focus:dark:bg-slate-300/10
-              outline-none border-0
-              disabled:opacity-30 disabled:cursor-not-allowed
-            "
+            className="inline-flex items-center justify-center p-2 mt-1 border-0 outline-none dark:bg-slate-300/10 focus:dark:bg-slate-300/10 disabled:opacity-30 disabled:cursor-not-allowed"
           >
             {btnText}
           </button>
