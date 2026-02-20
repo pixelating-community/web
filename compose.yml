@@ -1,36 +1,44 @@
+name: web
+
 services:
   postgres:
     image: postgres:18-alpine3.22
     container_name: postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
       interval: 15s
       start_period: 30s
 
-  app:
-    container_name: app
+  web:
+    container_name: web
     build:
       context: .
       target: dev
     ports:
       - "3000:3000"
-      - "9230:9230"
+      - "9229:9229"
+    command:
+      [
+        "sh",
+        "-lc",
+        "bun run dev:inspect & pid=$!; bun run debug:arm || true; wait $$pid",
+      ]
     volumes:
       - ./:/app:cached
-      - /app/.pnpm-store
-      - /app/infra/.terraform
+      - node_modules_data:/app/node_modules
     env_file: .env
-    environment:
-      NODE_OPTIONS: --max-old-space-size=4096
     depends_on:
       postgres:
         condition: service_healthy
 
 volumes:
   postgres_data:
+    name: web_postgres_data
+  node_modules_data:
+    name: web_node_modules_data

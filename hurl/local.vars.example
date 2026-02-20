@@ -1,0 +1,5 @@
+base_url=http://localhost:3000
+EL_KEY=replace-with-EL_KEY-from-.env
+topic_name=hurl-test
+topic_token=test
+topic_locked=true

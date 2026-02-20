@@ -1,0 +1,51 @@
+enable_cloudflare = false
+cloudflare_api_token = "cf_api_token_here"
+zone_id              = "cloudflare_zone_id_here"
+account_id           = "cloudflare_account_id_here"
+domain               = "pixelat.ing"
+r2_wav_bucket        = "audio"
+configure_cloudflare_https_settings = false
+create_cloudflare_origin_ca_certificate = false
+cloudflare_origin_ca_requested_validity = 5475
+cloudflare_origin_ca_hostnames = ["pixelat.ing", "*.pixelat.ing"]
+
+hcloud_token             = "hcloud_token_here"
+enable_hetzner           = true
+hetzner_server_name      = "pixelating-web"
+hetzner_server_type      = "cpx21"
+hetzner_server_image     = "ubuntu-24.04"
+hetzner_server_location  = null
+hetzner_enable_backups   = true
+hetzner_ssh_public_keys  = ["ssh-ed25519 AAAA... your-key"]
+
+create_hetzner_cloudflare_dns = false
+create_hetzner_cloudflare_preview_dns = false
+enable_preview_hostname       = true
+preview_subdomain             = "we"
+
+enable_app_bootstrap = true
+app_repo_url         = "https://github.com/pixelating-community/web.git"
+app_repo_branch      = "main"
+app_repo_path        = "/var/www/web"
+app_compose_file     = "production.yml"
+app_port             = 3000
+
+# Optional: full contents of your production .env for /var/www/web/.env
+app_env_content = <<-EOT
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=replace-me
+POSTGRES_DB=postgres
+REQUIRE_EXISTING_DATA=0
+# VITE_OBJ_BASE_URL is auto-set to the R2 custom-domain URL during bootstrap.
+EOT
+
+# Nginx reverse proxy + limits
+nginx_limit_req_rate       = "30r/s"
+nginx_limit_req_burst      = 60
+nginx_api_limit_req_rate   = "10r/s"
+nginx_api_limit_req_burst  = 25
+nginx_admin_limit_req_rate = "1r/s"
+nginx_admin_limit_req_burst = 5
+nginx_limit_conn_per_ip    = 40
+nginx_client_max_body_size = "25m"
+nginx_restrict_direct_origin_access = false

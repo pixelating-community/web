@@ -1,42 +1,21 @@
-FROM public.ecr.aws/docker/library/node:24-alpine AS base
-RUN apk add --no-cache libc6-compat
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@latest --activate
+FROM oven/bun:1.3.9 AS base
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm config set store-dir /pnpm/store
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm fetch
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --offline --frozen-lockfile
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-FROM base AS dev
-ENV NODE_ENV=development
-ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=deps /app/node_modules ./node_modules
+FROM deps AS dev
 COPY . .
-CMD ["pnpm", "run", "dev"]
+EXPOSE 3000
+CMD ["bun", "run", "dev"]
 
-FROM base AS builder
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-COPY --from=deps /app/node_modules ./node_modules
+FROM deps AS build
 COPY . .
-RUN --mount=type=secret,id=NEXT_SERVER_ACTIONS_ENCRYPTION_KEY \
-  NEXT_SERVER_ACTIONS_ENCRYPTION_KEY="$(cat /run/secrets/NEXT_SERVER_ACTIONS_ENCRYPTION_KEY)" \
-  pnpm run build
+RUN bun run build
 
-FROM base AS runner
+FROM base AS prod
 WORKDIR /app
-ENV NODE_ENV=production
-RUN addgroup --system --gid 1001 nodejs \
- && adduser --system --uid 1001 nextjs
-COPY --chown=nextjs:nodejs entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-USER nextjs
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["node", "server.js"]
+COPY --from=build /app .
+EXPOSE 3000
+CMD ["bun", "run", "start"]

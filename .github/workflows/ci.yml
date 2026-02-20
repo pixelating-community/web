@@ -1,10 +1,26 @@
 name: ci
+
 on:
+  workflow_dispatch:
   push:
-    branches: ["main"]
-    tags: ["v*.*.*"]
-  pull_request:
-    branches: ["main"]
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - production.yml
+      - compose.yml
+      - package.json
+      - bun.lock
+      - src/**
+      - app/**
+      - public/**
+      - scripts/**
+      - .github/workflows/ci.yml
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
 
 env:
   REGISTRY: ghcr.io
@@ -16,108 +32,338 @@ jobs:
     permissions:
       contents: read
       packages: write
-      id-token: write
     outputs:
-      sha: ${{ steps.set-sha.outputs.sha }}
+      web_image: ${{ steps.image.outputs.web_image }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get commit SHA
-        id: set-sha
-        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-
-      - name: Install cosign
-        if: github.event_name != 'pull_request'
-        uses: sigstore/cosign-installer@v2
-        with:
-          cosign-release: "v2.2.4"
+      - name: Set image metadata
+        id: image
+        run: |
+          set -euo pipefail
+          IMAGE_REPO="${REGISTRY}/${IMAGE_NAME,,}"
+          IMAGE_SHA_TAG="sha-${GITHUB_SHA}"
+          echo "image_repo=${IMAGE_REPO}" >> "$GITHUB_OUTPUT"
+          echo "image_sha_tag=${IMAGE_SHA_TAG}" >> "$GITHUB_OUTPUT"
+          echo "web_image=${IMAGE_REPO}:${IMAGE_SHA_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker-container
 
-      - name: Log into registry
+      - name: Log into GHCR
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push app
-        uses: docker/build-push-action@v5
+      - name: Build and push production image
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
+          target: prod
+          push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.set-sha.outputs.sha }}
+            ${{ steps.image.outputs.web_image }}
+            ${{ steps.image.outputs.image_repo }}:main
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          secrets: |
-            NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}
-
-      - name: Sign published images
-        if: github.event_name != 'pull_request'
-        run: |
-          set -xe
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
-          cosign sign --yes ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.set-sha.outputs.sha }}
 
   deploy:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+    concurrency:
+      group: deploy-hetzner-production
+      cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup SSH
+      - name: Fetch required deploy secrets from Vault (OIDC)
+        id: vault_deploy
+        if: ${{ vars.VAULT_ADDR != '' && vars.VAULT_ROLE != '' }}
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ vars.VAULT_ADDR }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          method: jwt
+          path: ${{ vars.VAULT_AUTH_PATH || 'jwt' }}
+          role: ${{ vars.VAULT_ROLE }}
+          jwtGithubAudience: ${{ vars.VAULT_GITHUB_AUDIENCE || format('https://github.com/{0}', github.repository_owner) }}
+          secrets: |
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} host | HOST ;
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} username | USERNAME ;
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} ssh_private_key | KEY ;
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} ssh_port | PORT ;
+
+      - name: Fetch optional deploy secrets from Vault (OIDC)
+        id: vault_optional
+        if: ${{ vars.VAULT_ADDR != '' && vars.VAULT_ROLE != '' }}
+        continue-on-error: true
+        uses: hashicorp/vault-action@v2
+        with:
+          url: ${{ vars.VAULT_ADDR }}
+          namespace: ${{ vars.VAULT_NAMESPACE }}
+          method: jwt
+          path: ${{ vars.VAULT_AUTH_PATH || 'jwt' }}
+          role: ${{ vars.VAULT_ROLE }}
+          jwtGithubAudience: ${{ vars.VAULT_GITHUB_AUDIENCE || format('https://github.com/{0}', github.repository_owner) }}
+          secrets: |
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} app_env_content | APP_ENV_CONTENT ;
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} cf_zone_id | CF_ZONE_ID ;
+            ${{ vars.VAULT_SECRET_PATH || 'secret/data/pixelating/web/deploy' }} cf_api_token | CF_API_TOKEN ;
+
+      - name: Report secret source
+        env:
+          VAULT_ENABLED: ${{ vars.VAULT_ADDR != '' && vars.VAULT_ROLE != '' && 'true' || 'false' }}
+          HOST_SOURCE: ${{ steps.vault_deploy.outputs.HOST != '' && 'vault' || (secrets.HOST != '' && 'github' || 'missing') }}
+          USERNAME_SOURCE: ${{ steps.vault_deploy.outputs.USERNAME != '' && 'vault' || (secrets.USERNAME != '' && 'github' || 'missing') }}
+          KEY_SOURCE: ${{ steps.vault_deploy.outputs.KEY != '' && 'vault' || (secrets.KEY != '' && 'github' || 'missing') }}
+          PORT_SOURCE: ${{ steps.vault_deploy.outputs.PORT != '' && 'vault' || (secrets.PORT != '' && 'github' || 'missing') }}
+          APP_ENV_CONTENT_SOURCE: ${{ steps.vault_optional.outputs.APP_ENV_CONTENT != '' && 'vault' || (secrets.APP_ENV_CONTENT != '' && 'github' || 'missing') }}
+          CF_ZONE_ID_SOURCE: ${{ steps.vault_optional.outputs.CF_ZONE_ID != '' && 'vault' || (vars.CF_ZONE_ID != '' && 'github_var' || (secrets.CF_ZONE_ID != '' && 'github' || 'missing')) }}
+          CF_API_TOKEN_SOURCE: ${{ steps.vault_optional.outputs.CF_API_TOKEN != '' && 'vault' || (secrets.CF_API_TOKEN != '' && 'github' || 'missing') }}
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.KEY }}" > ~/.ssh/key
-          chmod 600 ~/.ssh/key
-          ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          set -euo pipefail
+          echo "Vault enabled: ${VAULT_ENABLED}"
+          echo "HOST source: ${HOST_SOURCE}"
+          echo "USERNAME source: ${USERNAME_SOURCE}"
+          echo "KEY source: ${KEY_SOURCE}"
+          echo "PORT source: ${PORT_SOURCE}"
+          echo "APP_ENV_CONTENT source: ${APP_ENV_CONTENT_SOURCE}"
+          echo "CF_ZONE_ID source: ${CF_ZONE_ID_SOURCE}"
+          echo "CF_API_TOKEN source: ${CF_API_TOKEN_SOURCE}"
 
-          echo '#!/bin/sh' > /tmp/askpass.sh
-          echo "echo \"\$SSH_PASSPHRASE\"" >> /tmp/askpass.sh
-          chmod +x /tmp/askpass.sh
+          {
+            echo "### Deploy secret source summary"
+            echo "- Vault configured: \`${VAULT_ENABLED}\`"
+            echo "- HOST: \`${HOST_SOURCE}\`"
+            echo "- USERNAME: \`${USERNAME_SOURCE}\`"
+            echo "- KEY: \`${KEY_SOURCE}\`"
+            echo "- PORT: \`${PORT_SOURCE}\`"
+            echo "- APP_ENV_CONTENT: \`${APP_ENV_CONTENT_SOURCE}\`"
+            echo "- CF_ZONE_ID: \`${CF_ZONE_ID_SOURCE}\`"
+            echo "- CF_API_TOKEN: \`${CF_API_TOKEN_SOURCE}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
 
-          eval $(ssh-agent)
-          SSH_PASSPHRASE="${{ secrets.PASSPHRASE }}" SSH_ASKPASS=/tmp/askpass.sh SSH_ASKPASS_REQUIRE=force ssh-add ~/.ssh/key
-
-          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> $GITHUB_ENV
-
-      - name: Copy production.yml
-        run: scp production.yml ${{ secrets.USERNAME }}@${{ secrets.HOST }}:/tmp/production.yml
-
-      - name: Deploy
+      - name: Validate required secrets
+        env:
+          HOST: ${{ steps.vault_deploy.outputs.HOST || secrets.HOST }}
+          USERNAME: ${{ steps.vault_deploy.outputs.USERNAME || secrets.USERNAME }}
+          KEY: ${{ steps.vault_deploy.outputs.KEY || secrets.KEY }}
+          HOST_SOURCE: ${{ steps.vault_deploy.outputs.HOST != '' && 'vault' || (secrets.HOST != '' && 'github' || 'missing') }}
+          USERNAME_SOURCE: ${{ steps.vault_deploy.outputs.USERNAME != '' && 'vault' || (secrets.USERNAME != '' && 'github' || 'missing') }}
+          KEY_SOURCE: ${{ steps.vault_deploy.outputs.KEY != '' && 'vault' || (secrets.KEY != '' && 'github' || 'missing') }}
+          APP_ENV_CONTENT: ${{ steps.vault_optional.outputs.APP_ENV_CONTENT || secrets.APP_ENV_CONTENT }}
+          APP_ENV_CONTENT_SOURCE: ${{ steps.vault_optional.outputs.APP_ENV_CONTENT != '' && 'vault' || (secrets.APP_ENV_CONTENT != '' && 'github' || 'missing') }}
+          ALLOW_EMPTY_APP_ENV_CONTENT: ${{ vars.ALLOW_EMPTY_APP_ENV_CONTENT }}
+          REQUIRE_VAULT_SECRETS: ${{ vars.REQUIRE_VAULT_SECRETS }}
         run: |
-          ssh ${{ secrets.USERNAME }}@${{ secrets.HOST }} "
-            set -e
-            create_secret() { docker secret inspect \"\$1\" >/dev/null 2>&1 || printf '%s' \"\$2\" | docker secret create \"\$1\" -; }
-            create_secret POSTGRES_USER '${{ secrets.POSTGRES_USER }}'
-            create_secret POSTGRES_PASSWORD '${{ secrets.POSTGRES_PASSWORD }}'
-            create_secret POSTGRES_DB '${{ secrets.POSTGRES_DB }}'
-            create_secret EL_KEY '${{ secrets.EL_KEY }}'
-            create_secret NEXT_PUBLIC_URL '${{ secrets.NEXT_PUBLIC_URL }}'
-            create_secret NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY '${{ secrets.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}'
-            create_secret NEXT_SERVER_ACTIONS_ENCRYPTION_KEY '${{ secrets.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY }}'
-            create_secret STRIPE_SECRET_KEY '${{ secrets.STRIPE_SECRET_KEY }}'
-            create_secret STRIPE_WEBHOOK_SECRET '${{ secrets.STRIPE_WEBHOOK_SECRET }}'
-            create_secret REFLECTION_ACCESS_SECRET '${{ secrets.REFLECTION_ACCESS_SECRET }}'
-            create_secret SSE_BROADCAST_KEY '${{ secrets.SSE_BROADCAST_KEY }}'
+          set -euo pipefail
+          missing=0
+          if [ -z "${HOST:-}" ]; then
+            echo "::error::Missing HOST (source=${HOST_SOURCE}). Set Vault key 'host' or GitHub secret HOST."
+            missing=1
+          fi
+          if [ -z "${USERNAME:-}" ]; then
+            echo "::error::Missing USERNAME (source=${USERNAME_SOURCE}). Set Vault key 'username' or GitHub secret USERNAME."
+            missing=1
+          fi
+          if [ -z "${KEY:-}" ]; then
+            echo "::error::Missing KEY (source=${KEY_SOURCE}). Set Vault key 'ssh_private_key' or GitHub secret KEY."
+            missing=1
+          fi
+          if [ "${missing}" -ne 0 ]; then
+            exit 1
+          fi
 
-            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.sha }}
-            cd /tmp && WEB_SHA=${{ needs.build.outputs.sha }} docker stack deploy -c production.yml web --with-registry-auth
-            docker container prune -f || true
-            docker image prune -f || true
-          "
+          if [ "${REQUIRE_VAULT_SECRETS:-false}" = "true" ]; then
+            if [ "${HOST_SOURCE}" != "vault" ] || [ "${USERNAME_SOURCE}" != "vault" ] || [ "${KEY_SOURCE}" != "vault" ]; then
+              echo "::error::REQUIRE_VAULT_SECRETS=true, but one or more required deploy secrets came from fallback sources."
+              echo "::error::Sources: HOST=${HOST_SOURCE} USERNAME=${USERNAME_SOURCE} KEY=${KEY_SOURCE}"
+              exit 1
+            fi
+            if [ "${ALLOW_EMPTY_APP_ENV_CONTENT:-false}" != "true" ] && [ "${APP_ENV_CONTENT_SOURCE}" != "vault" ]; then
+              echo "::error::REQUIRE_VAULT_SECRETS=true and ALLOW_EMPTY_APP_ENV_CONTENT!=true, but APP_ENV_CONTENT was not loaded from Vault."
+              echo "::error::APP_ENV_CONTENT source: ${APP_ENV_CONTENT_SOURCE}"
+              exit 1
+            fi
+          fi
 
-      - name: Purge Cloudflare cache
+          if [ "${ALLOW_EMPTY_APP_ENV_CONTENT:-false}" != "true" ] && [ -z "${APP_ENV_CONTENT:-}" ]; then
+            echo "::error::APP_ENV_CONTENT is empty (source=${APP_ENV_CONTENT_SOURCE}). Set Vault key 'app_env_content' or GitHub secret APP_ENV_CONTENT."
+            exit 1
+          fi
+
+      - name: Configure SSH
+        env:
+          HOST: ${{ steps.vault_deploy.outputs.HOST || secrets.HOST }}
+          PORT: ${{ steps.vault_deploy.outputs.PORT || secrets.PORT }}
+          KEY: ${{ steps.vault_deploy.outputs.KEY || secrets.KEY }}
         run: |
-          curl -X POST "https://api.cloudflare.com/client/v4/zones/${{ secrets.CF_ZONE_ID }}/purge_cache" \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
+          set -euo pipefail
+          SSH_PORT="${PORT:-22}"
+
+          install -d -m 700 ~/.ssh
+          # Support private keys stored either with real newlines or literal "\n".
+          if printf '%s' "${KEY}" | grep -q '\\n'; then
+            printf '%b' "${KEY}" > ~/.ssh/id_ed25519
+          else
+            printf '%s\n' "${KEY}" > ~/.ssh/id_ed25519
+          fi
+          tr -d '\r' < ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.tmp
+          mv ~/.ssh/id_ed25519.tmp ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keygen -y -f ~/.ssh/id_ed25519 >/dev/null
+
+          ssh-keyscan -T 15 -p "${SSH_PORT}" -H "${HOST}" >> ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Validate SSH authentication
+        env:
+          HOST: ${{ steps.vault_deploy.outputs.HOST || secrets.HOST }}
+          PORT: ${{ steps.vault_deploy.outputs.PORT || secrets.PORT }}
+          USERNAME: ${{ steps.vault_deploy.outputs.USERNAME || secrets.USERNAME }}
+        run: |
+          set -euo pipefail
+          SSH_PORT="${PORT:-22}"
+          ssh -i ~/.ssh/id_ed25519 -p "${SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            "${USERNAME}@${HOST}" "echo 'SSH authentication successful'"
+
+      - name: Deploy on server
+        env:
+          HOST: ${{ steps.vault_deploy.outputs.HOST || secrets.HOST }}
+          PORT: ${{ steps.vault_deploy.outputs.PORT || secrets.PORT }}
+          USERNAME: ${{ steps.vault_deploy.outputs.USERNAME || secrets.USERNAME }}
+          APP_ENV_CONTENT: ${{ steps.vault_optional.outputs.APP_ENV_CONTENT || secrets.APP_ENV_CONTENT }}
+          APP_ENV_CONTENT_SOURCE: ${{ steps.vault_optional.outputs.APP_ENV_CONTENT != '' && 'vault' || (secrets.APP_ENV_CONTENT != '' && 'github' || 'missing') }}
+          DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+          DEPLOY_COMPOSE_FILE: ${{ vars.DEPLOY_COMPOSE_FILE }}
+          WEB_IMAGE: ${{ needs.build.outputs.web_image }}
+          GHCR_USERNAME: ${{ github.actor }}
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SSH_PORT="${PORT:-22}"
+          APP_DIR="${DEPLOY_PATH:-/var/www/web}"
+          COMPOSE_FILE="${DEPLOY_COMPOSE_FILE:-production.yml}"
+
+          if [ ! -f "${COMPOSE_FILE}" ]; then
+            echo "Compose file not found in repo: ${COMPOSE_FILE}" >&2
+            exit 1
+          fi
+
+          COMPOSE_CONTENT_B64="$(base64 < "${COMPOSE_FILE}" | tr -d '\n')"
+          APP_ENV_CONTENT_B64="$(printf '%s' "${APP_ENV_CONTENT:-}" | base64 | tr -d '\n')"
+          APP_ENV_CONTENT_BYTES="$(printf '%s' "${APP_ENV_CONTENT:-}" | wc -c | tr -d '[:space:]')"
+          APP_ENV_CONTENT_SHA256="$(printf '%s' "${APP_ENV_CONTENT:-}" | sha256sum | awk '{print $1}')"
+
+          echo "Deploying with APP_ENV_CONTENT source=${APP_ENV_CONTENT_SOURCE} bytes=${APP_ENV_CONTENT_BYTES}"
+
+          ssh -i ~/.ssh/id_ed25519 -p "${SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            "${USERNAME}@${HOST}" \
+            "APP_DIR='${APP_DIR}' COMPOSE_FILE='${COMPOSE_FILE}' COMPOSE_CONTENT_B64='${COMPOSE_CONTENT_B64}' APP_ENV_CONTENT_B64='${APP_ENV_CONTENT_B64}' APP_ENV_CONTENT_BYTES='${APP_ENV_CONTENT_BYTES}' APP_ENV_CONTENT_SHA256='${APP_ENV_CONTENT_SHA256}' APP_ENV_CONTENT_SOURCE='${APP_ENV_CONTENT_SOURCE}' WEB_IMAGE='${WEB_IMAGE}' GHCR_USERNAME='${GHCR_USERNAME}' GHCR_TOKEN='${GHCR_TOKEN}' bash -se" <<'REMOTE'
+          set -euo pipefail
+
+          if ! command -v docker >/dev/null 2>&1; then
+            apt-get update
+            apt-get install -y ca-certificates curl nginx docker.io docker-compose-plugin
+            systemctl enable --now docker
+            systemctl enable --now nginx
+          fi
+
+          install -d -m 0755 "${APP_DIR}"
+          printf '%s' "${COMPOSE_CONTENT_B64}" | base64 --decode > "${APP_DIR}/${COMPOSE_FILE}"
+          chmod 644 "${APP_DIR}/${COMPOSE_FILE}"
+
+          previous_env_sha=""
+          if [ -f "${APP_DIR}/.env" ]; then
+            previous_env_sha="$(sha256sum "${APP_DIR}/.env" | awk '{print $1}')"
+          fi
+
+          if [ -n "${APP_ENV_CONTENT_B64:-}" ]; then
+            printf '%s' "${APP_ENV_CONTENT_B64}" | base64 --decode > "${APP_DIR}/.env"
+            chmod 600 "${APP_DIR}/.env"
+
+            new_env_bytes="$(wc -c < "${APP_DIR}/.env" | tr -d '[:space:]')"
+            new_env_sha="$(sha256sum "${APP_DIR}/.env" | awk '{print $1}')"
+
+            if [ "${APP_ENV_CONTENT_BYTES:-0}" != "${new_env_bytes}" ] || [ "${APP_ENV_CONTENT_SHA256:-}" != "${new_env_sha}" ]; then
+              echo "::error::.env write verification failed."
+              echo "::error::source=${APP_ENV_CONTENT_SOURCE:-unknown} expected_bytes=${APP_ENV_CONTENT_BYTES:-unknown} actual_bytes=${new_env_bytes}"
+              exit 1
+            fi
+
+            if [ -n "${previous_env_sha}" ] && [ "${previous_env_sha}" = "${new_env_sha}" ]; then
+              echo ".env unchanged (${new_env_bytes} bytes) source=${APP_ENV_CONTENT_SOURCE:-unknown}"
+            else
+              echo ".env updated (${new_env_bytes} bytes) source=${APP_ENV_CONTENT_SOURCE:-unknown}"
+            fi
+          else
+            echo "APP_ENV_CONTENT is empty; leaving ${APP_DIR}/.env unchanged."
+          fi
+
+          if [ -n "${GHCR_TOKEN:-}" ]; then
+            printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
+          fi
+
+          cd "${APP_DIR}"
+          WEB_IMAGE="${WEB_IMAGE}" docker compose -f "${COMPOSE_FILE}" pull web
+          WEB_IMAGE="${WEB_IMAGE}" docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans --no-deps --force-recreate web
+          docker compose -f "${COMPOSE_FILE}" ps
+          docker compose -f "${COMPOSE_FILE}" exec -T web sh -lc '
+            for key in VITE_OBJ_BASE_URL POSTGRES_USER POSTGRES_DB; do
+              value="$(printenv "$key" 2>/dev/null || true)"
+              if [ -n "$value" ]; then
+                echo "$key=<set>"
+              else
+                echo "::warning::$key is missing in running web container"
+              fi
+            done
+          '
+          docker image prune -f || true
+
+          if [ -n "${GHCR_TOKEN:-}" ]; then
+            docker logout ghcr.io || true
+          fi
+          REMOTE
+
+      - name: Purge Cloudflare cache (optional)
+        env:
+          CF_ZONE_ID: ${{ steps.vault_optional.outputs.CF_ZONE_ID || vars.CF_ZONE_ID || secrets.CF_ZONE_ID }}
+          CF_API_TOKEN: ${{ steps.vault_optional.outputs.CF_API_TOKEN || secrets.CF_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_ZONE_ID:-}" ] || [ -z "${CF_API_TOKEN:-}" ]; then
+            echo "Cloudflare cache purge skipped (CF_ZONE_ID or CF_API_TOKEN missing)."
+            exit 0
+          fi
+
+          response="$(curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data '{"purge_everything":true}'
+            --data '{"purge_everything":true}')"
+
+          if printf '%s' "${response}" | jq -e '.success == true' >/dev/null 2>&1; then
+            echo "Cloudflare cache purged."
+            exit 0
+          fi
+
+          echo "::warning::Cloudflare cache purge returned a non-success response."
+          echo "${response}"

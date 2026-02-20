@@ -1,61 +1,16 @@
-# 👾
+# web
 
-[![ci](https://github.com/pixelating-community/web/actions/workflows/ci.yml/badge.svg)](https://github.com/pixelating-community/web/actions/workflows/ci.yml)
+Quickstart only.
 
-## prerequisites
+1. Start local stack:
+   `docker compose -f compose.yml up --build`
+2. Run lint:
+   `docker compose -f compose.yml exec web bun run lint`
+3. Run typecheck:
+   `docker compose -f compose.yml exec web bun run typecheck`
+4. Run tests:
+   `docker compose -f compose.yml exec web bun run test`
+5. Run build:
+   `docker compose -f compose.yml exec web bun run build`
 
-```sh
-brew install orbstack
-```
-
-## dev (docker compose)
-
-```sh
-cp .env.sample .env
-# set POSTGRES_PASSWORD (and any app vars you need) in .env
-orb
-docker compose up --build
-```
-
-app: http://localhost:3000
-node inspector: localhost:9229
-
-## lint
-
-```sh
-docker compose exec app npm run lint
-```
-
-## format
-
-```sh
-docker compose exec app npm run format
-```
-
-```sh
-docker compose run --rm app npm install
-docker compose build app
-docker compose up -d
-```
-
-## dev migrate
-
-```sh
-docker compose exec app npm install --no-save postgres && node /app/migrations/migrate.mjs
-```
-
-## ci
-
-```sh
-.github/workflows/ci.yml
-```
-
-```sh
-.github/workflows/migrate.yml
-```
-
-## destroy
-
-```sh
-docker compose down -v --rmi all --remove-orphans 2>/dev/null || true && docker system prune -a --volumes -f
-```
+Extended runbooks and private operational details should live in local/private docs, not in this file.
