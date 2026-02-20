@@ -1,0 +1,211 @@
+import "@tanstack/react-start/server-only";
+import { z } from "zod/v4";
+import { compilePerspective } from "@/lib/compilePerspective";
+import { decrypt, encrypt } from "@/lib/crypto";
+import { sql } from "@/lib/db.server";
+import { normalizeTimings } from "@/lib/perspectiveTimings";
+import { preserveWordTimings } from "@/lib/preserveWordTimings";
+import { verifyTopicToken } from "@/lib/topicToken";
+import {
+  resolveStoredTopicToken,
+  topicRequiresWriteToken,
+} from "@/lib/topicWriteAccess";
+import { getTopic } from "@/lib/getTopic.server";
+
+
+export const editPerspective = async ({
+  id,
+  name,
+  formData,
+  requestId,
+}: {
+  id: string;
+  name: string;
+  formData: FormData;
+  requestId?: string;
+}): Promise<{ message?: string; result?: unknown }> => {
+  try {
+    const rawAudioSrc = formData.get("audio_src");
+    const hasAudioSrc = formData.has("audio_src");
+    const audioSrcValue =
+      hasAudioSrc && typeof rawAudioSrc === "string"
+        ? rawAudioSrc.trim()
+        : null;
+    const rawImageSrc = formData.get("image_src");
+    const hasImageSrc = formData.has("image_src");
+    const imageSrcValue =
+      hasImageSrc && typeof rawImageSrc === "string"
+        ? rawImageSrc.trim()
+        : null;
+    const schema = z.object({
+      id: z.uuid(),
+      name: z.string().min(1),
+      token: z.string().min(1).optional(),
+      perspective: z.string().min(1),
+      audio_src: z.string().min(1).nullable().optional(),
+      image_src: z.string().min(1).nullable().optional(),
+    });
+    const rawToken = formData.get("token");
+    const data = schema.parse({
+      id,
+      name,
+      token: typeof rawToken === "string" ? rawToken : undefined,
+      perspective: formData.get("perspective"),
+      audio_src: hasAudioSrc ? audioSrcValue || null : undefined,
+      image_src: hasImageSrc ? imageSrcValue || null : undefined,
+    });
+
+    const topic = await getTopic({ name });
+    if (!topic?.id) {
+      return { message: "Topic not found" };
+    }
+    const topicId = String(topic.id);
+    const locked = Boolean(topic.locked);
+    const storedToken = resolveStoredTopicToken(
+      typeof topic.token === "string" ? topic.token : undefined,
+    );
+    const requiresWriteToken = topicRequiresWriteToken({
+      locked,
+      storedToken,
+    });
+    const token = data.token;
+    if (requiresWriteToken) {
+      if (!token) {
+        console.warn("[topic-auth] Missing token on editPerspective", {
+          requestId,
+          perspectiveId: id,
+          topicId,
+          topicName: name,
+        });
+        return { message: "Invalid token" };
+      }
+      const isValid = await verifyTopicToken(token, storedToken);
+      if (!isValid) {
+        console.warn("[topic-auth] Invalid token on editPerspective", {
+          requestId,
+          perspectiveId: id,
+          topicId,
+          topicName: name,
+        });
+        return { message: "Invalid token" };
+      }
+    }
+
+    const plaintextPerspective = data.perspective;
+    const compiled = compilePerspective(plaintextPerspective);
+    const newWords = compiled.words;
+    let renderedHtml = compiled.renderedHtml;
+    const storedAudioSrc =
+      data.audio_src === undefined
+        ? undefined
+        : locked && data.audio_src && token
+          ? encrypt(data.audio_src, token)
+          : data.audio_src;
+    const storedImageSrc =
+      data.image_src === undefined
+        ? undefined
+        : locked && data.image_src && token
+          ? encrypt(data.image_src, token)
+          : data.image_src;
+    if (locked && token) {
+      data.perspective = encrypt(data.perspective, token);
+      renderedHtml = encrypt(renderedHtml, token);
+    }
+
+    const existingRows = await sql`
+      SELECT perspective, words_json
+      FROM perspectives
+      WHERE id = ${id} AND topic_id = ${topicId}
+      LIMIT 1;
+    `;
+    if (existingRows.length === 0) {
+      return { message: "Perspective not found" };
+    }
+
+    const existingRow = existingRows[0];
+    const existingPerspectiveRaw =
+      typeof existingRow.perspective === "string"
+        ? existingRow.perspective
+        : "";
+    const existingPerspective =
+      locked && token
+        ? decrypt(existingPerspectiveRaw, token)
+        : existingPerspectiveRaw;
+
+    const existingWordsJsonRaw =
+      typeof existingRow.words_json === "string"
+        ? existingRow.words_json
+        : null;
+    const existingWordsJson = existingWordsJsonRaw
+      ? locked && token
+        ? decrypt(existingWordsJsonRaw, token)
+        : existingWordsJsonRaw
+      : null;
+
+    const existingTimings = existingWordsJson
+      ? normalizeTimings(existingWordsJson)
+      : [];
+    const existingWords = compilePerspective(existingPerspective).words;
+    const nextTimings = preserveWordTimings({
+      oldTimings: existingTimings,
+      oldWords: existingWords,
+      newWords,
+    });
+    const nextWordsJsonPlain = nextTimings.some(Boolean)
+      ? JSON.stringify(nextTimings)
+      : null;
+    const wordsJson =
+      nextWordsJsonPlain && locked && token
+        ? encrypt(nextWordsJsonPlain, token)
+        : nextWordsJsonPlain;
+
+    const shouldUpdateAudioSrc = data.audio_src !== undefined;
+    const shouldUpdateImageSrc = data.image_src !== undefined;
+    const result =
+      shouldUpdateAudioSrc && shouldUpdateImageSrc
+        ? await sql`
+            UPDATE perspectives
+            SET perspective = ${data.perspective},
+                audio_src = ${storedAudioSrc},
+                image_src = ${storedImageSrc},
+                rendered_html = ${renderedHtml},
+                words_json = ${wordsJson}
+            WHERE id = ${id};
+          `
+        : shouldUpdateAudioSrc
+          ? await sql`
+            UPDATE perspectives
+            SET perspective = ${data.perspective},
+                audio_src = ${storedAudioSrc},
+                rendered_html = ${renderedHtml},
+                words_json = ${wordsJson}
+            WHERE id = ${id};
+          `
+          : shouldUpdateImageSrc
+            ? await sql`
+            UPDATE perspectives
+            SET perspective = ${data.perspective},
+                image_src = ${storedImageSrc},
+                rendered_html = ${renderedHtml},
+                words_json = ${wordsJson}
+            WHERE id = ${id};
+          `
+            : await sql`
+            UPDATE perspectives
+            SET perspective = ${data.perspective},
+                rendered_html = ${renderedHtml},
+                words_json = ${wordsJson}
+            WHERE id = ${id};
+          `;
+
+
+    return { result };
+  } catch (e) {
+    console.error("Failed to edit perspective", e, {
+      requestId,
+      perspectiveId: id,
+      topicName: name,
+    });
+    return { message: "Failed to edit perspective" };
+  }
+};

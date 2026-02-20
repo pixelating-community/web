@@ -1,0 +1,25 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": [
+    "oxc",
+    "typescript",
+    "unicorn",
+    "import",
+    "react",
+    "vitest",
+    "jsx-a11y"
+  ],
+  "categories": {},
+  "rules": {
+    "react-hooks/exhaustive-deps": "off"
+  },
+  "env": {
+    "builtin": true
+  },
+  "globals": {},
+  "ignorePatterns": [
+    "dist/**",
+    "src/routeTree.gen.ts",
+    "app.config.timestamp_*.js"
+  ]
+}
