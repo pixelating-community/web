@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -89,6 +89,19 @@ describe("TanStack Start auth and boundary patterns", () => {
     expect(swRecordingSource).not.toMatch(/fetch\(`\/api\/p\/\$\{id\}\/align/);
     expect(commitRouteSource).toMatch(/useServerFn\(savePerspectiveAlignment\)/);
     expect(commitRouteSource).not.toMatch(/fetch\(`\/api\/p\/\$\{id\}\/align/);
+  });
+
+  it("keeps client-visible server function wrappers from statically importing server modules", () => {
+    const libDir = path.join(rootDir, "src/lib");
+    const functionFiles = readdirSync(libDir)
+      .filter((fileName) => fileName.endsWith(".functions.ts"))
+      .sort();
+
+    expect(functionFiles.length).toBeGreaterThan(0);
+    for (const fileName of functionFiles) {
+      const source = readSource(`src/lib/${fileName}`);
+      expect(source).not.toMatch(/from\s+["']@\/lib\/[^"']+\.server["']/);
+    }
   });
 
   it("keeps route search parsing at the router boundary and preloads the topic query cache", () => {

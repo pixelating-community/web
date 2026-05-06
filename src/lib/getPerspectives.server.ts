@@ -20,6 +20,7 @@ type PerspectiveRow = {
   parent_perspective_id: string | null;
   audio_src: string | null;
   image_src: string | null;
+  video_src: string | null;
   recording_src: string | null;
   remix_audio_src: string | null;
   remix_duration: number | null;
@@ -95,6 +96,7 @@ const processPerspectiveRows = ({
     let wordTimings: WordTimingEntry[] = [];
     let decryptedStoredAudioSrc: string | null = null;
     let decryptedStoredImageSrc: string | null = null;
+    let decryptedStoredVideoSrc: string | null = null;
     let decryptedStoredRecordingSrc: string | null = null;
     let decryptedStoredRemixAudioSrc: string | null = null;
 
@@ -102,6 +104,7 @@ const processPerspectiveRows = ({
       const storedHtml = perspective.rendered_html ?? null;
       const storedAudioSrc = perspective.audio_src ?? null;
       const storedImageSrc = perspective.image_src ?? null;
+      const storedVideoSrc = perspective.video_src ?? null;
       const storedRecordingSrc = perspective.recording_src ?? null;
       const storedRemixAudioSrc = perspective.remix_audio_src ?? null;
       const storedWords = perspective.words_json ?? null;
@@ -112,6 +115,11 @@ const processPerspectiveRows = ({
       });
       decryptedStoredImageSrc = decryptAudioSrcIfLocked({
         value: storedImageSrc,
+        isLocked,
+        token,
+      });
+      decryptedStoredVideoSrc = decryptAudioSrcIfLocked({
+        value: storedVideoSrc,
         isLocked,
         token,
       });
@@ -160,6 +168,9 @@ const processPerspectiveRows = ({
         : null,
       image_src: canAccess
         ? resolveStoredAudioSrc(decryptedStoredImageSrc)
+        : null,
+      video_src: canAccess
+        ? resolveStoredAudioSrc(decryptedStoredVideoSrc)
         : null,
       recording_src: canAccess
         ? resolveStoredAudioSrc(decryptedStoredRecordingSrc)
@@ -246,11 +257,11 @@ export const getPerspectives = async ({
     });
 
     const rows = data.forward
-      ? await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
+      ? await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
           FROM perspectives as p
           WHERE p.topic_id=${data.topic_id} AND p.parent_perspective_id IS NULL
           ORDER BY p.id;`
-      : await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
+      : await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
           FROM perspectives as p
           WHERE p.topic_id=${data.topic_id} AND p.parent_perspective_id IS NULL
           ORDER BY p.id DESC;`;
@@ -290,7 +301,7 @@ export const getChildPerspectives = async ({
       token,
     });
 
-    const rows = await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
+    const rows = await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
       FROM perspectives as p
       WHERE p.parent_perspective_id = ${parentId}
       ORDER BY p.id;`;

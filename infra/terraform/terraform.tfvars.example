@@ -49,5 +49,5 @@ nginx_api_limit_req_burst  = 25
 nginx_admin_limit_req_rate = "1r/s"
 nginx_admin_limit_req_burst = 5
 nginx_limit_conn_per_ip    = 40
-nginx_client_max_body_size = "25m"
+nginx_client_max_body_size = "110m"
 nginx_restrict_direct_origin_access = false

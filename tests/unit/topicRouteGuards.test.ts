@@ -45,6 +45,37 @@ describe("topic route guards", () => {
     );
   });
 
+  it("keeps the dark topic background isolated to the topic shell", () => {
+    const source = readSource("src/routes/t.$.tsx");
+    const cssSource = readSource("src/styles/globals.css");
+    const editorSource = readSource("src/components/SWEditor.tsx");
+    const studioSource = readSource("src/components/sw/SWStudioSurface.tsx");
+    const viewerSource = readSource("src/components/sw/SWViewerSurface.tsx");
+    const listenerSource = readSource("src/components/PerspectiveListener.tsx");
+    const writeSource = readSource("src/components/WritePerspective.tsx");
+    const karaokeSource = readSource("src/components/KaraokePresenter.tsx");
+
+    expect(source).toMatch(/DARK_TOPIC_NAME = "dark"/);
+    expect(source).toMatch(/DARK_TOPIC_SHELL_CLASS = `\$\{TOPIC_SHELL_CLASS\} topic-dark bg-black text-white`/);
+    expect(source).toMatch(
+      /getTopicShellClassName\(\s*topic\?\.name \?\? requestedTopicName,\s*\)/,
+    );
+    expect(cssSource).toMatch(/\.topic-dark \.sw-perspective-text/);
+    expect(cssSource).toMatch(/@apply bg-linear-to-r\/oklch from-purple-500 to-pink-500 bg-clip-text text-transparent/);
+    expect(cssSource).toMatch(/caret-color: var\(--color-neon-magenta\)/);
+    expect(cssSource).toMatch(/\.topic-dark \.sw-word\.is-marked/);
+    expect(cssSource).toMatch(/\.topic-dark \.sw-word\.is-selected/);
+    expect(editorSource).toMatch(/sw-perspective-text/);
+    expect(editorSource).toMatch(/classList\.toggle\("is-marked", isMarked\)/);
+    expect(editorSource).toMatch(/classList\.toggle\("is-selected", isSelected\)/);
+    expect(studioSource).toMatch(/showTranscribedIndicator=\{true\}/);
+    expect(viewerSource).not.toMatch(/showTranscribedIndicator=\{true\}/);
+    expect(listenerSource).not.toMatch(/showTranscribedIndicator=\{true\}/);
+    expect(writeSource).toMatch(/sw-perspective-text/);
+    expect(karaokeSource).toMatch(/karaoke-lines sw-perspective-text/);
+    expect(source).not.toMatch(/topic\.name === "dark"/);
+  });
+
   it("requires write access for karaoke editor routes", () => {
     const topicRoute = readSource("src/routes/t.$.tsx");
     const unlockRoute = readSource("src/routes/t.$topic.ul.tsx");

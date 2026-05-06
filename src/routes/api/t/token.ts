@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod/v4";
 import { getRequestId, requestIdHeaders } from "@/lib/requestId";
-import {
-  saveTopicTokenServer,
-  topicTokenLoginSchema,
-} from "@/lib/topicTokenLogin.server";
+import { saveTopicTokenServer } from "@/lib/topicTokenLogin.server";
+import { topicTokenLoginSchema } from "@/lib/topicTokenLogin.schema";
 
 export const Route = createFileRoute("/api/t/token")({
   server: {

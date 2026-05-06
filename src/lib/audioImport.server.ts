@@ -4,7 +4,12 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import type { z } from "zod/v4";
 import { verifyActionToken } from "@/lib/actionToken.server";
-import { audioImportSchema } from "@/lib/audioImport";
+import {
+  AUDIO_IMPORT_MAX_FILE_SIZE_BYTES,
+  AUDIO_IMPORT_MAX_FILE_SIZE_LABEL,
+  type AudioImportStep,
+  audioImportSchema,
+} from "@/lib/audioImport";
 import { sql } from "@/lib/db.server";
 import { buildR2Key, putR2Object } from "@/lib/r2.server";
 
@@ -13,10 +18,41 @@ export { audioImportSchema } from "@/lib/audioImport";
 const AUDIO_SAMPLE_RATE = 48_000;
 const AUDIO_CHANNELS = 2;
 const AUDIO_BITRATE_KBPS = 256;
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+const AUDIO_PROBE_TIMEOUT_MS = 60_000;
+const AUDIO_CONVERT_TIMEOUT_MS = 8 * 60 * 1000;
+
+const getPrimaryProbeValue = (stdout: string) =>
+  stdout
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean) ?? "";
+
+const guessUploadContentType = (file: File) => {
+  if (file.type.trim()) return file.type.trim();
+  const ext = path.extname(file.name || "").toLowerCase();
+  const map: Record<string, string> = {
+    ".m4v": "video/mp4",
+    ".mkv": "video/x-matroska",
+    ".mov": "video/quicktime",
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+  };
+  return map[ext] ?? "application/octet-stream";
+};
+
+const isDirectM4aUpload = ({
+  audioCodec,
+  hasVideoStream,
+  sourceExt,
+}: {
+  audioCodec: string;
+  hasVideoStream: boolean;
+  sourceExt: string;
+}) => sourceExt === ".m4a" && audioCodec === "aac" && !hasVideoStream;
 
 type BunSpawnProcLike = {
   exited: Promise<number>;
+  kill?: () => void;
   stderr: ReadableStream<Uint8Array>;
   stdout: ReadableStream<Uint8Array>;
 };
@@ -39,12 +75,20 @@ const getBunRuntime = () => {
   return bunRuntime;
 };
 
-const runCmd = async (cmd: string[], timeoutMs = 180_000) => {
+const runCmd = async (
+  cmd: string[],
+  timeoutMs: number,
+  timeoutLabel: string,
+) => {
   const bunRuntime = getBunRuntime();
   const proc = bunRuntime.spawn(cmd, { stdout: "pipe", stderr: "pipe" });
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Command timed out")), timeoutMs),
-  );
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      proc.kill?.();
+      reject(new Error(`${timeoutLabel} timed out`));
+    }, timeoutMs);
+  });
   const [stdoutBytes, stderrBytes, exitCode] = await Promise.race([
     Promise.all([
       new Response(proc.stdout).arrayBuffer(),
@@ -52,7 +96,9 @@ const runCmd = async (cmd: string[], timeoutMs = 180_000) => {
       proc.exited,
     ]),
     timeout,
-  ]);
+  ]).finally(() => {
+    if (timeoutId) clearTimeout(timeoutId);
+  });
   return {
     exitCode,
     stdout: Buffer.from(stdoutBytes).toString("utf8"),
@@ -60,7 +106,7 @@ const runCmd = async (cmd: string[], timeoutMs = 180_000) => {
   };
 };
 
-type ProgressCallback = (step: string) => void;
+type ProgressCallback = (step: AudioImportStep) => void;
 
 const verifyPerspective = async (data: {
   actionToken: string;
@@ -108,7 +154,7 @@ export const importAudioFile = async ({
     onProgress?.("uploading");
     await sql`
       UPDATE perspectives
-      SET audio_src = ${data.r2Key}, updated_at = NOW()
+      SET audio_src = ${data.r2Key}, video_src = NULL, updated_at = NOW()
       WHERE id = ${data.perspectiveId};
     `;
     onProgress?.("done");
@@ -119,18 +165,24 @@ export const importAudioFile = async ({
     return { ok: false as const, error: "No file or R2 key provided", status: 400 };
   }
 
-  if (file.size > MAX_FILE_SIZE) {
-    return { ok: false as const, error: "File too large (50 MB max)", status: 400 };
+  if (file.size > AUDIO_IMPORT_MAX_FILE_SIZE_BYTES) {
+    return {
+      ok: false as const,
+      error: `File too large (${AUDIO_IMPORT_MAX_FILE_SIZE_LABEL} max)`,
+      status: 400,
+    };
   }
 
   const tmpRoot = await mkdtemp(path.join(tmpdir(), "audio-import-"));
   try {
-    onProgress?.("converting");
+    onProgress?.("preparing");
 
     const ext = path.extname(file.name || "").toLowerCase() || ".bin";
     const sourcePath = path.join(tmpRoot, `source${ext}`);
     const fileBytes = Buffer.from(await file.arrayBuffer());
     await writeFile(sourcePath, fileBytes);
+
+    onProgress?.("classifying");
 
     const probeResult = await runCmd([
       "ffprobe",
@@ -139,15 +191,83 @@ export const importAudioFile = async ({
       "-show_entries", "stream=codec_name",
       "-of", "csv=p=0",
       sourcePath,
-    ]);
+    ], AUDIO_PROBE_TIMEOUT_MS, "Audio probe");
 
     if (probeResult.exitCode !== 0) {
-      return { ok: false as const, error: "Not a valid audio file", status: 400 };
+      return {
+        ok: false as const,
+        error: "Not a valid audio or video file",
+        status: 400,
+      };
+    }
+    const audioCodec = getPrimaryProbeValue(probeResult.stdout);
+    if (!audioCodec) {
+      return {
+        ok: false as const,
+        error: "No audio stream found in this file",
+        status: 400,
+      };
     }
 
-    const isSourceAac = probeResult.stdout.trim() === "aac";
+    const videoProbeResult = await runCmd([
+      "ffprobe",
+      "-v", "error",
+      "-select_streams", "v:0",
+      "-show_entries", "stream=codec_name",
+      "-of", "csv=p=0",
+      sourcePath,
+    ], AUDIO_PROBE_TIMEOUT_MS, "Video probe");
+    const hasVideoStream =
+      videoProbeResult.exitCode === 0 &&
+      getPrimaryProbeValue(videoProbeResult.stdout).length > 0;
+
+    const videoR2Key = hasVideoStream
+      ? buildR2Key(file.name || "video")
+      : null;
+    let videoUploadError: unknown;
+    const videoUploadPromise = videoR2Key
+      ? putR2Object({
+          key: videoR2Key,
+          contentType: guessUploadContentType(file),
+          body: fileBytes,
+        }).catch((error) => {
+          console.error("[audio-import] video upload failed", {
+            perspectiveId: data.perspectiveId,
+            videoR2Key,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          videoUploadError = error;
+        })
+      : null;
+
+    if (
+      isDirectM4aUpload({
+        audioCodec,
+        hasVideoStream,
+        sourceExt: ext,
+      })
+    ) {
+      onProgress?.("uploading");
+      const r2Key = buildR2Key(file.name || "music.m4a");
+      await putR2Object({
+        key: r2Key,
+        contentType: "audio/mp4",
+        body: fileBytes,
+      });
+      onProgress?.("saving");
+      await sql`
+        UPDATE perspectives
+        SET audio_src = ${r2Key}, video_src = NULL, updated_at = NOW()
+        WHERE id = ${data.perspectiveId};
+      `;
+      onProgress?.("done");
+      return { ok: true as const, r2Key };
+    }
+
+    const isSourceAac = audioCodec === "aac";
 
     const outputPath = path.join(tmpRoot, "music.m4a");
+    onProgress?.("converting");
     const ffResult = await runCmd([
       "ffmpeg",
       "-y",
@@ -162,7 +282,7 @@ export const importAudioFile = async ({
         ? ["-c:a", "copy"]
         : ["-c:a", "aac", "-b:a", `${AUDIO_BITRATE_KBPS}k`]),
       outputPath,
-    ]);
+    ], AUDIO_CONVERT_TIMEOUT_MS, "Audio conversion");
 
     if (ffResult.exitCode !== 0) {
       return {
@@ -185,9 +305,18 @@ export const importAudioFile = async ({
       body: outputBytes,
     });
 
+    if (videoUploadPromise) {
+      onProgress?.("storing_video");
+      await videoUploadPromise;
+      if (videoUploadError) {
+        throw videoUploadError;
+      }
+    }
+
+    onProgress?.("saving");
     await sql`
       UPDATE perspectives
-      SET audio_src = ${r2Key}, updated_at = NOW()
+      SET audio_src = ${r2Key}, video_src = ${videoR2Key}, updated_at = NOW()
       WHERE id = ${data.perspectiveId};
     `;
 
@@ -207,7 +336,7 @@ export const deleteAudio = async (
 
   await sql`
     UPDATE perspectives
-    SET audio_src = NULL, updated_at = NOW()
+    SET audio_src = NULL, video_src = NULL, updated_at = NOW()
     WHERE id = ${data.perspectiveId};
   `;
 

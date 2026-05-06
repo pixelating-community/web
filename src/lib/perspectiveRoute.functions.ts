@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { loadPerspectivePayloadServer } from "@/lib/perspectiveRoute.server";
 
 export const loadPerspectivePayload = createServerFn({ method: "GET" })
   .inputValidator((value: { id?: string }) => value)
@@ -8,5 +7,8 @@ export const loadPerspectivePayload = createServerFn({ method: "GET" })
     const id = data.id?.trim() ?? "";
     const request =
       (context as { request?: Request } | undefined)?.request ?? getRequest();
+    const { loadPerspectivePayloadServer } = await import(
+      "@/lib/perspectiveRoute.server"
+    );
     return await loadPerspectivePayloadServer({ id, request });
   });

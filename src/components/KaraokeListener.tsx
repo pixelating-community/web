@@ -139,6 +139,11 @@ export const KaraokeListener = ({
       resolvePublicAudioSrc(perspective.audio_src),
     [perspective.audio_src, perspective.recording_src],
   );
+  const resolvedVideoSrc = useMemo(
+    () =>
+      resolvePublicAudioSrc(videoSrc) || resolvePublicAudioSrc(perspective.video_src),
+    [perspective.video_src, videoSrc],
+  );
   const backgroundImageSrc = useMemo(
     () => imageSrc?.trim() || resolvePerspectiveBackgroundImageSrc(perspective),
     [imageSrc, perspective],
@@ -612,18 +617,18 @@ export const KaraokeListener = ({
         perspectiveId={perspective.id}
         topicName={topicName}
       />
-      {videoSrc ? (
+      {resolvedVideoSrc ? (
         // Background video — drives currentTime for karaoke sync
         // oxlint-disable-next-line jsx-a11y/media-has-caption
         <video
           ref={mediaRef as RefObject<HTMLVideoElement | null>}
           className="absolute inset-0 z-0 h-full w-full object-cover"
-          src={videoSrc}
+          src={resolvedVideoSrc}
           playsInline
           preload="auto"
         />
       ) : null}
-      {!videoSrc ? (
+      {!resolvedVideoSrc ? (
         <PerspectiveBackground imageSrc={backgroundImageSrc} />
       ) : null}
       <div className="flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden relative z-10">
@@ -771,7 +776,7 @@ export const KaraokeListener = ({
             </div>
           ) : null}
           {/* Hidden audio fallback when no video */}
-          {!videoSrc ? (
+          {!resolvedVideoSrc ? (
             // oxlint-disable-next-line jsx-a11y/media-has-caption
             <audio
               ref={mediaRef as RefObject<HTMLAudioElement | null>}

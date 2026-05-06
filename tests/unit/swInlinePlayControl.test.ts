@@ -18,8 +18,21 @@ describe("sw inline play control", () => {
     expect(source).toMatch(/preload="intent"/);
   });
 
-  it("does not show the inline preview shortcut when the mode nav is already visible", () => {
+  it("keeps the inline play control visible on studio editor routes with the mode nav", () => {
     const source = readSource("src/components/SW.tsx");
-    expect(source).toMatch(/isStudioSurface && topicName && !showPerspectiveModeNav/);
+    expect(source).toMatch(
+      /isStudioSurface &&[\s\S]*topicName &&[\s\S]*isActive/,
+    );
+    expect(source).not.toMatch(/!showPerspectiveModeNav &&[\s\S]*isActive/);
+  });
+
+  it("keeps edit actions visible for text-only viewer perspectives", () => {
+    const source = readSource("src/components/SW.tsx");
+
+    expect(source).toMatch(/const showViewerEditActions =/);
+    expect(source).toMatch(/hasAudio \|\| showViewerEditActions/);
+    expect(source).toMatch(
+      /previewHref=\{isStudioSurface \|\| !hasAudio \? "" : previewHref\}/,
+    );
   });
 });

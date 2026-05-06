@@ -2,7 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod/v4";
 import { resolveTopicTokenCookieFromRequest } from "@/lib/topicTokenCookies";
-import { getPerspectiveById } from "@/lib/getPerspectiveById.server";
 
 const schema = z.object({
   perspectiveId: z.uuid(),
@@ -25,6 +24,7 @@ export const loadPerspectiveById = createServerFn({ method: "GET" })
         })
       : null;
 
+    const { getPerspectiveById } = await import("@/lib/getPerspectiveById.server");
     const perspective = await getPerspectiveById({
       perspectiveId: data.perspectiveId,
       cookieToken: cookie?.value ?? undefined,

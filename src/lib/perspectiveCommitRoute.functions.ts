@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { loadPerspectiveCommitMetaServer } from "@/lib/perspectiveCommitRoute.server";
 
 export const loadPerspectiveCommitMeta = createServerFn({ method: "GET" })
   .inputValidator((value: { id?: string }) => value)
@@ -8,5 +7,8 @@ export const loadPerspectiveCommitMeta = createServerFn({ method: "GET" })
     const id = data.id?.trim() ?? "";
     const request =
       (context as { request?: Request } | undefined)?.request ?? getRequest();
+    const { loadPerspectiveCommitMetaServer } = await import(
+      "@/lib/perspectiveCommitRoute.server"
+    );
     return await loadPerspectiveCommitMetaServer({ id, request });
   });

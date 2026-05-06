@@ -4,7 +4,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PerspectiveBackground } from "@/components/PerspectiveBackground";
+import {
+  buildPerspectiveBackgroundStyle,
+  PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS,
+  PerspectiveBackground,
+} from "@/components/PerspectiveBackground";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
 import { ReflectionPerspectiveCard } from "@/components/ReflectionPerspectiveCard";
 import { SWEditor } from "@/components/SWEditor";
@@ -112,6 +116,7 @@ export const PerspectiveListener = ({
   onPlaybackComplete,
 }: PerspectiveListenerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const currentTimeRef = useRef(startTime ?? 0);
   const [currentTime, setCurrentTime] = useState(startTime ?? 0);
@@ -127,9 +132,17 @@ export const PerspectiveListener = ({
       resolvePublicAudioSrc(perspective.audio_src),
     [perspective.audio_src, perspective.recording_src],
   );
+  const resolvedVideoSrc = useMemo(
+    () => resolvePublicAudioSrc(perspective.video_src),
+    [perspective.video_src],
+  );
   const backgroundImageSrc = useMemo(
     () => resolvePerspectiveBackgroundImageSrc(perspective),
     [perspective],
+  );
+  const videoBackgroundStyle = useMemo(
+    () => buildPerspectiveBackgroundStyle(),
+    [],
   );
   const commitCurrentTime = useCallback(
     (time: number, forceRender = false) => {
@@ -143,6 +156,36 @@ export const PerspectiveListener = ({
     },
     [],
   );
+
+  const syncVideoToAudio = useCallback(
+    (audio: HTMLAudioElement, shouldPlay = false) => {
+      const video = videoRef.current;
+      if (!video || !resolvedVideoSrc) return;
+
+      const targetTime = Number.isFinite(audio.currentTime)
+        ? Math.max(0, audio.currentTime)
+        : 0;
+      try {
+        if (Math.abs(video.currentTime - targetTime) > 0.15) {
+          video.currentTime = targetTime;
+        }
+      } catch {
+        // Metadata may not be ready yet; the next media event/RAF tick will retry.
+      }
+
+      if (shouldPlay && video.paused) {
+        video.muted = true;
+        void video.play().catch(() => {});
+      }
+    },
+    [resolvedVideoSrc],
+  );
+
+  const pauseVideo = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.pause();
+  }, []);
 
   const logAudioState = (label: string, audio: HTMLAudioElement) => {
     if (!import.meta.env.DEV) return;
@@ -172,9 +215,10 @@ export const PerspectiveListener = ({
       seekToStart(audio);
       audio.muted = false;
       audio.volume = 1;
+      syncVideoToAudio(audio, true);
       void audio.play().catch(() => {});
     },
-    [seekToStart],
+    [seekToStart, syncVideoToAudio],
   );
 
   // Autoplay attempt on mount when URL has timestamps
@@ -217,12 +261,14 @@ export const PerspectiveListener = ({
 
     const handlePlaying = () => {
       logAudioState("playing", audio);
+      syncVideoToAudio(audio, true);
       setPlaybackError("");
       commitCurrentTime(audio.currentTime, true);
       setIsPlaying(true);
     };
     const handlePause = () => {
       logAudioState("pause", audio);
+      pauseVideo();
       commitCurrentTime(audio.currentTime, true);
       setIsPlaying(false);
     };
@@ -233,11 +279,13 @@ export const PerspectiveListener = ({
       if (hasTimestampRange) {
         playFromStart(audio);
       } else {
+        pauseVideo();
         onPlaybackComplete?.(perspective.id);
       }
     };
     const handleError = () => {
       logAudioState("error", audio);
+      pauseVideo();
       setIsPlaying(false);
       if (isBenignMediaError(audio.error)) {
         return;
@@ -277,7 +325,15 @@ export const PerspectiveListener = ({
       audio.removeEventListener("stalled", handleStalled);
       audio.removeEventListener("suspend", handleSuspend);
     };
-  }, [commitCurrentTime, hasTimestampRange, onPlaybackComplete, perspective.id, playFromStart]);
+  }, [
+    commitCurrentTime,
+    hasTimestampRange,
+    onPlaybackComplete,
+    pauseVideo,
+    perspective.id,
+    playFromStart,
+    syncVideoToAudio,
+  ]);
 
   // Throttled RAF loop for smooth currentTime updates + end-time boundary
   useEffect(() => {
@@ -311,6 +367,7 @@ export const PerspectiveListener = ({
               return;
             }
           } else {
+            syncVideoToAudio(audio, true);
             commitCurrentTime(audio.currentTime);
           }
         }
@@ -322,7 +379,14 @@ export const PerspectiveListener = ({
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [commitCurrentTime, endTime, hasTimestampRange, isPlaying, playFromStart]);
+  }, [
+    commitCurrentTime,
+    endTime,
+    hasTimestampRange,
+    isPlaying,
+    playFromStart,
+    syncVideoToAudio,
+  ]);
 
   const handleTogglePlayback = () => {
     const audio = audioRef.current;
@@ -405,11 +469,30 @@ export const PerspectiveListener = ({
 
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-y-auto">
-      <PerspectiveBackground
-        imageSrc={backgroundImageSrc}
-        overlayClassName="bg-black/25"
-        positionClassName="fixed"
-      />
+      {resolvedVideoSrc ? (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
+          style={videoBackgroundStyle}
+        >
+          {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- muted visual companion to the extracted audio track */}
+          <video
+            ref={videoRef}
+            className={`h-full w-full object-cover ${PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS}`}
+            src={resolvedVideoSrc}
+            muted
+            playsInline
+            preload="none"
+          />
+          <div className="absolute inset-0 bg-black/25" />
+        </div>
+      ) : (
+        <PerspectiveBackground
+          imageSrc={backgroundImageSrc}
+          overlayClassName="bg-black/25"
+          positionClassName="fixed"
+        />
+      )}
       <div className="relative z-10 flex h-dvh w-full shrink-0 flex-col overflow-hidden">
         {needsPlayGesture && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
@@ -474,7 +557,7 @@ export const PerspectiveListener = ({
             ref={audioRef}
             className="opacity-0 w-px h-px absolute"
             src={resolvedAudioSrc}
-            preload={hasUrlTimestamp ? "metadata" : "none"}
+            preload="none"
           />
         </div>
         {showPlaybackError ? (

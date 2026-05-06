@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { setPerspectiveBoundsServer } from "@/lib/perspectiveBounds.server";
 
 export const setPerspectiveBounds = createServerFn({ method: "POST" })
   .inputValidator(
@@ -15,10 +14,13 @@ export const setPerspectiveBounds = createServerFn({ method: "POST" })
       endTime?: number | null;
     }) => value,
   )
-  .handler(async ({ data, context }) =>
-    setPerspectiveBoundsServer({
+  .handler(async ({ data, context }) => {
+    const { setPerspectiveBoundsServer } = await import(
+      "@/lib/perspectiveBounds.server"
+    );
+    return setPerspectiveBoundsServer({
       request:
         (context as { request?: Request } | undefined)?.request ?? getRequest(),
       data,
-    }),
-  );
+    });
+  });

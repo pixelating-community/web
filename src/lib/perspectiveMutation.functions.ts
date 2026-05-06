@@ -1,10 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import {
-  createPerspectiveServer,
-  deletePerspectiveServer,
-  updatePerspectiveServer,
-} from "@/lib/perspectiveMutation.server";
 
 export const createPerspective = createServerFn({ method: "POST" })
   .inputValidator(
@@ -18,8 +13,11 @@ export const createPerspective = createServerFn({ method: "POST" })
       parentPerspectiveId?: string;
     }) => value,
   )
-  .handler(async ({ data, context }) =>
-    createPerspectiveServer({
+  .handler(async ({ data, context }) => {
+    const { createPerspectiveServer } = await import(
+      "@/lib/perspectiveMutation.server"
+    );
+    return createPerspectiveServer({
       request:
         (context as { request?: Request } | undefined)?.request ?? getRequest(),
       data: {
@@ -31,8 +29,8 @@ export const createPerspective = createServerFn({ method: "POST" })
         topicName: data.topicName?.trim() ?? "",
         parentPerspectiveId: data.parentPerspectiveId?.trim() || undefined,
       },
-    }),
-  );
+    });
+  });
 
 export const updatePerspective = createServerFn({ method: "POST" })
   .inputValidator(
@@ -46,8 +44,11 @@ export const updatePerspective = createServerFn({ method: "POST" })
       topicName?: string;
     }) => value,
   )
-  .handler(async ({ data, context }) =>
-    updatePerspectiveServer({
+  .handler(async ({ data, context }) => {
+    const { updatePerspectiveServer } = await import(
+      "@/lib/perspectiveMutation.server"
+    );
+    return updatePerspectiveServer({
       request:
         (context as { request?: Request } | undefined)?.request ?? getRequest(),
       data: {
@@ -61,8 +62,8 @@ export const updatePerspective = createServerFn({ method: "POST" })
         topicId: data.topicId?.trim() ?? "",
         topicName: data.topicName?.trim() ?? "",
       },
-    }),
-  );
+    });
+  });
 
 export const removePerspective = createServerFn({ method: "POST" })
   .inputValidator(
@@ -72,8 +73,11 @@ export const removePerspective = createServerFn({ method: "POST" })
       topicId?: string;
     }) => value,
   )
-  .handler(async ({ data, context }) =>
-    deletePerspectiveServer({
+  .handler(async ({ data, context }) => {
+    const { deletePerspectiveServer } = await import(
+      "@/lib/perspectiveMutation.server"
+    );
+    return deletePerspectiveServer({
       request:
         (context as { request?: Request } | undefined)?.request ?? getRequest(),
       data: {
@@ -81,5 +85,5 @@ export const removePerspective = createServerFn({ method: "POST" })
         perspectiveId: data.perspectiveId?.trim() ?? "",
         topicId: data.topicId?.trim() ?? "",
       },
-    }),
-  );
+    });
+  });

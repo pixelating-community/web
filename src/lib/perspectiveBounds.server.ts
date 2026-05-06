@@ -2,6 +2,7 @@ import "@tanstack/react-start/server-only";
 import { verifyActionToken } from "@/lib/actionToken.server";
 import { sql } from "@/lib/db.server";
 import { getRequestId } from "@/lib/requestId";
+import { normalizeTimestampRangeEnd } from "@/lib/routeSearch";
 import { buildTopicKaraokeEditorPath } from "@/lib/topicRoutes";
 
 type SetBoundsArgs = {
@@ -55,6 +56,10 @@ const buildBoundsHref = ({
   const url = new URL(href, URL_BASE);
   const nextStartTime = normalizeFiniteTime(startTime);
   const nextEndTime = normalizeFiniteTime(endTime);
+  const visibleEndTime = normalizeTimestampRangeEnd({
+    end: nextEndTime,
+    start: nextStartTime,
+  });
 
   if (nextStartTime === null) {
     url.searchParams.delete("s");
@@ -62,10 +67,10 @@ const buildBoundsHref = ({
     url.searchParams.set("s", formatUrlTime(nextStartTime));
   }
 
-  if (nextEndTime === null) {
+  if (visibleEndTime === undefined) {
     url.searchParams.delete("e");
   } else {
-    url.searchParams.set("e", formatUrlTime(nextEndTime));
+    url.searchParams.set("e", formatUrlTime(visibleEndTime));
   }
 
   return `${url.pathname}${url.search}${url.hash}`;

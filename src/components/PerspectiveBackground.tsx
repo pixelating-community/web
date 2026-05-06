@@ -12,6 +12,17 @@ type PerspectiveBackgroundProps = {
 
 const FALLBACK_COLOR = "oklch(0.22 0.14 300)";
 const SAMPLE_SIZE = 32;
+export const PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS =
+  "opacity-80 mix-blend-luminosity";
+
+export const buildPerspectiveBackgroundStyle = (
+  sampledColor?: string | null,
+) =>
+  ({
+    "--perspective-image-color": sampledColor ?? FALLBACK_COLOR,
+    background:
+      "linear-gradient(90deg, color-mix(in oklch, var(--perspective-image-color), var(--color-gradient-start) 62%), color-mix(in oklch, var(--perspective-image-color), var(--color-gradient-end) 62%))",
+  }) as CSSProperties;
 
 const toRgb = (red: number, green: number, blue: number) =>
   `rgb(${Math.round(red)} ${Math.round(green)} ${Math.round(blue)})`;
@@ -52,11 +63,7 @@ export const PerspectiveBackground = ({
   const [sampledColor, setSampledColor] = useState<string | null>(null);
   const resolvedImageSrc = imageSrc?.trim() ?? "";
   const backgroundStyle = useMemo(
-    () => ({
-      "--perspective-image-color": sampledColor ?? FALLBACK_COLOR,
-      background:
-        "linear-gradient(90deg, color-mix(in oklch, var(--perspective-image-color), var(--color-gradient-start) 62%), color-mix(in oklch, var(--perspective-image-color), var(--color-gradient-end) 62%))",
-    }) as CSSProperties,
+    () => buildPerspectiveBackgroundStyle(sampledColor),
     [sampledColor],
   );
 
@@ -82,7 +89,7 @@ export const PerspectiveBackground = ({
       <img
         src={resolvedImageSrc}
         alt=""
-        className="h-full w-full object-cover opacity-80 mix-blend-luminosity"
+        className={`h-full w-full object-cover ${PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS}`}
         decoding="async"
         onLoad={handleImageLoad}
       />

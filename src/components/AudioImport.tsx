@@ -1,6 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  AUDIO_IMPORT_MAX_FILE_SIZE_BYTES,
+  AUDIO_IMPORT_MAX_FILE_SIZE_LABEL,
+  type AudioImportStep,
+} from "@/lib/audioImport";
 import { resolvePublicAudioSrc } from "@/lib/publicAudioBase";
 
 type AvailableTrack = {
@@ -19,25 +24,44 @@ type AudioImportProps = {
   onDeleted?: () => Promise<unknown> | unknown;
 };
 
-type Step = "idle" | "converting" | "uploading" | "done" | "error";
+type Step = AudioImportStep;
 
 const STEP_LABEL: Record<Step, string> = {
   idle: "",
+  preparing: "Preparing",
+  classifying: "Checking media",
   converting: "Converting",
   uploading: "Uploading",
+  storing_video: "Storing video",
+  saving: "Saving",
   done: "",
   error: "",
 };
 
 const STEP_PROGRESS: Record<Step, number> = {
   idle: 0,
-  converting: 0.4,
-  uploading: 0.8,
+  preparing: 0.12,
+  classifying: 0.24,
+  converting: 0.52,
+  uploading: 0.74,
+  storing_video: 0.88,
+  saving: 0.96,
   done: 1,
   error: 0,
 };
 
-const ACCEPTED_AUDIO_TYPES = "audio/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.opus,.wma,.webm";
+const SLOW_IMPORT_MESSAGE =
+  "Still working. Large media can take a few minutes.";
+const SLOW_IMPORT_MESSAGE_DELAY_MS = 30_000;
+const IMPORT_TIMEOUT_MS = 10 * 60 * 1000;
+const ACCEPTED_MEDIA_TYPES =
+  "audio/*,video/*,.mp3,.m4a,.aac,.wav,.ogg,.flac,.opus,.wma,.webm,.mp4,.m4v,.mov,.mkv";
+
+const isKnownStep = (step: unknown): step is Step =>
+  typeof step === "string" && step in STEP_LABEL;
+
+const isAbortError = (error: unknown) =>
+  error instanceof DOMException && error.name === "AbortError";
 
 export const AudioImport = ({
   actionToken,
@@ -50,6 +74,7 @@ export const AudioImport = ({
 }: AudioImportProps) => {
   const [step, setStep] = useState<Step>("idle");
   const [error, setError] = useState("");
+  const [slowMessage, setSlowMessage] = useState("");
   const [audioSrc, setAudioSrc] = useState("");
   const [fileName, setFileName] = useState("");
   const [isPlaying, setIsPlaying] = useState(false);
@@ -58,7 +83,8 @@ export const AudioImport = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const busyRef = useRef(false);
 
-  const hasMusic = Boolean(audioSrc || currentAudioSrc);
+  const previewAudioSrc = audioSrc || resolvePublicAudioSrc(currentAudioSrc);
+  const hasMusic = Boolean(previewAudioSrc);
 
   const togglePlay = () => {
     const el = audioRef.current;
@@ -72,12 +98,29 @@ export const AudioImport = ({
 
   const uploadFile = async (file: File) => {
     if (busyRef.current) return;
+    if (file.size > AUDIO_IMPORT_MAX_FILE_SIZE_BYTES) {
+      setStep("error");
+      setError(`File too large (${AUDIO_IMPORT_MAX_FILE_SIZE_LABEL} max)`);
+      setFileName(file.name);
+      return;
+    }
     busyRef.current = true;
-    setStep("converting");
+    setStep("preparing");
     setError("");
+    setSlowMessage("");
     setAudioSrc("");
     setIsPlaying(false);
     setFileName(file.name);
+
+    const controller = new AbortController();
+    let timedOut = false;
+    const slowTimer = window.setTimeout(() => {
+      setSlowMessage(SLOW_IMPORT_MESSAGE);
+    }, SLOW_IMPORT_MESSAGE_DELAY_MS);
+    const timeoutTimer = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, IMPORT_TIMEOUT_MS);
 
     try {
       const formData = new FormData();
@@ -89,6 +132,7 @@ export const AudioImport = ({
       const response = await fetch("/api/obj/yt", {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
 
       if (!response.ok || !response.body) {
@@ -99,10 +143,16 @@ export const AudioImport = ({
       }
 
       await readSSE(response.body);
-    } catch {
+    } catch (caught) {
       setStep("error");
-      setError("Import failed");
+      setError(
+        timedOut || isAbortError(caught)
+          ? "Import timed out. Try a smaller file or retry."
+          : "Import failed",
+      );
     } finally {
+      window.clearTimeout(slowTimer);
+      window.clearTimeout(timeoutTimer);
       busyRef.current = false;
     }
   };
@@ -112,15 +162,27 @@ export const AudioImport = ({
     busyRef.current = true;
     setStep("uploading");
     setError("");
+    setSlowMessage("");
     setAudioSrc("");
     setIsPlaying(false);
     setFileName("");
+
+    const controller = new AbortController();
+    let timedOut = false;
+    const slowTimer = window.setTimeout(() => {
+      setSlowMessage(SLOW_IMPORT_MESSAGE);
+    }, SLOW_IMPORT_MESSAGE_DELAY_MS);
+    const timeoutTimer = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, IMPORT_TIMEOUT_MS);
 
     try {
       const response = await fetch("/api/obj/yt", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ actionToken, topicId, perspectiveId, r2Key }),
+        signal: controller.signal,
       });
 
       if (!response.ok || !response.body) {
@@ -131,10 +193,16 @@ export const AudioImport = ({
       }
 
       await readSSE(response.body);
-    } catch {
+    } catch (caught) {
       setStep("error");
-      setError("Import failed");
+      setError(
+        timedOut || isAbortError(caught)
+          ? "Import timed out. Try a smaller file or retry."
+          : "Import failed",
+      );
     } finally {
+      window.clearTimeout(slowTimer);
+      window.clearTimeout(timeoutTimer);
       busyRef.current = false;
     }
   };
@@ -144,6 +212,8 @@ export const AudioImport = ({
     const decoder = new TextDecoder();
     let buffer = "";
     let finalError = "";
+    let completed = false;
+    let sawProgress = false;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -165,19 +235,28 @@ export const AudioImport = ({
         if (payload.step === "error") {
           finalError = payload.error || "Import failed";
         } else if (payload.step === "done" && payload.r2Key) {
+          completed = true;
           setStep("done");
+          setSlowMessage("");
           setFileName("");
           setAudioSrc(resolvePublicAudioSrc(payload.r2Key));
           await onImported?.();
-        } else if (payload.step) {
-          setStep(payload.step as Step);
+        } else if (isKnownStep(payload.step)) {
+          sawProgress = true;
+          setStep(payload.step);
         }
       }
     }
 
     if (finalError) {
       setStep("error");
+      setSlowMessage("");
       setError(finalError);
+    } else if (!completed && sawProgress) {
+      setStep("done");
+      setSlowMessage("");
+      setFileName("");
+      await onImported?.();
     }
   };
 
@@ -225,14 +304,20 @@ export const AudioImport = ({
     void assignR2Key(r2Key);
   };
 
-  const isWorking = step === "converting" || step === "uploading";
+  const isWorking =
+    step === "preparing" ||
+    step === "classifying" ||
+    step === "converting" ||
+    step === "uploading" ||
+    step === "storing_video" ||
+    step === "saving";
   const progress = STEP_PROGRESS[step];
   const hasTracks = availableTracks && availableTracks.length > 0;
 
   return (
     <div className="w-full m-1">
       <div className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-xs text-white/75">
-        {audioSrc ? (
+        {previewAudioSrc ? (
           <>
             <button
               type="button"
@@ -245,7 +330,7 @@ export const AudioImport = ({
             {/* eslint-disable-next-line jsx-a11y/media-has-caption -- music preview, no captions */}
             <audio
               ref={audioRef}
-              src={audioSrc}
+              src={previewAudioSrc}
               preload="none"
               onPlay={() => setIsPlaying(true)}
               onPause={() => setIsPlaying(false)}
@@ -289,10 +374,10 @@ export const AudioImport = ({
         <input
           ref={fileInputRef}
           type="file"
-          accept={ACCEPTED_AUDIO_TYPES}
+          accept={ACCEPTED_MEDIA_TYPES}
           onChange={handleFileChange}
           className="hidden"
-          aria-label="Upload audio file"
+          aria-label="Upload audio or video file"
         />
         {isWorking ? (
           <span className="min-w-0 flex-1 truncate text-[11px] text-white/50">
@@ -305,7 +390,7 @@ export const AudioImport = ({
             disabled={isWorking}
             className="min-w-0 flex-1 rounded-lg border border-dashed border-white/15 px-3 py-2 text-left text-[11px] text-white/50 transition-colors hover:border-purple-500/40 hover:text-white/70 disabled:opacity-50"
           >
-            Upload audio file
+            Upload audio or video file
           </button>
         )}
         {hasMusic && !isWorking ? (
@@ -322,12 +407,19 @@ export const AudioImport = ({
         ) : null}
       </div>
       {isWorking ? (
-        <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
-          <div
-            className="h-full rounded-full bg-purple-500/70 transition-all duration-700 ease-out"
-            style={{ width: `${progress * 100}%` }}
-          />
-        </div>
+        <>
+          <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-purple-500/70 transition-all duration-700 ease-out"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+          {slowMessage ? (
+            <p className="pt-2 text-center text-[11px] text-white/45">
+              {slowMessage}
+            </p>
+          ) : null}
+        </>
       ) : null}
       {step === "done" ? (
         <p className="pt-2 text-center text-xs text-green-400">💿 ✅</p>

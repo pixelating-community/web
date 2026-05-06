@@ -59,6 +59,16 @@ const getWildcardParam = (params: Record<string, unknown>) => {
 const getTopicQueryKey = (topicName: string) =>
   ["topic-payload", topicName] as const;
 
+const DARK_TOPIC_NAME = "dark";
+const TOPIC_SHELL_CLASS = "flex h-dvh w-full flex-col items-center";
+const DARK_TOPIC_SHELL_CLASS = `${TOPIC_SHELL_CLASS} topic-dark bg-black text-white`;
+
+const isDarkTopicName = (topicName: string | null | undefined) =>
+  topicName?.trim().toLowerCase() === DARK_TOPIC_NAME;
+
+const getTopicShellClassName = (topicName: string | null | undefined) =>
+  isDarkTopicName(topicName) ? DARK_TOPIC_SHELL_CLASS : TOPIC_SHELL_CLASS;
+
 const getTopicPayloadQueryOptions = ({
   loadTopicPayloadFn,
   topicName,
@@ -199,6 +209,9 @@ function TopicRoute() {
   const resolvedData = topicQuery.data.data;
   const resolvedError = topicQuery.data.error;
   const topic = resolvedData?.topic;
+  const topicShellClassName = getTopicShellClassName(
+    topic?.name ?? requestedTopicName,
+  );
 
   const loadPerspectiveByIdFn = useServerFn(loadPerspectiveById);
 
@@ -440,8 +453,8 @@ function TopicRoute() {
   }
 
   return (
-    <main className="flex flex-col items-center h-dvh">
-      <div className="flex flex-col flex-1 min-h-0">{content}</div>
+    <main className={topicShellClassName}>
+      <div className="flex w-full flex-col flex-1 min-h-0">{content}</div>
     </main>
   );
 }

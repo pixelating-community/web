@@ -55,6 +55,7 @@ import type {
 import { useServerFn } from "@tanstack/react-start";
 import { setPerspectiveBounds } from "@/lib/perspectiveBounds.functions";
 import { getPublicAudioBaseUrl } from "@/lib/publicAudioBase";
+import { setTimestampSearchParams } from "@/lib/routeSearch";
 import {
   buildTopicPerspectivePath,
   buildTopicViewerPerspectivePath,
@@ -412,8 +413,9 @@ export const SW = ({
   const {
     clearAllMarks,
     clearCurrentMark,
-    markAndForward,
+    markEndAndForward,
     markCurrentEnd,
+    markStart,
     rewindToPrevious,
     shiftWordStartBackward,
     shiftWordStartForward,
@@ -701,6 +703,8 @@ export const SW = ({
         const hasAudio = hasPlayableAudioSource(audioFor(perspective));
         const hasPlaybackError = Boolean(playbackErrorById[perspective.id]);
         const playDisabled = !hasAudio;
+        const showViewerEditActions =
+          isViewer && showViewerEditLink && canWrite && Boolean(topicName);
         const showStopState =
           !playDisabled && !hasPlaybackError && isActive && isPlaybackActive;
         const playLabel =
@@ -711,18 +715,21 @@ export const SW = ({
               : isActive && isPlaybackActive
                 ? "Pause audio"
                 : "Play audio";
-        const showInlinePlayControl = hasAudio && (
-          isViewer ? !showViewerAudioControls : isActive
-        );
+        const showInlinePlayControl = isViewer
+          ? !showViewerAudioControls && (hasAudio || showViewerEditActions)
+          : hasAudio &&
+            isStudioSurface &&
+            topicName &&
+            isActive;
         const writeHref =
-          isViewer && showViewerEditLink && canWrite && topicName
+          showViewerEditActions && topicName
             ? buildTopicWritePerspectivePath({
                 topicName,
                 perspectiveId: perspective.id,
               })
             : "";
         const recordHref =
-          isViewer && showViewerEditLink && canWrite && topicName
+          showViewerEditActions && topicName
             ? buildTopicPerspectivePath({
                 topicName,
                 perspectiveId: perspective.id,
@@ -735,8 +742,11 @@ export const SW = ({
                 perspectiveId: perspective.id,
               });
               const params = new URLSearchParams();
-              if (perspective.start_time != null) params.set("s", String(perspective.start_time));
-              if (perspective.end_time != null) params.set("e", String(perspective.end_time));
+              setTimestampSearchParams({
+                end: perspective.end_time,
+                params,
+                start: perspective.start_time,
+              });
               const qs = params.toString();
               return qs ? `${base}?${qs}` : base;
             })()
@@ -751,7 +761,7 @@ export const SW = ({
                 <SwInlinePlayControl
                   playDisabled={playDisabled}
                   playLabel={playLabel}
-                  previewHref={isStudioSurface ? "" : previewHref}
+                  previewHref={isStudioSurface || !hasAudio ? "" : previewHref}
                   recordHref={recordHref}
                   showStopState={showStopState}
                   writeHref={writeHref}
@@ -866,7 +876,8 @@ export const SW = ({
           onDeleteAudio={handleDeleteAudio}
           onCycleStudioPlaybackRate={cycleStudioPlaybackRate}
           onRewindToPrevious={rewindToPrevious}
-          onMarkAndForward={markAndForward}
+          onMarkStart={markStart}
+          onMarkEndAndForward={markEndAndForward}
           onMarkCurrentEnd={markCurrentEnd}
           onClearCurrentMark={handleClearCurrentMark}
           isClearCurrentMarkArmed={isClearCurrentMarkArmed}

@@ -204,4 +204,44 @@ describe("setPerspectiveBoundsServer", () => {
       endTime: 90.1234567,
     });
   });
+
+  it("omits a nearly identical end bound from the returned href", async () => {
+    sqlMock.mockImplementation(
+      async (strings: TemplateStringsArray, ...values: unknown[]) => {
+        const query = strings.join(" ");
+        if (query.includes("SELECT p.topic_id")) {
+          return [
+            {
+              end_time: null,
+              start_time: 246.755671,
+              topic_id: "topic-1",
+              topic_name: "art tools",
+            },
+          ];
+        }
+        if (query.includes("UPDATE perspectives")) {
+          return [values];
+        }
+        return [];
+      },
+    );
+
+    const result = await setPerspectiveBoundsServer({
+      request,
+      data: {
+        actionToken: "align-token",
+        currentPath: "/t/art%20tools/ke/p1?s=246.755671&e=246.911676",
+        endTime: 246.911676,
+        perspectiveId: "p1",
+        topicId: "topic-1",
+      },
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      href: "/t/art%20tools/ke/p1?s=246.755671",
+      startTime: 246.755671,
+      endTime: 246.911676,
+    });
+  });
 });

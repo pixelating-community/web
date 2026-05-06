@@ -19,6 +19,7 @@ export type Perspective = {
   height?: number;
   audio_src?: string;
   image_src?: string;
+  video_src?: string;
   recording_src?: string;
   remix_audio_src?: string;
   remix_duration?: number;

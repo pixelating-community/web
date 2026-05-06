@@ -4,6 +4,56 @@ const normalizeOptionalString = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const MIN_TIMESTAMP_RANGE_SECONDS = 0.2;
+
+const normalizeFiniteTimestamp = (value: number | null | undefined) =>
+  typeof value === "number" && Number.isFinite(value) && value >= 0
+    ? value
+    : undefined;
+
+export const normalizeTimestampRangeEnd = ({
+  end,
+  start,
+}: {
+  end?: number | null;
+  start?: number | null;
+}) => {
+  const normalizedEnd = normalizeFiniteTimestamp(end);
+  if (normalizedEnd === undefined) return undefined;
+  const normalizedStart = normalizeFiniteTimestamp(start);
+  if (normalizedStart === undefined) return normalizedEnd;
+  return normalizedEnd - normalizedStart > MIN_TIMESTAMP_RANGE_SECONDS
+    ? normalizedEnd
+    : undefined;
+};
+
+export const setTimestampSearchParams = ({
+  end,
+  params,
+  start,
+}: {
+  end?: number | null;
+  params: URLSearchParams;
+  start?: number | null;
+}) => {
+  const normalizedStart = normalizeFiniteTimestamp(start);
+  if (normalizedStart !== undefined) {
+    params.set("s", String(normalizedStart));
+  } else {
+    params.delete("s");
+  }
+
+  const normalizedEnd = normalizeTimestampRangeEnd({
+    end,
+    start: normalizedStart,
+  });
+  if (normalizedEnd !== undefined) {
+    params.set("e", String(normalizedEnd));
+  } else {
+    params.delete("e");
+  }
+};
+
 const parseTimecode = (raw: string): number | undefined => {
   // Supports: "1.25", "0:01.25", "1:02.5", "01:25"
   const match = raw.match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/);
@@ -43,7 +93,7 @@ export const parseTopicRouteSearch = (
     r: normalizeOptionalString(search.r),
     w: normalizeOptionalString(search.w),
     s,
-    e: e !== undefined && s !== undefined && e < s ? undefined : e,
+    e: normalizeTimestampRangeEnd({ end: e, start: s }),
     parent: normalizeOptionalString(search.parent),
     v: normalizeOptionalString(search.v),
     i: normalizeOptionalString(search.i),

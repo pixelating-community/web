@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, type RefObject } from "react";
+import { useRef, type ReactNode, type RefObject } from "react";
 import { Audio } from "@/components/Audio";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { useConfirmAction } from "@/components/sw/useConfirmAction";
@@ -60,7 +60,8 @@ type SWEFooterProps = {
   onDeleteAudio: () => void;
   onCycleStudioPlaybackRate: () => void;
   onRewindToPrevious: () => void;
-  onMarkAndForward: () => void;
+  onMarkStart: () => void;
+  onMarkEndAndForward: () => void;
   onMarkCurrentEnd: () => void;
   onClearCurrentMark: () => void;
   isClearCurrentMarkArmed?: boolean;
@@ -112,7 +113,8 @@ export const SWEFooter = ({
   onDeleteAudio,
   onCycleStudioPlaybackRate,
   onRewindToPrevious,
-  onMarkAndForward,
+  onMarkStart,
+  onMarkEndAndForward,
   onMarkCurrentEnd,
   onClearCurrentMark,
   isClearCurrentMarkArmed = false,
@@ -132,6 +134,7 @@ export const SWEFooter = ({
   onAudioError,
   children,
 }: SWEFooterProps) => {
+  const activeMarkPointerIdRef = useRef<number | null>(null);
   const confirmDeleteAudio = useConfirmAction({
     enabled: !isBusy && hasRecordedAudio,
     onConfirm: onDeleteAudio,
@@ -326,7 +329,43 @@ export const SWEFooter = ({
               </button>
               <button
                 type="button"
-                onClick={onMarkAndForward}
+                onPointerDown={(event) => {
+                  if (event.button !== 0) return;
+                  activeMarkPointerIdRef.current = event.pointerId;
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  onMarkStart();
+                }}
+                onPointerUp={(event) => {
+                  if (activeMarkPointerIdRef.current !== event.pointerId) {
+                    return;
+                  }
+                  activeMarkPointerIdRef.current = null;
+                  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  }
+                  onMarkEndAndForward();
+                }}
+                onPointerCancel={(event) => {
+                  if (activeMarkPointerIdRef.current !== event.pointerId) {
+                    return;
+                  }
+                  activeMarkPointerIdRef.current = null;
+                  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+                    event.currentTarget.releasePointerCapture(event.pointerId);
+                  }
+                  onMarkEndAndForward();
+                }}
+                onKeyDown={(event) => {
+                  if (event.key !== " " && event.key !== "Enter") return;
+                  event.preventDefault();
+                  if (event.repeat) return;
+                  onMarkStart();
+                }}
+                onKeyUp={(event) => {
+                  if (event.key !== " " && event.key !== "Enter") return;
+                  event.preventDefault();
+                  onMarkEndAndForward();
+                }}
                 className="px-3 py-1 text-sm border-0 h-11 rounded-xl bg-emerald-500/40 text-emerald-100 touch-manipulation"
                 disabled={isBusy || selectedWordCount === 0}
                 aria-label="Mark word and move next"

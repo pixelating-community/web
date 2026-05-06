@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { saveKaraokePhrasesServer } from "@/lib/karaokePhrases.server";
 
 export const saveKaraokePhrases = createServerFn({ method: "POST" })
   .inputValidator(
@@ -11,10 +10,11 @@ export const saveKaraokePhrases = createServerFn({ method: "POST" })
       phrases?: unknown;
     }) => value,
   )
-  .handler(async ({ data, context }) =>
-    saveKaraokePhrasesServer({
+  .handler(async ({ data, context }) => {
+    const { saveKaraokePhrasesServer } = await import("@/lib/karaokePhrases.server");
+    return saveKaraokePhrasesServer({
       request:
         (context as { request?: Request } | undefined)?.request ?? getRequest(),
       data,
-    }),
-  );
+    });
+  });

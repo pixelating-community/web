@@ -48,6 +48,7 @@ export const SWStudioSurface = ({
             readOnly={true}
             showTimingLabels={true}
             showSelection={true}
+            showTranscribedIndicator={true}
             selectedWordIndex={
               item.isActive ? item.selectedWordIndex : undefined
             }

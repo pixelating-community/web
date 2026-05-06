@@ -65,6 +65,7 @@ export const useSwTimingEditor = ({
   latestTimingsRef.current = selectedTimings;
   const selectedWordIndexRef = useRef(selectedWordIndex);
   selectedWordIndexRef.current = selectedWordIndex;
+  const arrowRightMarkingRef = useRef(false);
 
   const updateTimingEntry = useCallback(
     (index: number, next: WordTimingEntry | null) => {
@@ -248,23 +249,23 @@ export const useSwTimingEditor = ({
     if (!selectedPerspective) return;
     const words = getPerspectiveWords(selectedPerspective);
     const currentIndex = getTimingEditorIndex({
-      selectedWordIndex,
+      selectedWordIndex: selectedWordIndexRef.current,
       wordsLength: words.length,
     });
     if (currentIndex < 0) return;
     markStartAtIndex(currentIndex);
-  }, [markStartAtIndex, selectedPerspective, selectedWordIndex]);
+  }, [markStartAtIndex, selectedPerspective]);
 
   const markEndAndForward = useCallback(() => {
     if (!selectedPerspective) return;
     const words = getPerspectiveWords(selectedPerspective);
     const currentIndex = getTimingEditorIndex({
-      selectedWordIndex,
+      selectedWordIndex: selectedWordIndexRef.current,
       wordsLength: words.length,
     });
     if (currentIndex < 0) return;
     const nextTimings = buildTimingEntries({
-      existingTimings: selectedTimings,
+      existingTimings: latestTimingsRef.current,
       wordsLength: words.length,
     });
     nextTimings[currentIndex] = buildTimingEndEntry({
@@ -272,6 +273,8 @@ export const useSwTimingEditor = ({
       end: getCurrentTime(),
     });
     const nextSelectedWordIndex = Math.min(words.length - 1, currentIndex + 1);
+    latestTimingsRef.current = nextTimings;
+    selectedWordIndexRef.current = nextSelectedWordIndex;
     const runtimeState = runtimeById[selectedPerspective.id];
     const nextRevision = (runtimeState?.timingsRevision ?? 0) + 1;
     setSelectedId(selectedPerspective.id);
@@ -286,8 +289,6 @@ export const useSwTimingEditor = ({
     patchRuntime,
     runtimeById,
     selectedPerspective,
-    selectedTimings,
-    selectedWordIndex,
     setSelectedId,
   ]);
 
@@ -296,11 +297,13 @@ export const useSwTimingEditor = ({
     const words = getPerspectiveWords(selectedPerspective);
     const nextState = buildMarkAndForwardState({
       currentTime: getCurrentTime(),
-      existingTimings: selectedTimings,
-      selectedWordIndex,
+      existingTimings: latestTimingsRef.current,
+      selectedWordIndex: selectedWordIndexRef.current,
       wordsLength: words.length,
     });
     if (!nextState) return;
+    latestTimingsRef.current = nextState.nextTimings;
+    selectedWordIndexRef.current = nextState.nextSelectedWordIndex;
     const runtimeState = runtimeById[selectedPerspective.id];
     const nextRevision = (runtimeState?.timingsRevision ?? 0) + 1;
     setSelectedId(selectedPerspective.id);
@@ -315,8 +318,6 @@ export const useSwTimingEditor = ({
     patchRuntime,
     runtimeById,
     selectedPerspective,
-    selectedTimings,
-    selectedWordIndex,
     setSelectedId,
   ]);
 
@@ -398,12 +399,27 @@ export const useSwTimingEditor = ({
     const words = getPerspectiveWords(selectedPerspective);
     if (words.length === 0) return;
     const currentIndex = getTimingEditorIndex({
-      selectedWordIndex,
+      selectedWordIndex: selectedWordIndexRef.current,
       wordsLength: words.length,
     });
     if (currentIndex < 0) return;
-    setTimingEnd(currentIndex, getCurrentTime());
-  }, [getCurrentTime, selectedPerspective, selectedWordIndex, setTimingEnd]);
+    const nextTimings = buildTimingEntries({
+      existingTimings: latestTimingsRef.current,
+      wordsLength: words.length,
+    });
+    nextTimings[currentIndex] = buildTimingEndEntry({
+      existing: nextTimings[currentIndex],
+      end: getCurrentTime(),
+    });
+    latestTimingsRef.current = nextTimings;
+    const runtimeState = runtimeById[selectedPerspective.id];
+    const nextRevision = (runtimeState?.timingsRevision ?? 0) + 1;
+    patchRuntime(selectedPerspective.id, {
+      dirtyTimings: true,
+      timings: nextTimings,
+      timingsRevision: nextRevision,
+    });
+  }, [getCurrentTime, patchRuntime, runtimeById, selectedPerspective]);
 
   const markEndAtIndex = useCallback(
     (targetIndex: number) => {
@@ -473,7 +489,10 @@ export const useSwTimingEditor = ({
       event.preventDefault();
 
       if (event.key === "ArrowRight") {
-        markAndForward();
+        if (!event.repeat && !arrowRightMarkingRef.current) {
+          arrowRightMarkingRef.current = true;
+          markStart();
+        }
         return;
       }
 
@@ -489,14 +508,24 @@ export const useSwTimingEditor = ({
       rewindToPrevious();
     };
 
+    const handleKeyUp = (event: KeyboardEvent) => {
+      if (event.key !== "ArrowRight" || !arrowRightMarkingRef.current) return;
+      event.preventDefault();
+      arrowRightMarkingRef.current = false;
+      markEndAndForward();
+    };
+
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
     };
   }, [
     enabled,
     clearCurrentMark,
-    markAndForward,
+    markEndAndForward,
+    markStart,
     markCurrentEnd,
     rewindToPrevious,
     selectedPerspective,
@@ -560,7 +589,9 @@ export const useSwTimingEditor = ({
     clearAllMarks,
     clearCurrentMark,
     markAndForward,
+    markEndAndForward,
     markCurrentEnd,
+    markStart,
     markStartAtIndex,
     midiLearnTarget,
     midiUndoNote,

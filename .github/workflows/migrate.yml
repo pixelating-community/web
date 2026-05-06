@@ -196,6 +196,9 @@ jobs:
           fi
 
           docker compose -f "${COMPOSE_FILE}" ps
+          echo "Pruning unused Docker images and build cache..."
+          docker image prune -a -f
+          docker builder prune -a -f
 
           if [ -n "${GHCR_TOKEN:-}" ]; then
             docker logout ghcr.io || true

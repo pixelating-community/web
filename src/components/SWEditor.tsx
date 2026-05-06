@@ -26,6 +26,7 @@ export type SWEditorProps = {
   readOnly?: boolean;
   showTimingLabels?: boolean;
   showSelection?: boolean;
+  showTranscribedIndicator?: boolean;
   selectedWordIndex?: number | null;
   onSelectWord?: (index: number) => void;
   highlightDurationScale?: number;
@@ -147,6 +148,7 @@ const SWEditorComponent = ({
   readOnly = false,
   showTimingLabels = true,
   showSelection = true,
+  showTranscribedIndicator = false,
   selectedWordIndex,
   onSelectWord,
   highlightDurationScale = 1,
@@ -204,6 +206,7 @@ const SWEditorComponent = ({
       if (index === null) continue;
       const timingIndex = index;
       const timing = coerceTimingEntry(timings, timingIndex);
+      const isMarked = showTranscribedIndicator && Boolean(timing);
       const isPlayback =
         isActive &&
         activeWordIndex >= 0 &&
@@ -238,6 +241,8 @@ const SWEditorComponent = ({
       }
 
       wordElement.classList.toggle("is-playback", isPlayback);
+      wordElement.classList.toggle("is-marked", isMarked);
+      wordElement.classList.toggle("is-selected", isSelected);
       wordElement.classList.toggle("ring-[0.5px]", isSelected);
       wordElement.classList.toggle("ring-purple-300/80", isSelected);
 
@@ -256,6 +261,7 @@ const SWEditorComponent = ({
     selectedWordIndex,
     showSelection,
     showTimingLabels,
+    showTranscribedIndicator,
     shouldEnableWordMode,
     timings,
     timings,
@@ -342,7 +348,7 @@ const SWEditorComponent = ({
           <div className="flex-1 min-w-0">
             <div
               ref={viewerRef}
-              className="flex flex-col w-full text-left whitespace-pre-line leading-[1.15] [&_p]:my-0 [&_p+p]:mt-[0.2em] has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20"
+              className="sw-perspective-text flex flex-col w-full text-left whitespace-pre-line leading-[1.15] [&_p]:my-0 [&_p+p]:mt-[0.2em] has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20"
             />
           </div>
         </div>
@@ -362,6 +368,9 @@ const areSWEditorPropsEqual = (prev: SWEditorProps, next: SWEditorProps) => {
   if (prev.readOnly !== next.readOnly) return false;
   if (prev.showTimingLabels !== next.showTimingLabels) return false;
   if (prev.showSelection !== next.showSelection) return false;
+  if (prev.showTranscribedIndicator !== next.showTranscribedIndicator) {
+    return false;
+  }
   if (prev.selectedWordIndex !== next.selectedWordIndex) return false;
   if (prev.highlightDurationScale !== next.highlightDurationScale) return false;
 

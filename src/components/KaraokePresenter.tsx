@@ -228,7 +228,7 @@ export const KaraokePresenter = ({
           {isPlaying ? "■" : "▶"}
         </button>
       </div>
-      <div className="karaoke-lines relative flex-1 overflow-x-auto overflow-y-hidden scrollbar-transparent flex items-center px-[50vw]">
+      <div className="karaoke-lines sw-perspective-text relative flex-1 overflow-x-auto overflow-y-visible scrollbar-transparent flex items-center px-[50vw] py-[0.25em]">
         {lines.map((lineWords, lineIndex) => {
           const state =
             lineIndex === activeLineIndex
@@ -274,7 +274,7 @@ export const KaraokePresenter = ({
                     }}
                     aria-pressed={isSelected || isActivePhraseWord}
                     style={styleVars}
-                    className={`sw-word karaoke-word relative px-2 font-bold leading-none text-center border-0 bg-transparent cursor-pointer transition-opacity duration-200 ${
+                    className={`sw-word karaoke-word relative px-2 font-bold leading-[1.18] text-center border-0 bg-transparent cursor-pointer transition-opacity duration-200 ${
                       hasTiming ? "" : "opacity-40"
                     } ${isActivePhraseWord ? "is-active-phrase" : ""} ${
                       isSelected ? "is-selected ring-2 ring-purple-200/90" : ""
