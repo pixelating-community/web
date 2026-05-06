@@ -1,7 +1,12 @@
 import "@tanstack/react-start/server-only";
-import { z } from "zod/v4";
+import type { z } from "zod/v4";
 import { verifyActionToken } from "@/lib/actionToken.server";
 import { sql } from "@/lib/db.server";
+import {
+  generatePerspectiveShareCodeSchema,
+  loadPerspectiveShareStatusSchema,
+  redeemPerspectiveShareCodeSchema,
+} from "@/lib/perspectiveShare.schema";
 import { getRequestId } from "@/lib/requestId";
 import {
   createReflectionAccessToken,
@@ -145,23 +150,6 @@ const verifyPerspectiveShareAction = async ({
 
   return null;
 };
-
-export const loadPerspectiveShareStatusSchema = z.object({
-  actionToken: z.string().min(1),
-  perspectiveId: z.uuid(),
-  topicId: z.uuid(),
-});
-
-export const generatePerspectiveShareCodeSchema = z.object({
-  actionToken: z.string().min(1),
-  perspectiveId: z.uuid(),
-  topicId: z.uuid(),
-});
-
-export const redeemPerspectiveShareCodeSchema = z.object({
-  code: z.string().min(1),
-  perspectiveId: z.uuid(),
-});
 
 export const loadPerspectiveShareStatusServer = async ({
   request,

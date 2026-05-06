@@ -228,7 +228,7 @@ export const KaraokePresenter = ({
           {isPlaying ? "■" : "▶"}
         </button>
       </div>
-      <div className="karaoke-lines relative flex-1 overflow-x-auto overflow-y-hidden scrollbar-transparent flex items-center px-[50vw]">
+      <div className="karaoke-lines sw-perspective-text relative flex-1 overflow-x-auto overflow-y-hidden scrollbar-transparent flex items-center px-[50vw]">
         {lines.map((lineWords, lineIndex) => {
           const state =
             lineIndex === activeLineIndex

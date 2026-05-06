@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { savePerspectiveAlignmentServer } from "@/lib/perspectiveAlignment.server";
 import type { WordTimingEntry } from "@/types/perspectives";
 
 export const savePerspectiveAlignment = createServerFn({ method: "POST" })
@@ -18,8 +17,11 @@ export const savePerspectiveAlignment = createServerFn({ method: "POST" })
       voiceOffsetSeconds?: number;
     }) => value,
   )
-  .handler(async ({ data, context }) =>
-    savePerspectiveAlignmentServer({
+  .handler(async ({ data, context }) => {
+    const { savePerspectiveAlignmentServer } = await import(
+      "@/lib/perspectiveAlignment.server"
+    );
+    return savePerspectiveAlignmentServer({
       request:
         (context as { request?: Request } | undefined)?.request ?? getRequest(),
       data: {
@@ -36,5 +38,5 @@ export const savePerspectiveAlignment = createServerFn({ method: "POST" })
         timings: Array.isArray(data.timings) ? data.timings : [],
         topicId: data.topicId?.trim() ?? "",
       },
-    }),
-  );
+    });
+  });

@@ -15,6 +15,7 @@ type PerspectiveWithTopicRow = {
   parent_perspective_id: string | null;
   audio_src: string | null;
   image_src: string | null;
+  video_src: string | null;
   recording_src: string | null;
   remix_audio_src: string | null;
   remix_duration: number | null;
@@ -46,7 +47,7 @@ export const getPerspectiveById = async ({
 
     const rows = await sql<PerspectiveWithTopicRow>`
       SELECT p.id, p.perspective, p.topic_id, p.parent_perspective_id,
-        p.audio_src, p.image_src, p.recording_src, p.remix_audio_src, p.remix_duration,
+        p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration,
         p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time,
         p.symbols, p.rendered_html, p.words_json,
         t.locked AS topic_locked, t.token AS topic_token
@@ -86,6 +87,7 @@ export const getPerspectiveById = async ({
       parent_perspective_id: row.parent_perspective_id ?? null,
       audio_src: resolveStoredAudioSrc(decryptIfLocked(row.audio_src, isLocked, token)),
       image_src: resolveStoredAudioSrc(decryptIfLocked(row.image_src, isLocked, token)),
+      video_src: resolveStoredAudioSrc(decryptIfLocked(row.video_src, isLocked, token)),
       recording_src: resolveStoredAudioSrc(decryptIfLocked(row.recording_src, isLocked, token)),
       remix_audio_src: resolveStoredAudioSrc(decryptIfLocked(row.remix_audio_src, isLocked, token)),
       remix_duration: row.remix_duration ?? null,

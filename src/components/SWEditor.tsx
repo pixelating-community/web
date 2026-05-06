@@ -342,7 +342,7 @@ const SWEditorComponent = ({
           <div className="flex-1 min-w-0">
             <div
               ref={viewerRef}
-              className="flex flex-col w-full text-left whitespace-pre-line leading-[1.15] [&_p]:my-0 [&_p+p]:mt-[0.2em] has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20"
+              className="sw-perspective-text flex flex-col w-full text-left whitespace-pre-line leading-[1.15] [&_p]:my-0 [&_p+p]:mt-[0.2em] has-[blockquote]:border-l-2 has-[blockquote]:border-purple-700 has-[blockquote]:pl-2 text-shadow-2xs text-shadow-purple-200/20"
             />
           </div>
         </div>

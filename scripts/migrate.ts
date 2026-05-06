@@ -125,6 +125,10 @@ const perspectiveStatements = [
   `,
   `
     ALTER TABLE perspectives
+    ADD COLUMN IF NOT EXISTS video_src TEXT;
+  `,
+  `
+    ALTER TABLE perspectives
     DROP COLUMN IF EXISTS collection_id,
     DROP COLUMN IF EXISTS segment_effects_json;
   `,

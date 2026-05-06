@@ -635,9 +635,11 @@ export const useSwPlaybackController = ({
         if (currentSrc !== nextSrc) {
           audio.pause();
           audio.src = nextSrc;
+          audio.currentTime = 0;
+          commitCurrentTime(0, { forceRender: true });
           audio.load();
           currentTrackRef.current = nextTrack;
-          startPlayback({ fromStart: false });
+          startPlayback({ fromStart: true });
           return;
         }
       }
@@ -683,6 +685,8 @@ export const useSwPlaybackController = ({
       }
       if (plan.shouldReplaceSrc) {
         audio.src = nextSrc;
+        audio.currentTime = 0;
+        commitCurrentTime(0, { forceRender: true });
       }
       if (plan.shouldLoad) {
         audio.load();

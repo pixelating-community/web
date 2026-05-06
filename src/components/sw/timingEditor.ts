@@ -2,6 +2,8 @@ import { coerceTimingEntry } from "@/components/sw/editorUtils";
 import { DEFAULT_WORD_DURATION } from "@/components/sw/runtime";
 import type { WordTimingEntry } from "@/types/perspectives";
 
+const MIN_WORD_DURATION = 0.04;
+
 export const getTimingEditorIndex = ({
   selectedWordIndex,
   wordsLength,
@@ -39,7 +41,9 @@ export const buildTimingStartEntry = ({
   const rawEnd =
     existing && typeof existing === "object" ? existing.end : undefined;
   const end =
-    typeof rawEnd === "number" && Number.isFinite(rawEnd) ? rawEnd : undefined;
+    typeof rawEnd === "number" && Number.isFinite(rawEnd)
+      ? Math.max(rawEnd, safeStart + MIN_WORD_DURATION)
+      : undefined;
   return {
     start: safeStart,
     end,
@@ -53,13 +57,15 @@ export const buildTimingEndEntry = ({
   end: number;
   existing: WordTimingEntry;
 }) => {
-  const start =
+  const safeEnd = Math.max(MIN_WORD_DURATION, end);
+  const rawStart =
     existing && typeof existing === "object"
       ? existing.start
-      : Math.max(0, end - DEFAULT_WORD_DURATION);
+      : Math.max(0, safeEnd - DEFAULT_WORD_DURATION);
+  const start = Math.min(rawStart, safeEnd - MIN_WORD_DURATION);
   return {
-    start,
-    end,
+    start: Math.max(0, start),
+    end: safeEnd,
   };
 };
 

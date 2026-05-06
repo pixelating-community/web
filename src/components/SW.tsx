@@ -701,6 +701,8 @@ export const SW = ({
         const hasAudio = hasPlayableAudioSource(audioFor(perspective));
         const hasPlaybackError = Boolean(playbackErrorById[perspective.id]);
         const playDisabled = !hasAudio;
+        const showViewerEditActions =
+          isViewer && showViewerEditLink && canWrite && Boolean(topicName);
         const showStopState =
           !playDisabled && !hasPlaybackError && isActive && isPlaybackActive;
         const playLabel =
@@ -711,18 +713,21 @@ export const SW = ({
               : isActive && isPlaybackActive
                 ? "Pause audio"
                 : "Play audio";
-        const showInlinePlayControl = hasAudio && (
-          isViewer ? !showViewerAudioControls : isActive
-        );
+        const showInlinePlayControl = isViewer
+          ? !showViewerAudioControls && (hasAudio || showViewerEditActions)
+          : hasAudio &&
+            isStudioSurface &&
+            topicName &&
+            isActive;
         const writeHref =
-          isViewer && showViewerEditLink && canWrite && topicName
+          showViewerEditActions && topicName
             ? buildTopicWritePerspectivePath({
                 topicName,
                 perspectiveId: perspective.id,
               })
             : "";
         const recordHref =
-          isViewer && showViewerEditLink && canWrite && topicName
+          showViewerEditActions && topicName
             ? buildTopicPerspectivePath({
                 topicName,
                 perspectiveId: perspective.id,
@@ -751,7 +756,7 @@ export const SW = ({
                 <SwInlinePlayControl
                   playDisabled={playDisabled}
                   playLabel={playLabel}
-                  previewHref={isStudioSurface ? "" : previewHref}
+                  previewHref={isStudioSurface || !hasAudio ? "" : previewHref}
                   recordHref={recordHref}
                   showStopState={showStopState}
                   writeHref={writeHref}

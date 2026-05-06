@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { normalizeTimings } from "@/lib/perspectiveTimings";
 import {
+  coerceTiming,
   findActiveWordIndex,
   getTimingDuration,
   normalizePlaybackTimings,
@@ -69,6 +70,27 @@ describe("sw playback timing helpers", () => {
     expect(getTimingDuration(timings, 0)).toBeCloseTo(0.4, 4);
     expect(findActiveWordIndex(timings, 1.35)).toBe(0);
     expect(findActiveWordIndex(timings, 1.45)).toBe(1);
+  });
+
+  it("highlights words from legacy timing entries around URL playback offsets", () => {
+    const timings = [
+      { start_time: "162.230974", end_time: "162.6", word: "first" },
+      { timestamp: "162.75", stop: "163.1", word: "second" },
+      { time: "163.25", end: "163.6", word: "third" },
+      "163.8",
+      164.1,
+    ] as unknown as WordTimingEntry[];
+
+    expect(coerceTiming(timings, 0)).toEqual({
+      start: 162.230974,
+      end: 162.6,
+    });
+    expect(findActiveWordIndex(timings, 162.230974)).toBe(0);
+    expect(findActiveWordIndex(timings, 162.7)).toBe(-1);
+    expect(findActiveWordIndex(timings, 162.8)).toBe(1);
+    expect(findActiveWordIndex(timings, 163.3)).toBe(2);
+    expect(findActiveWordIndex(timings, 163.85)).toBe(3);
+    expect(getTimingDuration(timings, 3)).toBeCloseTo(0.3, 4);
   });
 
   it("does not keep highlighting after a marked word window ends", () => {

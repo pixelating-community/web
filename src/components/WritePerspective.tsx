@@ -1,3 +1,4 @@
+/* oxlint-disable jsx-a11y/prefer-tag-over-role -- contentEditable rich text uses div textbox surfaces. */
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -797,6 +798,7 @@ export function WritePerspective({
                             setCharacters(text.length);
                           }}
                           className="
+                            sw-perspective-text
                             whitespace-pre-wrap
                             cursor-text
                             ui-focus-ring ui-editor-ring
@@ -817,6 +819,7 @@ export function WritePerspective({
                         <div key={`preview-${p.id}`} className="group relative">
                           <div
                             className="
+                              sw-perspective-text
                               flex w-full flex-col
                               whitespace-pre-line
                               has-[blockquote]:border-l-2
@@ -913,6 +916,7 @@ export function WritePerspective({
                     setCharacters(text.length);
                   }}
                   className="
+                    sw-perspective-text
                     whitespace-pre-wrap
                     cursor-text ui-focus-ring ui-editor-ring
                     p-2 rounded

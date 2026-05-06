@@ -1,10 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
 import { z } from "zod/v4";
-import {
-  saveTopicTokenServer,
-  topicTokenLoginSchema,
-} from "@/lib/topicTokenLogin.server";
+import { topicTokenLoginSchema } from "@/lib/topicTokenLogin.schema";
 
 const topicTokenLoginRedirectSchema = topicTokenLoginSchema.extend({
   nextPath: z.string().min(1),
@@ -17,6 +14,9 @@ export const saveTopicTokenAndRedirect = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const request =
       (context as { request?: Request } | undefined)?.request ?? getRequest();
+    const { saveTopicTokenServer } = await import(
+      "@/lib/topicTokenLogin.server"
+    );
     const result = await saveTopicTokenServer({
       request,
       data,

@@ -45,6 +45,27 @@ describe("topic route guards", () => {
     );
   });
 
+  it("keeps the dark topic background isolated to the topic shell", () => {
+    const source = readSource("src/routes/t.$.tsx");
+    const cssSource = readSource("src/styles/globals.css");
+    const editorSource = readSource("src/components/SWEditor.tsx");
+    const writeSource = readSource("src/components/WritePerspective.tsx");
+    const karaokeSource = readSource("src/components/KaraokePresenter.tsx");
+
+    expect(source).toMatch(/DARK_TOPIC_NAME = "dark"/);
+    expect(source).toMatch(/DARK_TOPIC_SHELL_CLASS = `\$\{TOPIC_SHELL_CLASS\} topic-dark bg-black text-white`/);
+    expect(source).toMatch(
+      /getTopicShellClassName\(\s*topic\?\.name \?\? requestedTopicName,\s*\)/,
+    );
+    expect(cssSource).toMatch(/\.topic-dark \.sw-perspective-text/);
+    expect(cssSource).toMatch(/@apply bg-linear-to-r\/oklch from-purple-500 to-pink-500 bg-clip-text text-transparent/);
+    expect(cssSource).toMatch(/caret-color: var\(--color-neon-magenta\)/);
+    expect(editorSource).toMatch(/sw-perspective-text/);
+    expect(writeSource).toMatch(/sw-perspective-text/);
+    expect(karaokeSource).toMatch(/karaoke-lines sw-perspective-text/);
+    expect(source).not.toMatch(/topic\.name === "dark"/);
+  });
+
   it("requires write access for karaoke editor routes", () => {
     const topicRoute = readSource("src/routes/t.$.tsx");
     const unlockRoute = readSource("src/routes/t.$topic.ul.tsx");

@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod/v4";
-import { getChildPerspectives } from "@/lib/getPerspectives.server";
 
 const childPerspectiveSchema = z.object({
   parentPerspectiveId: z.uuid(),
@@ -17,6 +16,7 @@ export const loadChildPerspectives = createServerFn({ method: "GET" })
     }) => childPerspectiveSchema.parse(value),
   )
   .handler(async ({ data }) => {
+    const { getChildPerspectives } = await import("@/lib/getPerspectives.server");
     const results = await getChildPerspectives({
       parentPerspectiveId: data.parentPerspectiveId,
       isLocked: data.isLocked,

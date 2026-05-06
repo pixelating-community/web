@@ -1,5 +1,7 @@
 "use client";
 
+import { Link } from "@tanstack/react-router";
+
 type SwInlinePlayControlProps = {
   playDisabled: boolean;
   playLabel: string;
@@ -49,9 +51,13 @@ export const SwInlinePlayControl = ({
           {showStopState ? "■" : "▶"}
         </button>
       ) : previewHref ? (
-        <a
-          href={playDisabled ? undefined : previewHref}
+        <Link
+          to={previewHref}
+          preload="intent"
           onClick={(event) => {
+            if (playDisabled) {
+              event.preventDefault();
+            }
             event.stopPropagation();
           }}
           aria-label={playLabel}
@@ -62,11 +68,12 @@ export const SwInlinePlayControl = ({
           }`}
         >
           ▶
-        </a>
+        </Link>
       ) : null}
       {writeHref ? (
-        <a
-          href={writeHref}
+        <Link
+          to={writeHref}
+          preload="intent"
           onClick={(event) => {
             event.stopPropagation();
           }}
@@ -75,11 +82,12 @@ export const SwInlinePlayControl = ({
           className="unstyled-link inline-flex h-6 w-6 touch-manipulation items-center justify-center border-0 bg-transparent text-sm text-white/90"
         >
           🖋️
-        </a>
+        </Link>
       ) : null}
       {recordHref ? (
-        <a
-          href={recordHref}
+        <Link
+          to={recordHref}
+          preload="intent"
           onClick={(event) => {
             event.stopPropagation();
           }}
@@ -88,7 +96,7 @@ export const SwInlinePlayControl = ({
           className="unstyled-link inline-flex h-6 w-6 touch-manipulation items-center justify-center border-0 bg-transparent text-xs text-white/90"
         >
           🔴
-        </a>
+        </Link>
       ) : null}
     </div>
   );

@@ -38,7 +38,12 @@ describe("sw player compatibility", () => {
     expect(listenerSource).toMatch(/audio\.ended/);
     expect(listenerSource).toMatch(/audio\.load\(\)/);
     expect(listenerSource).toMatch(/NETWORK_EMPTY/);
-    expect(listenerSource).toMatch(/preload="none"/);
+    expect(listenerSource).toMatch(
+      /<video[\s\S]*className=\{`h-full w-full object-cover \$\{PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS\}`\}[\s\S]*preload="none"/,
+    );
+    expect(listenerSource).not.toMatch(/\bobject-contain\b/);
+    expect(listenerSource).toMatch(/<audio[\s\S]*preload="none"/);
+    expect(listenerSource).not.toMatch(/\bautoPlay(?:=|\b)/);
     expect(listenerSource).not.toMatch(/hasAutoStartedRef/);
     expect(swSource).toMatch(/playIntentUntilRef/);
     expect(swSource).toMatch(/audio\.currentTime = 0/);
@@ -48,5 +53,17 @@ describe("sw player compatibility", () => {
     );
     expect(topicRouteSource).not.toMatch(/autoStartOnLoad/);
     expect(perspectiveRouteSource).not.toMatch(/autoStartOnLoad/);
+  });
+
+  it("uses stored perspective videos as karaoke backgrounds when no override is provided", () => {
+    const source = readSource("src/components/KaraokeListener.tsx");
+
+    expect(source).toMatch(/const resolvedVideoSrc = useMemo/);
+    expect(source).toMatch(
+      /resolvePublicAudioSrc\(videoSrc\) \|\| resolvePublicAudioSrc\(perspective\.video_src\)/,
+    );
+    expect(source).toMatch(/src=\{resolvedVideoSrc\}/);
+    expect(source).toMatch(/\{!resolvedVideoSrc \? \(/);
+    expect(source).not.toMatch(/\{!videoSrc \? \(/);
   });
 });

@@ -142,7 +142,7 @@ variable "nginx_limit_conn_per_ip" {
 
 variable "nginx_client_max_body_size" {
   type    = string
-  default = "25m"
+  default = "110m"
 }
 
 variable "nginx_restrict_direct_origin_access" {

@@ -61,6 +61,7 @@ export const loadPerspectivePayloadServer = async ({
       words_json?: string | null;
       audio_src?: string | null;
       image_src?: string | null;
+      video_src?: string | null;
       recording_src?: string | null;
       remix_audio_src?: string | null;
       remix_duration?: number | null;
@@ -82,6 +83,7 @@ export const loadPerspectivePayloadServer = async ({
         p.words_json,
         p.audio_src,
         p.image_src,
+        p.video_src,
         p.recording_src,
         p.remix_audio_src,
         p.remix_duration,
@@ -111,6 +113,7 @@ export const loadPerspectivePayloadServer = async ({
       wordTimings,
       audio_src: resolveStoredAudioSrc(row.audio_src) ?? undefined,
       image_src: resolveStoredAudioSrc(row.image_src) ?? undefined,
+      video_src: resolveStoredAudioSrc(row.video_src) ?? undefined,
       recording_src: resolveStoredAudioSrc(row.recording_src) ?? undefined,
       remix_audio_src: resolveStoredAudioSrc(row.remix_audio_src) ?? undefined,
       remix_duration: row.remix_duration ?? undefined,

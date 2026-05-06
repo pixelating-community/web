@@ -318,6 +318,33 @@ button.sw-word:focus-visible {
     0 0 6px oklch(0.15 0.12 293 / 0.5);
 }
 
+.topic-dark .sw-perspective-text,
+.topic-dark .sw-perspective-text :where(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  em,
+  strong,
+  blockquote,
+  a,
+  span:not(.sw-bg),
+  .sw-text
+) {
+  @apply bg-linear-to-r/oklch from-purple-500 to-pink-500 bg-clip-text text-transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0;
+  background-size: 100vw 100%;
+  text-shadow: none;
+}
+
+.topic-dark :where([contenteditable], input, textarea) {
+  caret-color: var(--color-neon-magenta);
+}
+
 .sw-word.is-held {
   background: oklch(0.45 0.2 310 / 0.5);
   box-shadow: 0 0 8px 2px oklch(0.7 0.25 310 / 0.4);

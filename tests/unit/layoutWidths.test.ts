@@ -14,9 +14,27 @@ describe("layout widths", () => {
     expect(readSource("src/components/WritePerspective.tsx")).toMatch(
       /\bw-screen\b/,
     );
-    expect(readSource("src/components/Perspectives.tsx")).toMatch(
+    expect(readSource("src/components/PerspectiveListener.tsx")).toMatch(
       /\bw-screen\b/,
     );
+  });
+
+  it("keeps the listener player clipped to one viewport before reflections", () => {
+    const source = readSource("src/components/PerspectiveListener.tsx");
+
+    expect(source).toMatch(
+      /className="relative flex h-dvh w-full flex-col overflow-y-auto"/,
+    );
+    expect(source).toMatch(
+      /className="relative z-10 flex h-dvh w-full shrink-0 flex-col overflow-hidden"/,
+    );
+    expect(source).toMatch(
+      /className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden/,
+    );
+    expect(source).toMatch(
+      /className="h-full w-\[80vw\] overflow-y-auto scrollbar-transparent"/,
+    );
+    expect(source).toMatch(/<PerspectiveReflections/);
   });
 
   it("uses a single stable scrollbar gutter on the root document", () => {

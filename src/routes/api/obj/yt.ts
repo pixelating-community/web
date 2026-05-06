@@ -3,6 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getClientIp, rateLimit } from "@/lib/rateLimit";
 import { audioImportSchema, deleteAudio, importAudioFile } from "@/lib/audioImport.server";
 
+const IMPORT_KEEPALIVE_INTERVAL_MS = 15_000;
+
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error);
+
 export const Route = createFileRoute("/api/obj/yt")({
   server: {
     handlers: {
@@ -57,11 +62,45 @@ export const Route = createFileRoute("/api/obj/yt")({
         const encoder = new TextEncoder();
         const stream = new ReadableStream({
           start(controller) {
-            const send = (payload: Record<string, unknown>) => {
-              controller.enqueue(
-                encoder.encode(`data: ${JSON.stringify(payload)}\n\n`),
-              );
+            let closed = false;
+            let closeTimer: ReturnType<typeof setTimeout> | undefined;
+            const enqueue = (chunk: string) => {
+              if (closed) return;
+              try {
+                controller.enqueue(encoder.encode(chunk));
+              } catch {
+                closed = true;
+              }
             };
+            const send = (payload: Record<string, unknown>) => {
+              enqueue(`data: ${JSON.stringify(payload)}\n\n`);
+            };
+            const close = () => {
+              if (closed) return;
+              closed = true;
+              clearInterval(keepaliveId);
+              if (closeTimer) clearTimeout(closeTimer);
+              controller.close();
+            };
+            const finish = () => {
+              if (closed) return;
+              clearInterval(keepaliveId);
+              closeTimer = setTimeout(close, 250);
+            };
+            const keepaliveId = setInterval(() => {
+              enqueue(`: import keepalive ${Date.now()}\n\n`);
+            }, IMPORT_KEEPALIVE_INTERVAL_MS);
+            request.signal.addEventListener(
+              "abort",
+              () => {
+                closed = true;
+                clearInterval(keepaliveId);
+                if (closeTimer) clearTimeout(closeTimer);
+              },
+              { once: true },
+            );
+
+            send({ step: "preparing" });
 
             importAudioFile({
               data,
@@ -71,12 +110,26 @@ export const Route = createFileRoute("/api/obj/yt")({
               if (result.ok) {
                 send({ step: "done", r2Key: result.r2Key });
               } else {
+                console.error("[audio-import] failed", {
+                  perspectiveId: data.perspectiveId,
+                  status: result.status,
+                  error: result.error,
+                });
                 send({ step: "error", error: result.error });
               }
-              controller.close();
-            }).catch(() => {
-              send({ step: "error", error: "Import failed" });
-              controller.close();
+              finish();
+            }).catch((error) => {
+              const message = getErrorMessage(error);
+              console.error("[audio-import] crashed", {
+                perspectiveId: data.perspectiveId,
+                error: message,
+                stack: error instanceof Error ? error.stack : undefined,
+              });
+              send({
+                step: "error",
+                error: `Import failed: ${message.slice(0, 200)}`,
+              });
+              finish();
             });
           },
         });
@@ -86,6 +139,7 @@ export const Route = createFileRoute("/api/obj/yt")({
             "Content-Type": "text/event-stream",
             "Cache-Control": "no-cache",
             Connection: "keep-alive",
+            "X-Accel-Buffering": "no",
           },
         });
       },

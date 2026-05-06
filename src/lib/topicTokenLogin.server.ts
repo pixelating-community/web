@@ -1,16 +1,11 @@
 import "@tanstack/react-start/server-only";
-import { z } from "zod/v4";
+import type { z } from "zod/v4";
 import { sql } from "@/lib/db.server";
 import { getClientIp, rateLimit } from "@/lib/rateLimit";
 import { getRequestId } from "@/lib/requestId";
 import { verifyTopicToken } from "@/lib/topicToken";
 import { getTopicTokenCookieNames } from "@/lib/topicTokenCookies";
-
-export const topicTokenLoginSchema = z.object({
-  token: z.string().min(1),
-  topicId: z.uuid(),
-  topicName: z.string().min(1),
-});
+import { topicTokenLoginSchema } from "@/lib/topicTokenLogin.schema";
 
 const buildCookie = ({
   name,

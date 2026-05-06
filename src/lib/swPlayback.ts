@@ -1,17 +1,78 @@
 import type { WordTimingEntry } from "@/types/perspectives";
 
 const DEFAULT_WORD_DURATION = 0.2;
+const NORMALIZED_START_STEP = 0.01;
+const TIME_PRECISION = 1_000_000;
+
+const roundTime = (value: number) =>
+  Math.round(value * TIME_PRECISION) / TIME_PRECISION;
+
+const toTimingNumber = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string") {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+const coerceTimingValue = (entry: unknown) => {
+  if (typeof entry === "number" && Number.isFinite(entry)) {
+    return { start: entry, end: null };
+  }
+  if (typeof entry === "string") {
+    const start = toTimingNumber(entry);
+    return start === null ? null : { start, end: null };
+  }
+  if (!entry || typeof entry !== "object") return null;
+
+  const raw = entry as Record<string, unknown>;
+  const start =
+    toTimingNumber(raw.start) ??
+    toTimingNumber(raw.start_time) ??
+    toTimingNumber(raw.timestamp) ??
+    toTimingNumber(raw.time);
+  if (start === null) return null;
+  const end =
+    toTimingNumber(raw.end) ??
+    toTimingNumber(raw.end_time) ??
+    toTimingNumber(raw.stop) ??
+    null;
+  return { start, end };
+};
+
+export const normalizePlaybackTimings = (
+  timings: WordTimingEntry[],
+): WordTimingEntry[] => {
+  let previousStart = Number.NEGATIVE_INFINITY;
+  return timings.map((entry) => {
+    const timing = coerceTimingValue(entry);
+    if (!timing) return null;
+
+    const start = roundTime(
+      Math.max(0, timing.start, previousStart + NORMALIZED_START_STEP),
+    );
+    previousStart = start;
+    const end =
+      typeof timing.end === "number" &&
+      Number.isFinite(timing.end) &&
+      timing.end > start
+        ? timing.end
+        : undefined;
+
+    if (!entry || typeof entry !== "object") {
+      return end === undefined ? { start } : { start, end };
+    }
+    if (end === undefined) {
+      const { end: _end, ...rest } = entry;
+      return { ...rest, start };
+    }
+    return { ...entry, start, end };
+  });
+};
 
 export const coerceTiming = (timings: WordTimingEntry[], index: number) => {
-  const entry = timings[index];
-  if (!entry || typeof entry !== "object") return null;
-  const start = entry.start;
-  if (typeof start !== "number" || !Number.isFinite(start)) return null;
-  const end =
-    typeof entry.end === "number" && Number.isFinite(entry.end)
-      ? entry.end
-      : null;
-  return { start, end };
+  return coerceTimingValue(timings[index]);
 };
 
 const findNextTiming = (
@@ -20,13 +81,9 @@ const findNextTiming = (
   currentStart = -1,
 ) => {
   for (let i = index + 1; i < timings.length; i += 1) {
-    const start = timings[i]?.start;
-    if (
-      typeof start === "number" &&
-      Number.isFinite(start) &&
-      start > currentStart
-    ) {
-      return { index: i, start };
+    const timing = coerceTiming(timings, i);
+    if (timing && timing.start > currentStart) {
+      return { index: i, start: timing.start };
     }
   }
   return null;
@@ -53,7 +110,6 @@ const resolveEnd = (
   return null;
 };
 
-
 export const getTimingDuration = (
   timings: WordTimingEntry[],
   index: number,
@@ -75,8 +131,8 @@ export const getTimingDuration = (
 };
 
 /**
- * Binary search for the active word. Assumes timings are sorted by start
- * (ascending) — which normalizePlaybackTimings guarantees.
+ * Find the active word. Assumes timings are sorted by start (ascending),
+ * which normalizePlaybackTimings guarantees, but still tolerates null gaps.
  */
 export const findActiveWordIndex = (
   timings: WordTimingEntry[],
@@ -84,34 +140,15 @@ export const findActiveWordIndex = (
 ): number => {
   if (!Number.isFinite(time)) return -1;
 
-  // Binary search: find the last timed entry whose start <= time
-  let lo = 0;
-  let hi = timings.length - 1;
   let candidate = -1;
-  while (lo <= hi) {
-    const mid = (lo + hi) >>> 1;
-    const timing = coerceTiming(timings, mid);
-    if (!timing) {
-      // null entry — scan right to find a valid one
-      let found = false;
-      for (let j = mid + 1; j <= hi; j++) {
-        if (coerceTiming(timings, j)) {
-          lo = j;
-          found = true;
-          break;
-        }
-      }
-      if (!found) {
-        hi = mid - 1;
-      }
+  for (let index = 0; index < timings.length; index += 1) {
+    const timing = coerceTiming(timings, index);
+    if (!timing) continue;
+    if (timing.start <= time) {
+      candidate = index;
       continue;
     }
-    if (timing.start <= time) {
-      candidate = mid;
-      lo = mid + 1;
-    } else {
-      hi = mid - 1;
-    }
+    break;
   }
 
   if (candidate < 0) return -1;
