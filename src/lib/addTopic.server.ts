@@ -93,6 +93,21 @@ export const addTopic = async ({
         (existing[0] as { locked?: unknown }).locked,
       );
       const tokenUnchanged = await verifyTopicToken(data.token, existingToken);
+      if (existingLocked && !tokenUnchanged) {
+        const contributionRows = await sql`
+          SELECT 1
+          FROM perspective_contributions AS contribution
+          JOIN perspectives AS perspective
+            ON perspective.id = contribution.perspective_id
+          WHERE perspective.topic_id = ${existingTopicId}
+          LIMIT 1;
+        `;
+        if (contributionRows.length > 0) {
+          return {
+            message: "topic has payment history and cannot be reset",
+          };
+        }
+      }
       const hashedToken = await hashTopicToken(data.token);
       const updated = await sql.begin(async (tx) => {
         if (existingLocked && !tokenUnchanged) {

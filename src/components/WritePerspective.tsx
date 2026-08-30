@@ -30,6 +30,12 @@ import {
 import { patchTopicPayloadQueryResult } from "@/lib/topicPayloadCache";
 import type { Perspective, WritePerspectiveProps } from "@/types/perspectives";
 import type { TopicPayloadQueryResult } from "@/types/topic";
+import {
+  UPLOAD_ACTION_TOKEN_HEADER,
+  UPLOAD_PERSPECTIVE_ID_HEADER,
+  UPLOAD_SCOPE_HEADER,
+  UPLOAD_TOPIC_ID_HEADER,
+} from "@/lib/uploadPolicy";
 
 type PerspectiveUpdate = {
   id: string;
@@ -388,9 +394,20 @@ export function WritePerspective({
       const uploadFormData = new FormData();
       uploadFormData.set("file", file);
       uploadFormData.set("contentTypeHint", file.type);
+      const uploadHeaders = new Headers({
+        [UPLOAD_ACTION_TOKEN_HEADER]: actionToken ?? "",
+        [UPLOAD_SCOPE_HEADER]: isEditingPerspective
+          ? "perspective:edit"
+          : "perspective:add",
+        [UPLOAD_TOPIC_ID_HEADER]: id,
+      });
+      if (perspectiveId) {
+        uploadHeaders.set(UPLOAD_PERSPECTIVE_ID_HEADER, perspectiveId);
+      }
       const response = await fetch("/api/obj/upload", {
         method: "POST",
         body: uploadFormData,
+        headers: uploadHeaders,
       });
       const payload = await response.json().catch(() => null);
       if (!response.ok) {

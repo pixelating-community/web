@@ -1,4 +1,5 @@
 import { purgePerspectiveShareCodes } from "../src/lib/perspectiveShareCleanup.server";
+import { sql } from "../src/lib/db.server";
 
 const DEFAULT_HEARTBEAT_PATH = "/tmp/perspective-share-cleanup-heartbeat.json";
 
@@ -50,10 +51,14 @@ const runCleanup = async ({
 };
 
 const scheduled = async (controller?: ScheduledControllerLike) => {
-  await runCleanup({
-    scheduledTime: controller?.scheduledTime,
-    trigger: "cron",
-  });
+  try {
+    await runCleanup({
+      scheduledTime: controller?.scheduledTime,
+      trigger: "cron",
+    });
+  } finally {
+    await sql.close?.();
+  }
 };
 
 export default {
@@ -61,7 +66,11 @@ export default {
 };
 
 if (import.meta.main) {
-  await runCleanup({
-    trigger: "manual",
-  });
+  try {
+    await runCleanup({
+      trigger: "manual",
+    });
+  } finally {
+    await sql.close?.();
+  }
 }

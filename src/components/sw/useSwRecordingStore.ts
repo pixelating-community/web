@@ -16,7 +16,7 @@ export type PendingRecording = {
 };
 
 const pendingRecordings = new Map<string, PendingRecording>();
-const DB_NAME = "pixelating-studio-recordings";
+const DB_NAME = "pxl8-studio-recordings";
 const DB_VERSION = 1;
 const STORE_NAME = "pending-recordings";
 let openDbPromise: Promise<IDBDatabase | null> | null = null;

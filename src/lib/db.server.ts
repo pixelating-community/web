@@ -42,8 +42,8 @@ const getBunSQL = () => {
 };
 
 const globalCache = globalThis as typeof globalThis & {
-  __pixelatingSql?: BunSQLClient;
-  __pixelatingSqlConnection?: string;
+  __pxl8Sql?: BunSQLClient;
+  __pxl8SqlConnection?: string;
 };
 
 const createSqlClient = (connectionString: string) => {
@@ -54,16 +54,16 @@ const createSqlClient = (connectionString: string) => {
 const connectionString = resolveConnectionString();
 
 if (
-  globalCache.__pixelatingSql &&
-  globalCache.__pixelatingSqlConnection !== connectionString
+  globalCache.__pxl8Sql &&
+  globalCache.__pxl8SqlConnection !== connectionString
 ) {
-  void globalCache.__pixelatingSql.close?.();
-  globalCache.__pixelatingSql = undefined;
+  void globalCache.__pxl8Sql.close?.();
+  globalCache.__pxl8Sql = undefined;
 }
 
-if (!globalCache.__pixelatingSql) {
-  globalCache.__pixelatingSql = createSqlClient(connectionString);
-  globalCache.__pixelatingSqlConnection = connectionString;
+if (!globalCache.__pxl8Sql) {
+  globalCache.__pxl8Sql = createSqlClient(connectionString);
+  globalCache.__pxl8SqlConnection = connectionString;
 }
 
-export const sql = globalCache.__pixelatingSql;
+export const sql = globalCache.__pxl8Sql;

@@ -24,7 +24,10 @@ import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
 import { Route as ApiPIdRouteImport } from './routes/api/p/$id'
 import { Route as ApiObjYtRouteImport } from './routes/api/obj/yt'
 import { Route as ApiObjUploadRouteImport } from './routes/api/obj/upload'
+import { Route as ApiObjStripeWebhookRouteImport } from './routes/api/obj/stripe-webhook'
+import { Route as ApiObjPaypalWebhookRouteImport } from './routes/api/obj/paypal-webhook'
 import { Route as ApiObjMergeStatusRouteImport } from './routes/api/obj/merge-status'
+import { Route as ApiObjHealthRouteImport } from './routes/api/obj/health'
 import { Route as ApiPIdPromptRouteImport } from './routes/api/p/$id/prompt'
 import { Route as ApiPIdAudioSnippetsRouteImport } from './routes/api/p/$id/audio-snippets'
 import { Route as ApiPIdAudioMixRouteImport } from './routes/api/p/$id/audio-mix'
@@ -105,9 +108,24 @@ const ApiObjUploadRoute = ApiObjUploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => ApiObjRoute,
 } as any)
+const ApiObjStripeWebhookRoute = ApiObjStripeWebhookRouteImport.update({
+  id: '/stripe-webhook',
+  path: '/stripe-webhook',
+  getParentRoute: () => ApiObjRoute,
+} as any)
+const ApiObjPaypalWebhookRoute = ApiObjPaypalWebhookRouteImport.update({
+  id: '/paypal-webhook',
+  path: '/paypal-webhook',
+  getParentRoute: () => ApiObjRoute,
+} as any)
 const ApiObjMergeStatusRoute = ApiObjMergeStatusRouteImport.update({
   id: '/merge-status',
   path: '/merge-status',
+  getParentRoute: () => ApiObjRoute,
+} as any)
+const ApiObjHealthRoute = ApiObjHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => ApiObjRoute,
 } as any)
 const ApiPIdPromptRoute = ApiPIdPromptRouteImport.update({
@@ -138,7 +156,10 @@ export interface FileRoutesByFullPath {
   '/api/p': typeof ApiPRouteWithChildren
   '/p/$id': typeof PIdRouteWithChildren
   '/t/$': typeof TSplatRoute
+  '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
+  '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
+  '/api/obj/stripe-webhook': typeof ApiObjStripeWebhookRoute
   '/api/obj/upload': typeof ApiObjUploadRoute
   '/api/obj/yt': typeof ApiObjYtRoute
   '/api/p/$id': typeof ApiPIdRouteWithChildren
@@ -160,7 +181,10 @@ export interface FileRoutesByTo {
   '/api/p': typeof ApiPRouteWithChildren
   '/p/$id': typeof PIdRouteWithChildren
   '/t/$': typeof TSplatRoute
+  '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
+  '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
+  '/api/obj/stripe-webhook': typeof ApiObjStripeWebhookRoute
   '/api/obj/upload': typeof ApiObjUploadRoute
   '/api/obj/yt': typeof ApiObjYtRoute
   '/api/p/$id': typeof ApiPIdRouteWithChildren
@@ -183,7 +207,10 @@ export interface FileRoutesById {
   '/api/p': typeof ApiPRouteWithChildren
   '/p/$id': typeof PIdRouteWithChildren
   '/t/$': typeof TSplatRoute
+  '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
+  '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
+  '/api/obj/stripe-webhook': typeof ApiObjStripeWebhookRoute
   '/api/obj/upload': typeof ApiObjUploadRoute
   '/api/obj/yt': typeof ApiObjYtRoute
   '/api/p/$id': typeof ApiPIdRouteWithChildren
@@ -207,7 +234,10 @@ export interface FileRouteTypes {
     | '/api/p'
     | '/p/$id'
     | '/t/$'
+    | '/api/obj/health'
     | '/api/obj/merge-status'
+    | '/api/obj/paypal-webhook'
+    | '/api/obj/stripe-webhook'
     | '/api/obj/upload'
     | '/api/obj/yt'
     | '/api/p/$id'
@@ -229,7 +259,10 @@ export interface FileRouteTypes {
     | '/api/p'
     | '/p/$id'
     | '/t/$'
+    | '/api/obj/health'
     | '/api/obj/merge-status'
+    | '/api/obj/paypal-webhook'
+    | '/api/obj/stripe-webhook'
     | '/api/obj/upload'
     | '/api/obj/yt'
     | '/api/p/$id'
@@ -251,7 +284,10 @@ export interface FileRouteTypes {
     | '/api/p'
     | '/p/$id'
     | '/t/$'
+    | '/api/obj/health'
     | '/api/obj/merge-status'
+    | '/api/obj/paypal-webhook'
+    | '/api/obj/stripe-webhook'
     | '/api/obj/upload'
     | '/api/obj/yt'
     | '/api/p/$id'
@@ -388,11 +424,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiObjUploadRouteImport
       parentRoute: typeof ApiObjRoute
     }
+    '/api/obj/stripe-webhook': {
+      id: '/api/obj/stripe-webhook'
+      path: '/stripe-webhook'
+      fullPath: '/api/obj/stripe-webhook'
+      preLoaderRoute: typeof ApiObjStripeWebhookRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/paypal-webhook': {
+      id: '/api/obj/paypal-webhook'
+      path: '/paypal-webhook'
+      fullPath: '/api/obj/paypal-webhook'
+      preLoaderRoute: typeof ApiObjPaypalWebhookRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
     '/api/obj/merge-status': {
       id: '/api/obj/merge-status'
       path: '/merge-status'
       fullPath: '/api/obj/merge-status'
       preLoaderRoute: typeof ApiObjMergeStatusRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/health': {
+      id: '/api/obj/health'
+      path: '/health'
+      fullPath: '/api/obj/health'
+      preLoaderRoute: typeof ApiObjHealthRouteImport
       parentRoute: typeof ApiObjRoute
     }
     '/api/p/$id/prompt': {
@@ -427,13 +484,19 @@ declare module '@tanstack/react-router' {
 }
 
 interface ApiObjRouteChildren {
+  ApiObjHealthRoute: typeof ApiObjHealthRoute
   ApiObjMergeStatusRoute: typeof ApiObjMergeStatusRoute
+  ApiObjPaypalWebhookRoute: typeof ApiObjPaypalWebhookRoute
+  ApiObjStripeWebhookRoute: typeof ApiObjStripeWebhookRoute
   ApiObjUploadRoute: typeof ApiObjUploadRoute
   ApiObjYtRoute: typeof ApiObjYtRoute
 }
 
 const ApiObjRouteChildren: ApiObjRouteChildren = {
+  ApiObjHealthRoute: ApiObjHealthRoute,
   ApiObjMergeStatusRoute: ApiObjMergeStatusRoute,
+  ApiObjPaypalWebhookRoute: ApiObjPaypalWebhookRoute,
+  ApiObjStripeWebhookRoute: ApiObjStripeWebhookRoute,
   ApiObjUploadRoute: ApiObjUploadRoute,
   ApiObjYtRoute: ApiObjYtRoute,
 }

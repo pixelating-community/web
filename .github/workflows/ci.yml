@@ -15,6 +15,9 @@ on:
       - app/**
       - public/**
       - scripts/**
+      - tests/**
+      - tsconfig.json
+      - vite.config.ts
       - .github/workflows/ci.yml
 
 permissions:
@@ -28,7 +31,34 @@ env:
   WORKER_IMAGE_NAME: ${{ github.repository }}-ffmpeg-worker
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate in the application container
+        run: |
+          set -euo pipefail
+          cp .env.sample .env
+          docker compose -f compose.yml up -d --build
+          docker compose -f compose.yml exec -T web bun run lint
+          docker compose -f compose.yml exec -T web bun run typecheck
+          docker compose -f compose.yml exec -T web bun run test
+          docker compose -f compose.yml exec -T web bun run build
+
+      - name: Show container logs after failure
+        if: failure()
+        run: docker compose -f compose.yml logs --no-color --tail=200
+
+      - name: Stop validation containers
+        if: always()
+        run: docker compose -f compose.yml down -v
+
   build:
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -97,7 +127,7 @@ jobs:
       id-token: write
       packages: read
     concurrency:
-      group: deploy-hetzner-production
+      group: deploy-pxl8-production
       cancel-in-progress: true
     steps:
       - name: Checkout repository
@@ -275,7 +305,7 @@ jobs:
         run: |
           set -euo pipefail
           SSH_PORT="${PORT:-22}"
-          APP_DIR="${DEPLOY_PATH:-/var/www/web}"
+          APP_DIR="${DEPLOY_PATH:-/var/www/pxl8}"
           COMPOSE_FILE="${DEPLOY_COMPOSE_FILE:-production.yml}"
 
           if [ ! -f "${COMPOSE_FILE}" ]; then
@@ -345,18 +375,26 @@ jobs:
           cd "${APP_DIR}"
           echo "Deploying images: WEB_IMAGE=${WEB_IMAGE} FFMPEG_WORKER_IMAGE=${FFMPEG_WORKER_IMAGE}"
           WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" --profile worker pull web ffmpeg-worker
+          WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" up -d postgres
           WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans --no-deps --force-recreate web
           docker compose -f "${COMPOSE_FILE}" ps
-          docker compose -f "${COMPOSE_FILE}" exec -T web sh -lc '
-            for key in VITE_OBJ_BASE_URL POSTGRES_USER POSTGRES_DB; do
-              value="$(printenv "$key" 2>/dev/null || true)"
-              if [ -n "$value" ]; then
-                echo "$key=<set>"
-              else
-                echo "::warning::$key is missing in running web container"
-              fi
-            done
-          '
+          healthy=0
+          for attempt in $(seq 1 45); do
+            if docker compose -f "${COMPOSE_FILE}" exec -T web bun -e '
+              const response = await fetch("http://127.0.0.1:3000/api/obj/health");
+              if (!response.ok) process.exit(1);
+            ' >/dev/null 2>&1; then
+              healthy=1
+              break
+            fi
+            sleep 2
+          done
+          if [ "${healthy}" -ne 1 ]; then
+            echo "::error::Application health check did not become ready."
+            docker compose -f "${COMPOSE_FILE}" logs --no-color --tail=200 web postgres
+            exit 1
+          fi
+          echo "Application health check passed."
           echo "Pruning unused Docker images and build cache..."
           docker image prune -a -f
           docker builder prune -a -f

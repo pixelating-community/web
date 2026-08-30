@@ -90,7 +90,7 @@ server {
     add_header Cache-Control "public, max-age=604800";
   }
 
-  location = /api/s/h {
+  location = /api/obj/health {
     proxy_pass http://127.0.0.1:${app_port};
     proxy_http_version 1.1;
     proxy_set_header Host $host;

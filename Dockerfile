@@ -1,5 +1,5 @@
-FROM oven/bun:1.3.14 AS base
-ARG REQUIRED_BUN_VERSION=1.3.14
+FROM oven/bun:1.4.0 AS base
+ARG REQUIRED_BUN_VERSION=1.4.0
 WORKDIR /app
 RUN test "$(bun --version)" = "$REQUIRED_BUN_VERSION"
 RUN apt-get update \

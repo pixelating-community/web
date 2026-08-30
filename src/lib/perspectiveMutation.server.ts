@@ -279,6 +279,27 @@ export const deletePerspectiveServer = async ({
     }
   }
 
+  const contributionRows = await sql`
+    WITH RECURSIVE perspective_tree AS (
+      SELECT id FROM perspectives WHERE id = ${data.perspectiveId}
+      UNION
+      SELECT child.id
+      FROM perspectives AS child
+      JOIN perspective_tree AS parent ON child.parent_perspective_id = parent.id
+    )
+    SELECT 1
+    FROM perspective_contributions AS contribution
+    JOIN perspective_tree ON perspective_tree.id = contribution.perspective_id
+    LIMIT 1;
+  `;
+  if (contributionRows.length > 0) {
+    return createFailure({
+      requestId,
+      error: "This story has payment history and cannot be deleted.",
+      code: "PAYMENT_HISTORY_EXISTS",
+    });
+  }
+
   await sql`DELETE FROM perspectives WHERE id = ${data.perspectiveId};`;
 
   return { ok: true };

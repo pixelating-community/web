@@ -5,6 +5,7 @@ import { decrypt } from "@/lib/crypto";
 import { sql } from "@/lib/db.server";
 import { normalizeSymbolList } from "@/lib/karaokePhrases";
 import { normalizeTimings } from "@/lib/perspectiveTimings";
+import { coerceSupportCount, SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
 import { resolveStoredAudioSrc } from "@/lib/publicAudioBase";
 import { verifyTopicToken } from "@/lib/topicToken";
 import type { WordTimingEntry } from "@/types/perspectives";
@@ -32,6 +33,8 @@ type PerspectiveRow = {
   rendered_html: string | null;
   words_json: string | null;
   reflection_count: number | null;
+  virtual_vote_count: number | string | null;
+  contribution_total_minor: number | string | null;
 };
 
 const decryptAudioSrcIfLocked = ({
@@ -199,6 +202,11 @@ const processPerspectiveRows = ({
       words: canAccess ? words : [],
       wordTimings: canAccess ? wordTimings : [],
       reflection_count: perspective.reflection_count ?? 0,
+      virtual_vote_count: coerceSupportCount(perspective.virtual_vote_count),
+      contribution_total_minor: coerceSupportCount(
+        perspective.contribution_total_minor,
+      ),
+      contribution_currency: SUPPORT_CURRENCY,
     });
   }
   return results;
@@ -257,11 +265,11 @@ export const getPerspectives = async ({
     });
 
     const rows = data.forward
-      ? await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
+      ? await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count, (SELECT count(*) FROM perspective_votes v WHERE v.perspective_id = p.id)::int AS virtual_vote_count, (SELECT COALESCE(sum(GREATEST(c.amount_minor - c.refunded_minor, 0)), 0) FROM perspective_contributions c WHERE c.perspective_id = p.id AND c.status IN ('completed', 'refunded')) AS contribution_total_minor
           FROM perspectives as p
           WHERE p.topic_id=${data.topic_id} AND p.parent_perspective_id IS NULL
           ORDER BY p.id;`
-      : await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
+      : await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count, (SELECT count(*) FROM perspective_votes v WHERE v.perspective_id = p.id)::int AS virtual_vote_count, (SELECT COALESCE(sum(GREATEST(c.amount_minor - c.refunded_minor, 0)), 0) FROM perspective_contributions c WHERE c.perspective_id = p.id AND c.status IN ('completed', 'refunded')) AS contribution_total_minor
           FROM perspectives as p
           WHERE p.topic_id=${data.topic_id} AND p.parent_perspective_id IS NULL
           ORDER BY p.id DESC;`;
@@ -301,7 +309,7 @@ export const getChildPerspectives = async ({
       token,
     });
 
-    const rows = await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count
+    const rows = await sql<PerspectiveRow>`SELECT p.id, perspective, p.topic_id, p.parent_perspective_id, p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration, p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time, p.symbols, p.rendered_html, p.words_json, (SELECT count(*) FROM perspectives c WHERE c.parent_perspective_id = p.id)::int AS reflection_count, (SELECT count(*) FROM perspective_votes v WHERE v.perspective_id = p.id)::int AS virtual_vote_count, (SELECT COALESCE(sum(GREATEST(c.amount_minor - c.refunded_minor, 0)), 0) FROM perspective_contributions c WHERE c.perspective_id = p.id AND c.status IN ('completed', 'refunded')) AS contribution_total_minor
       FROM perspectives as p
       WHERE p.parent_perspective_id = ${parentId}
       ORDER BY p.id;`;

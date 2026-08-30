@@ -1,0 +1,105 @@
+# Install as /etc/nginx/sites-available/pxl8.conf after placing the Cloudflare
+# Origin CA files at /etc/nginx/pxl8.pem and /etc/nginx/pxl8.key.
+
+limit_conn_zone $binary_remote_addr zone=pxl8_conn:10m;
+limit_req_zone $binary_remote_addr zone=pxl8_general:10m rate=30r/s;
+limit_req_zone $binary_remote_addr zone=pxl8_api:10m rate=10r/s;
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name pxl8.ing www.pxl8.ing we.pxl8.ing;
+  return 301 https://pxl8.ing$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  server_name pxl8.ing www.pxl8.ing we.pxl8.ing;
+
+  ssl_certificate /etc/nginx/pxl8.pem;
+  ssl_certificate_key /etc/nginx/pxl8.key;
+  ssl_protocols TLSv1.2 TLSv1.3;
+  ssl_session_cache shared:PXL8SSL:10m;
+  ssl_session_timeout 1d;
+  ssl_session_tickets off;
+
+  access_log /var/log/nginx/pxl8.access.log;
+  error_log /var/log/nginx/pxl8.error.log;
+
+  client_max_body_size 110m;
+  limit_conn pxl8_conn 40;
+
+  # Only Cloudflare should reach this origin virtual host.
+  if ($http_cf_connecting_ip = "") {
+    return 403;
+  }
+
+  location = /api/obj/health {
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+  }
+
+  # Provider retries must reach the application unchanged. Signature and
+  # idempotency checks are performed by the webhook handlers.
+  location = /api/obj/stripe-webhook {
+    client_max_body_size 1m;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+  }
+
+  location = /api/obj/paypal-webhook {
+    client_max_body_size 1m;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+  }
+
+  location /api/ {
+    limit_req zone=pxl8_api burst=25 nodelay;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+    proxy_set_header CF-IPCountry $http_cf_ipcountry;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 600s;
+    proxy_read_timeout 600s;
+  }
+
+  location /assets/ {
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    add_header Cache-Control "public, max-age=31536000, immutable";
+  }
+
+  location / {
+    limit_req zone=pxl8_general burst=60 nodelay;
+    proxy_pass http://127.0.0.1:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header CF-Connecting-IP $http_cf_connecting_ip;
+    proxy_set_header CF-IPCountry $http_cf_ipcountry;
+    proxy_connect_timeout 10s;
+    proxy_send_timeout 60s;
+    proxy_read_timeout 60s;
+  }
+}

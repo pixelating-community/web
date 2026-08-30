@@ -51,3 +51,15 @@ nginx_admin_limit_req_burst = 5
 nginx_limit_conn_per_ip    = 40
 nginx_client_max_body_size = "110m"
 nginx_restrict_direct_origin_access = false
+
+# Additive PXL8 resources. Keep DNS disabled until the app is serving on 3100
+# and the PXL8 Nginx virtual host has passed its HTTPS health check.
+enable_pxl8                           = false
+pxl8_zone_id                          = "cloudflare_pxl8_zone_id_here"
+pxl8_domain                           = "pxl8.ing"
+pxl8_r2_bucket                        = "pxl8-media"
+pxl8_origin_ipv4                      = "203.0.113.10"
+pxl8_create_dns                       = false
+pxl8_configure_https_settings         = true
+pxl8_create_origin_ca_certificate     = true
+pxl8_origin_ca_requested_validity     = 5475

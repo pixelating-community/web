@@ -22,7 +22,7 @@ export const sanitizeCommitReturnPath = (
 
 export const appendSavedSearchParam = (path: string) => {
   try {
-    const url = new URL(path, "https://local.pixelating");
+    const url = new URL(path, "https://local.pxl8");
     url.searchParams.set("saved", "1");
     return `${url.pathname}${url.search}${url.hash}`;
   } catch {

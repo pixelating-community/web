@@ -1,9 +1,12 @@
 import { resolve } from "node:path";
 import { registerAppCronJobs } from "../src/lib/appCron";
-import server from "../dist/server/server.js";
+import { assertProductionConfig } from "../src/lib/productionConfig";
 
 const DIST_CLIENT_DIR = resolve(process.cwd(), "dist/client");
 const PORT = Number(process.env.PORT || "3000");
+
+assertProductionConfig(process.env);
+const { default: server } = await import("../dist/server/server.js");
 
 function resolveStaticPath(pathname: string): string | null {
   if (!pathname || pathname.endsWith("/")) return null;

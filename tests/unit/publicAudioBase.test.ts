@@ -73,11 +73,11 @@ describe("resolveStoredAudioSrc", () => {
   });
 
   it("normalizes legacy R2 S3 absolute URLs to custom domain URLs when configured", () => {
-    process.env.VITE_OBJ_BASE_URL = "https://obj.pixelat.ing";
+    process.env.VITE_OBJ_BASE_URL = "https://obj.pxl8.ing";
     const legacyUrl =
       "https://acc123.r2.cloudflarestorage.com/wav/folder/clip.wav?X-Amz-Signature=abc";
     expect(resolveStoredAudioSrc(legacyUrl)).toBe(
-      "https://obj.pixelat.ing/folder/clip.wav",
+      "https://obj.pxl8.ing/folder/clip.wav",
     );
   });
 });

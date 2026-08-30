@@ -5,6 +5,7 @@ import { decrypt } from "@/lib/crypto";
 import { sql } from "@/lib/db.server";
 import { normalizeSymbolList } from "@/lib/karaokePhrases";
 import { normalizeTimings } from "@/lib/perspectiveTimings";
+import { coerceSupportCount, SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
 import { resolveStoredAudioSrc } from "@/lib/publicAudioBase";
 import { verifyTopicToken } from "@/lib/topicToken";
 
@@ -28,6 +29,8 @@ type PerspectiveWithTopicRow = {
   words_json: string | null;
   topic_locked: boolean | null;
   topic_token: string | null;
+  virtual_vote_count: number | string | null;
+  contribution_total_minor: number | string | null;
 };
 
 const decryptIfLocked = (value: string | null, isLocked: boolean, token?: string) => {
@@ -50,6 +53,8 @@ export const getPerspectiveById = async ({
         p.audio_src, p.image_src, p.video_src, p.recording_src, p.remix_audio_src, p.remix_duration,
         p.remix_updated_at, p.remix_waveform_json, p.start_time, p.end_time,
         p.symbols, p.rendered_html, p.words_json,
+        (SELECT count(*) FROM perspective_votes v WHERE v.perspective_id = p.id)::int AS virtual_vote_count,
+        (SELECT COALESCE(sum(GREATEST(c.amount_minor - c.refunded_minor, 0)), 0) FROM perspective_contributions c WHERE c.perspective_id = p.id AND c.status IN ('completed', 'refunded')) AS contribution_total_minor,
         t.locked AS topic_locked, t.token AS topic_token
       FROM perspectives AS p
       JOIN topics AS t ON t.id = p.topic_id
@@ -104,6 +109,9 @@ export const getPerspectiveById = async ({
       rendered_html: renderedHtml,
       words,
       wordTimings,
+      virtual_vote_count: coerceSupportCount(row.virtual_vote_count),
+      contribution_total_minor: coerceSupportCount(row.contribution_total_minor),
+      contribution_currency: SUPPORT_CURRENCY,
     };
   } catch (e) {
     console.error("Failed to get perspective by id", e);

@@ -5,6 +5,7 @@ import { memo } from "react";
 import { PerspectiveMarkup } from "@/components/PerspectiveMarkup";
 import { hasPlayableAudioSource } from "@/components/sw/runtime";
 import { buildTopicViewerPerspectivePath } from "@/lib/topicRoutes";
+import { formatContributionTotal } from "@/lib/perspectiveSupport";
 import type { Perspective } from "@/types/perspectives";
 
 type ReflectionPerspectiveCardProps = {
@@ -43,6 +44,15 @@ export const ReflectionPerspectiveCard = memo(function ReflectionPerspectiveCard
       >
         {hasAudio ? "▶" : "⇓"}
       </Link>
+      <div className="mt-2 flex items-center gap-3 text-xs text-white/40">
+        <span>♡ {perspective.virtual_vote_count ?? 0}</span>
+        <span>
+          ✦ {formatContributionTotal(
+            perspective.contribution_total_minor ?? 0,
+            perspective.contribution_currency,
+          )}
+        </span>
+      </div>
     </div>
   );
 });

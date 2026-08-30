@@ -146,7 +146,7 @@ const tryBuildServerAudioUrl = (key: string) => {
 
 /**
  * Extract the bare R2 object key from a stored audio value.
- * Handles public URLs (https://obj.pixelat.ing/{key}), proxy URLs, S3 API URLs,
+ * Handles public URLs (https://obj.pxl8.ing/{key}), proxy URLs, S3 API URLs,
  * and bare keys. Returns null if the value is empty or unparseable.
  */
 export const extractR2Key = (value: string | null | undefined): string | null => {

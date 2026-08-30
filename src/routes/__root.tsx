@@ -12,8 +12,8 @@ import type { ReactNode } from "react";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { RootErrorPage } from "@/components/RootErrorPage";
 
-const SITE_TITLE = "▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄";
-const SITE_DESCRIPTION = "\u{1F47E}";
+const SITE_TITLE = "PXL8";
+const SITE_DESCRIPTION = "Stories shaped by voices, votes, and support.";
 const SITE_VIEWPORT =
   "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no";
 const SITE_ICON =

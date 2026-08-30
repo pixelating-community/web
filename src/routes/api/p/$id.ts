@@ -227,7 +227,13 @@ export const Route = createFileRoute("/api/p/$id")({
           );
         }
 
-        await deletePerspective({ perspectiveId: data.id });
+        const deletion = await deletePerspective({ perspectiveId: data.id });
+        if (!deletion.deleted && deletion.reason === "payment-history") {
+          return Response.json(
+            { error: "This story has payment history and cannot be deleted." },
+            { status: 409, headers: requestIdHeaders(requestId) },
+          );
+        }
         return Response.json(
           { ok: true },
           { headers: requestIdHeaders(requestId) },

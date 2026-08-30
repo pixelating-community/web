@@ -1,4 +1,4 @@
-name: web-prod
+name: pxl8-prod
 
 services:
   postgres:
@@ -7,11 +7,11 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
-      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-pxl8}
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-pxl8}"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -32,8 +32,14 @@ services:
       POSTGRES_PORT: 5432
       REQUIRE_EXISTING_DATA: ${REQUIRE_EXISTING_DATA:-0}
     ports:
-      - "3000:3000"
-    command: ["sh", "-lc", "bun run migrate && bun run start"]
+      - "127.0.0.1:${APP_HOST_PORT:-3100}:3000"
+    command: ["sh", "-lc", "bun run migrate && exec sh scripts/run-web.sh prod"]
+    healthcheck:
+      test: ["CMD", "bun", "-e", "const response = await fetch('http://127.0.0.1:3000/api/obj/health'); if (!response.ok) process.exit(1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 45s
 
   ffmpeg-worker:
     image: ${FFMPEG_WORKER_IMAGE:-ghcr.io/pixelating-community/web-ffmpeg-worker:main}
@@ -57,4 +63,4 @@ services:
 
 volumes:
   postgres_data:
-    name: web_postgres_data
+    name: pxl8_postgres_data

@@ -55,6 +55,7 @@ import type {
 } from "@/components/sw/types";
 import { useServerFn } from "@tanstack/react-start";
 import { setPerspectiveBounds } from "@/lib/perspectiveBounds.functions";
+import { formatContributionTotal } from "@/lib/perspectiveSupport";
 import { getPublicAudioBaseUrl } from "@/lib/publicAudioBase";
 import { setTimestampSearchParams } from "@/lib/routeSearch";
 import { getTimingDuration } from "@/lib/swPlayback";
@@ -775,15 +776,33 @@ export const SW = ({
           leadingControl: (isStudioSurface || showInlinePlayControl) ? (
             <span className="inline-flex items-center gap-2">
               {showInlinePlayControl ? (
-                <SwInlinePlayControl
-                  playDisabled={playDisabled}
-                  playLabel={playLabel}
-                  previewHref={isStudioSurface || !hasAudio ? "" : previewHref}
-                  recordHref={recordHref}
-                  showStopState={showStopState}
-                  writeHref={writeHref}
-                  onPlayClick={isStudioSurface ? () => handlePlayControlActivate(perspective) : undefined}
-                />
+                <span className="relative inline-flex w-11 shrink-0 justify-center">
+                  <SwInlinePlayControl
+                    playDisabled={playDisabled}
+                    playLabel={playLabel}
+                    previewHref={isStudioSurface || !hasAudio ? "" : previewHref}
+                    recordHref={recordHref}
+                    showStopState={showStopState}
+                    writeHref={writeHref}
+                    onPlayClick={isStudioSurface ? () => handlePlayControlActivate(perspective) : undefined}
+                  />
+                  {isViewer ? (
+                    <span
+                      aria-label="Story support totals"
+                      className="pointer-events-none absolute left-1/2 top-full mt-1 flex -translate-x-1/2 flex-col items-center gap-0.5 whitespace-nowrap text-center text-xs text-white/45"
+                    >
+                      <span>
+                        ♡ {perspective.virtual_vote_count ?? 0}
+                      </span>
+                      <span>
+                        ✦ {formatContributionTotal(
+                          perspective.contribution_total_minor ?? 0,
+                          perspective.contribution_currency,
+                        )}
+                      </span>
+                    </span>
+                  ) : null}
+                </span>
               ) : null}
               {isStudioSurface ? (
                 <LineLengthIndicator text={perspective.perspective} />

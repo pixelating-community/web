@@ -26,6 +26,12 @@ import {
 import { savePerspectiveAlignment } from "@/lib/perspectiveAlignment.functions";
 import { buildTopicUnlockHref } from "@/lib/topicRoutes";
 import type { Perspective, WordTimingEntry } from "@/types/perspectives";
+import {
+  UPLOAD_ACTION_TOKEN_HEADER,
+  UPLOAD_PERSPECTIVE_ID_HEADER,
+  UPLOAD_SCOPE_HEADER,
+  UPLOAD_TOPIC_ID_HEADER,
+} from "@/lib/uploadPolicy";
 
 type PatchRuntime = (
   id: string,
@@ -121,10 +127,12 @@ export const useSwRecording = ({
       blob,
       contentTypeHint,
       filename,
+      perspectiveId,
     }: {
       blob: Blob;
       contentTypeHint?: string;
       filename: string;
+      perspectiveId: string;
     }) => {
       const formData = new FormData();
       formData.append("file", blob, filename);
@@ -134,6 +142,12 @@ export const useSwRecording = ({
       const response = await fetch("/api/obj/upload", {
         method: "POST",
         body: formData,
+        headers: {
+          [UPLOAD_ACTION_TOKEN_HEADER]: actionToken ?? "",
+          [UPLOAD_PERSPECTIVE_ID_HEADER]: perspectiveId,
+          [UPLOAD_SCOPE_HEADER]: "perspective:align",
+          [UPLOAD_TOPIC_ID_HEADER]: topicId,
+        },
       });
       if (!response.ok) {
         throw new Error("Upload failed");
@@ -144,7 +158,7 @@ export const useSwRecording = ({
         publicUrl: payload.publicUrl ?? payload.key,
       };
     },
-    [],
+    [actionToken, topicId],
   );
 
   const saveTimings = useCallback(
@@ -363,6 +377,7 @@ export const useSwRecording = ({
           blob: uploadBlob,
           filename,
           contentTypeHint: uploadMimeType,
+          perspectiveId,
         });
 
         setRecordingState(perspectiveId, { status: "saving" });

@@ -6,7 +6,7 @@ const { encryptMock, sqlMock, verifyTopicTokenMock, buildServerAudioUrlMock } =
     sqlMock: vi.fn<() => unknown>(),
     verifyTopicTokenMock: vi.fn<() => unknown>(),
     buildServerAudioUrlMock: vi.fn<(key: string) => string>(
-      (key: string) => `https://obj.pixelat.ing/${key}`,
+      (key: string) => `https://obj.pxl8.ing/${key}`,
     ),
   }));
 
@@ -24,7 +24,7 @@ vi.mock("@/lib/topicToken", () => ({
 
 vi.mock("@/lib/publicAudioBase", () => ({
   buildServerAudioUrl: buildServerAudioUrlMock,
-  getServerAudioBaseUrl: () => "https://obj.pixelat.ing",
+  getServerAudioBaseUrl: () => "https://obj.pxl8.ing",
 }));
 
 import {

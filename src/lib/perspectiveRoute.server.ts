@@ -5,6 +5,7 @@ import { TOPIC_UI_ACTION_SCOPES } from "@/lib/actionToken";
 import { compilePerspective } from "@/lib/compilePerspective";
 import { sql } from "@/lib/db.server";
 import { normalizeTimings } from "@/lib/perspectiveTimings";
+import { coerceSupportCount, SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
 import { resolveStoredAudioSrc } from "@/lib/publicAudioBase";
 import { getRequestId } from "@/lib/requestId";
 import { verifyTopicToken } from "@/lib/topicToken";
@@ -69,6 +70,8 @@ export const loadPerspectivePayloadServer = async ({
       remix_waveform_json?: unknown;
       start_time?: number | null;
       end_time?: number | null;
+      virtual_vote_count?: number | string | null;
+      contribution_total_minor?: number | string | null;
     }>`
       SELECT
         p.id,
@@ -90,7 +93,9 @@ export const loadPerspectivePayloadServer = async ({
         p.remix_updated_at,
         p.remix_waveform_json,
         p.start_time,
-        p.end_time
+        p.end_time,
+        (SELECT count(*) FROM perspective_votes v WHERE v.perspective_id = p.id)::int AS virtual_vote_count,
+        (SELECT COALESCE(sum(GREATEST(c.amount_minor - c.refunded_minor, 0)), 0) FROM perspective_contributions c WHERE c.perspective_id = p.id AND c.status IN ('completed', 'refunded')) AS contribution_total_minor
       FROM perspectives AS p
       JOIN topics AS t ON t.id = p.topic_id
       WHERE p.id = ${parsed.id}
@@ -129,6 +134,11 @@ export const loadPerspectivePayloadServer = async ({
         : undefined,
       start_time: row.start_time ?? undefined,
       end_time: row.end_time ?? undefined,
+      virtual_vote_count: coerceSupportCount(row.virtual_vote_count),
+      contribution_total_minor: coerceSupportCount(
+        row.contribution_total_minor,
+      ),
+      contribution_currency: SUPPORT_CURRENCY,
     };
 
     const isLocked = Boolean(row.topic_locked);

@@ -6,10 +6,16 @@ import {
 } from "@/lib/audioTranscode";
 import {
   buildObjectKey,
-  createObjectUploadUrl,
   getObjectPublicUrl,
   putObject,
 } from "@/lib/objectStorage.server";
+import { verifyActionToken } from "@/lib/actionToken.server";
+import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rateLimit";
+import {
+  MAX_MULTIPART_UPLOAD_BYTES,
+  getUploadSizeLimit,
+  readUploadRequestMetadata,
+} from "@/lib/uploadPolicy";
 
 const guessContentType = (filename: string) => {
   const ext = path.extname(filename).toLowerCase();
@@ -35,8 +41,52 @@ export const Route = createFileRoute("/api/obj/upload")({
     handlers: {
       POST: async ({ request }) => {
         const contentType = request.headers.get("content-type") ?? "";
+        if (!contentType.includes("multipart/form-data")) {
+          return Response.json(
+            { error: "multipart form data required" },
+            { status: 415 },
+          );
+        }
 
-        if (contentType.includes("multipart/form-data")) {
+        const metadata = readUploadRequestMetadata(request.headers);
+        if (!metadata) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        const verified = verifyActionToken({
+          token: metadata.actionToken,
+          requiredScope: metadata.scope,
+          topicId: metadata.topicId,
+          perspectiveId: metadata.perspectiveId,
+        });
+        if (!verified) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+
+        const ip = getClientIp(request.headers);
+        const rate = rateLimit(
+          `object-upload:${metadata.topicId}:${ip}`,
+          20,
+          10 * 60 * 1000,
+        );
+        if (!rate.ok) {
+          return Response.json(
+            { error: "Too many requests" },
+            { status: 429, headers: rateLimitHeaders(rate) },
+          );
+        }
+
+        const rawContentLength = request.headers.get("content-length");
+        const contentLength = rawContentLength
+          ? Number.parseInt(rawContentLength, 10)
+          : 0;
+        if (
+          Number.isFinite(contentLength) &&
+          contentLength > MAX_MULTIPART_UPLOAD_BYTES
+        ) {
+          return Response.json({ error: "File is too large" }, { status: 413 });
+        }
+
+        try {
           const formData = await request.formData().catch(() => null);
           if (!formData) {
             return Response.json(
@@ -71,6 +121,19 @@ export const Route = createFileRoute("/api/obj/upload")({
               : file.type?.startsWith("image/")
                 ? file.type
                 : guessContentType(filename);
+          const sizeLimit = getUploadSizeLimit(resolvedContentType);
+          if (!sizeLimit) {
+            return Response.json(
+              { error: "Only audio and image files are supported" },
+              { status: 415 },
+            );
+          }
+          if (file.size <= 0) {
+            return Response.json({ error: "File is empty" }, { status: 400 });
+          }
+          if (file.size > sizeLimit) {
+            return Response.json({ error: "File is too large" }, { status: 413 });
+          }
           let uploadBody: Buffer;
           let uploadContentType = resolvedContentType;
           if (resolvedContentType.startsWith("audio/")) {
@@ -97,34 +160,13 @@ export const Route = createFileRoute("/api/obj/upload")({
             key,
             publicUrl: getObjectPublicUrl(key),
           });
+        } catch (error) {
+          console.error("Object upload failed", {
+            topicId: metadata.topicId,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          return Response.json({ error: "Upload failed" }, { status: 500 });
         }
-
-        const body = await request.json().catch(() => null);
-        const filename =
-          body && typeof body.filename === "string" ? body.filename : "";
-        const jsonContentType =
-          body && typeof body.contentType === "string" ? body.contentType : "";
-
-        if (!filename) {
-          return Response.json({ error: "filename required" }, { status: 400 });
-        }
-
-        const resolvedContentType = jsonContentType?.startsWith("audio/") ||
-          jsonContentType?.startsWith("image/")
-          ? jsonContentType
-          : guessContentType(filename);
-
-        const key = buildObjectKey(filename);
-        const uploadUrl = await createObjectUploadUrl({
-          key,
-          contentType: resolvedContentType,
-        });
-
-        return Response.json({
-          key,
-          uploadUrl,
-          publicUrl: getObjectPublicUrl(key),
-        });
       },
     },
   },

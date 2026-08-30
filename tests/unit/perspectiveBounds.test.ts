@@ -21,7 +21,7 @@ vi.mock("@/lib/requestId", () => ({
 
 import { setPerspectiveBoundsServer } from "@/lib/perspectiveBounds.server";
 
-const request = new Request("https://we.pixelat.ing/t/art/ke/p1");
+const request = new Request("https://pxl8.ing/t/art/ke/p1");
 
 describe("setPerspectiveBoundsServer", () => {
   beforeEach(() => {

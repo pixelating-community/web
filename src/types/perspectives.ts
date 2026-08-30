@@ -35,6 +35,9 @@ export type Perspective = {
   audio_mix_src?: string;
   parent_perspective_id?: string | null;
   reflection_count?: number;
+  virtual_vote_count?: number;
+  contribution_total_minor?: number;
+  contribution_currency?: string;
 };
 
 export type AudioMixSnippet = {

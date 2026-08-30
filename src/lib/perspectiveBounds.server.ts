@@ -19,7 +19,7 @@ type SetBoundsArgs = {
   };
 };
 
-const URL_BASE = "https://pixelating.local";
+const URL_BASE = "https://pxl8.local";
 
 const normalizeFiniteTime = (value: number | null | undefined) =>
   typeof value === "number" && Number.isFinite(value) ? value : null;

@@ -272,6 +272,96 @@ const audioMixStatements = [
   `,
 ] as const;
 
+const perspectiveSupportStatements = [
+  `
+    CREATE TABLE IF NOT EXISTS perspective_votes (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      perspective_id uuid NOT NULL REFERENCES perspectives(id) ON DELETE CASCADE,
+      voter_hash CHAR(64) NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (perspective_id, voter_hash)
+    );
+  `,
+  `
+    CREATE INDEX IF NOT EXISTS idx_perspective_votes_perspective
+    ON perspective_votes (perspective_id);
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS perspective_contributions (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      perspective_id uuid NOT NULL REFERENCES perspectives(id) ON DELETE RESTRICT,
+      provider TEXT NOT NULL,
+      provider_order_id TEXT,
+      provider_capture_id TEXT,
+      amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
+      refunded_minor INTEGER NOT NULL DEFAULT 0 CHECK (refunded_minor >= 0),
+      currency CHAR(3) NOT NULL,
+      status TEXT NOT NULL CHECK (
+        status IN ('initializing', 'created', 'capturing', 'completed', 'failed', 'refunded')
+      ),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      completed_at TIMESTAMPTZ
+    );
+  `,
+  `
+    DO $$
+    DECLARE
+      current_constraint_name TEXT;
+      current_delete_action "char";
+    BEGIN
+      SELECT constraint_row.conname, constraint_row.confdeltype
+      INTO current_constraint_name, current_delete_action
+      FROM pg_constraint AS constraint_row
+      WHERE constraint_row.conrelid = 'perspective_contributions'::regclass
+        AND constraint_row.confrelid = 'perspectives'::regclass
+        AND constraint_row.contype = 'f'
+      LIMIT 1;
+
+      IF current_constraint_name IS NULL THEN
+        ALTER TABLE perspective_contributions
+        ADD CONSTRAINT perspective_contributions_perspective_id_fkey
+        FOREIGN KEY (perspective_id) REFERENCES perspectives(id) ON DELETE RESTRICT;
+      ELSIF current_delete_action <> 'r' THEN
+        EXECUTE format(
+          'ALTER TABLE perspective_contributions DROP CONSTRAINT %I',
+          current_constraint_name
+        );
+        ALTER TABLE perspective_contributions
+        ADD CONSTRAINT perspective_contributions_perspective_id_fkey
+        FOREIGN KEY (perspective_id) REFERENCES perspectives(id) ON DELETE RESTRICT;
+      END IF;
+    END $$;
+  `,
+  `
+    ALTER TABLE perspective_contributions
+    ADD COLUMN IF NOT EXISTS refunded_minor INTEGER NOT NULL DEFAULT 0;
+  `,
+  `
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_perspective_contributions_provider_order
+    ON perspective_contributions (provider, provider_order_id)
+    WHERE provider_order_id IS NOT NULL;
+  `,
+  `
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_perspective_contributions_provider_capture
+    ON perspective_contributions (provider, provider_capture_id)
+    WHERE provider_capture_id IS NOT NULL;
+  `,
+  `
+    CREATE INDEX IF NOT EXISTS idx_perspective_contributions_total
+    ON perspective_contributions (perspective_id, status);
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS payment_webhook_events (
+      provider TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (provider, event_id)
+    );
+  `,
+] as const;
+
 const indexStatements = [
   "CREATE INDEX IF NOT EXISTS idx_topics_name ON topics (name);",
   "CREATE INDEX IF NOT EXISTS idx_perspectives_topic ON perspectives (topic_id);",
@@ -290,6 +380,7 @@ const migrationGroups = [
   audioImportStatements,
   legacyAudioRenameStatements,
   audioMixStatements,
+  perspectiveSupportStatements,
   indexStatements,
 ] as const;
 

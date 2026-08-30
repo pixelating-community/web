@@ -22,7 +22,7 @@ jobs:
   migrate:
     runs-on: ubuntu-latest
     concurrency:
-      group: deploy-hetzner-production
+      group: deploy-pxl8-production
       cancel-in-progress: false
     steps:
       - name: Fetch required deploy secrets from Vault (OIDC)
@@ -155,7 +155,7 @@ jobs:
         run: |
           set -euo pipefail
           SSH_PORT="${PORT:-22}"
-          APP_DIR="${DEPLOY_PATH:-/var/www/web}"
+          APP_DIR="${DEPLOY_PATH:-/var/www/pxl8}"
           COMPOSE_FILE="${DEPLOY_COMPOSE_FILE:-production.yml}"
 
           ssh -i ~/.ssh/id_ed25519 -p "${SSH_PORT}" \

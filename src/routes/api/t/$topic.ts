@@ -168,7 +168,13 @@ export const Route = createFileRoute("/api/t/$topic")({
           );
         }
 
-        await deleteTopic({ topicId });
+        const deletion = await deleteTopic({ topicId });
+        if (!deletion.deleted && deletion.reason === "payment-history") {
+          return Response.json(
+            { error: "This topic has payment history and cannot be deleted." },
+            { status: 409, headers: requestIdHeaders(requestId) },
+          );
+        }
         return Response.json(
           { ok: true },
           { headers: requestIdHeaders(requestId) },

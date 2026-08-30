@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { TOPIC_UI_ACTION_SCOPES } from "@/lib/actionToken";
 import {
+  ACTION_TOKEN_CLOCK_SKEW_MS,
+  ACTION_TOKEN_MAX_AGE_MS,
   hasActionTokenSecret,
   issueActionToken,
   verifyActionToken,
@@ -81,5 +83,31 @@ describe("action token helpers", () => {
         topicId: OTHER_TOPIC_ID,
       }),
     ).toBeNull();
+  });
+
+  it("rejects expired tokens and tokens issued too far in the future", () => {
+    process.env.ACTION_TOKEN_SECRET = "test-secret";
+    process.env.REFLECTION_ACCESS_SECRET = "";
+    process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY = "";
+
+    for (const issuedAt of [
+      Date.now() - ACTION_TOKEN_MAX_AGE_MS - 1,
+      Date.now() + ACTION_TOKEN_CLOCK_SKEW_MS + 60_000,
+    ]) {
+      const token = issueActionToken({
+        scopes: ["perspective:align"],
+        topicId: TOPIC_ID,
+        requestId: "req-time-bound",
+        issuedAt,
+      });
+
+      expect(
+        verifyActionToken({
+          token: token ?? "",
+          requiredScope: "perspective:align",
+          topicId: TOPIC_ID,
+        }),
+      ).toBeNull();
+    }
   });
 });

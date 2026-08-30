@@ -7,6 +7,9 @@ import {
   actionTokenPayloadSchema,
 } from "@/lib/actionToken";
 
+export const ACTION_TOKEN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+export const ACTION_TOKEN_CLOCK_SKEW_MS = 5 * 60 * 1000;
+
 const getSecret = () =>
   process.env.ACTION_TOKEN_SECRET?.trim() ||
   process.env.REFLECTION_ACCESS_SECRET?.trim() ||
@@ -84,6 +87,9 @@ export const verifyActionToken = ({
 }) => {
   const payload = decodePayload(token);
   if (!payload) return null;
+  const now = Date.now();
+  if (payload.issuedAt < now - ACTION_TOKEN_MAX_AGE_MS) return null;
+  if (payload.issuedAt > now + ACTION_TOKEN_CLOCK_SKEW_MS) return null;
   if (!payload.scopes.includes(requiredScope)) return null;
   if (topicId && payload.topicId !== topicId) return null;
   if (perspectiveId && payload.perspectiveId && payload.perspectiveId !== perspectiveId) {

@@ -135,7 +135,7 @@ resource "cloudflare_ruleset" "waf_custom" {
   rules = [
     {
       action      = "block"
-      expression  = "(cf.client.bot) and (http.request.uri.path contains \"/api/\") and (http.request.uri.path ne \"/api/s/h\")"
+      expression  = "(cf.client.bot) and (http.request.uri.path contains \"/api/\") and (http.request.uri.path ne \"/api/obj/health\")"
       description = "Block bots on API"
       enabled     = true
     },

@@ -1,11 +1,11 @@
 import { resolve } from "node:path";
 
 const PERSPECTIVE_SHARE_CLEANUP_CRON_TITLE =
-  "pixelating-perspective-share-cleanup";
+  "pxl8-perspective-share-cleanup";
 const DEFAULT_DEV_PERSPECTIVE_SHARE_CLEANUP_CRON = "* * * * *";
 const DEFAULT_PROD_PERSPECTIVE_SHARE_CLEANUP_CRON = "17 * * * *";
 
-const AUDIO_MIX_CRON_TITLE = "pixelating-audio-mix";
+const AUDIO_MIX_CRON_TITLE = "pxl8-audio-mix";
 const DEFAULT_AUDIO_MIX_CRON = "* * * * *";
 
 type BunCronRegistrar = ((scriptPath: string, cron: string, title: string) => Promise<void>) & {

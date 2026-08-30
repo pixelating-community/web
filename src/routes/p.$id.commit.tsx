@@ -23,6 +23,12 @@ import { savePerspectiveAlignment } from "@/lib/perspectiveAlignment.functions";
 import { loadPerspectiveCommitMeta } from "@/lib/perspectiveCommitRoute.functions";
 import type { CommitRouteLoaderData } from "@/lib/perspectiveCommitRoute.server";
 import { buildTopicPath } from "@/lib/topicRoutes";
+import {
+  UPLOAD_ACTION_TOKEN_HEADER,
+  UPLOAD_PERSPECTIVE_ID_HEADER,
+  UPLOAD_SCOPE_HEADER,
+  UPLOAD_TOPIC_ID_HEADER,
+} from "@/lib/uploadPolicy";
 
 const isAbortError = (value: unknown) =>
   value instanceof DOMException && value.name === "AbortError";
@@ -105,6 +111,12 @@ function CommitRoute() {
       const response = await fetch("/api/obj/upload", {
         method: "POST",
         body: formData,
+        headers: {
+          [UPLOAD_ACTION_TOKEN_HEADER]: data?.actionToken ?? "",
+          [UPLOAD_PERSPECTIVE_ID_HEADER]: id,
+          [UPLOAD_SCOPE_HEADER]: "perspective:align",
+          [UPLOAD_TOPIC_ID_HEADER]: data?.topicId ?? "",
+        },
         signal,
       });
       if (!response.ok) {
@@ -117,7 +129,7 @@ function CommitRoute() {
         publicUrl: payload.publicUrl ?? payload.key,
       };
     },
-    [],
+    [data?.actionToken, data?.topicId, id],
   );
 
   const runCommit = useCallback(async () => {

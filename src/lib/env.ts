@@ -14,8 +14,6 @@ const getKnownVitePublicEnv = (key: string) => {
       return normalizeEnvValue(import.meta.env.VITE_CDN_URL);
     case "VITE_FUNDING_URL":
       return normalizeEnvValue(import.meta.env.VITE_FUNDING_URL);
-    case "VITE_STRIPE_PUBLISHABLE_KEY":
-      return normalizeEnvValue(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
     default:
       return undefined;
   }

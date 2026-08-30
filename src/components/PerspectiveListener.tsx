@@ -10,6 +10,7 @@ import {
   PerspectiveBackground,
 } from "@/components/PerspectiveBackground";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
+import { PerspectiveSupport } from "@/components/PerspectiveSupport";
 import { ReflectionPerspectiveCard } from "@/components/ReflectionPerspectiveCard";
 import { SWEditor } from "@/components/SWEditor";
 import { loadChildPerspectives } from "@/lib/childPerspectiveRoute.functions";
@@ -586,6 +587,7 @@ export const PerspectiveListener = ({
           </button>
         </div>
       </div>
+      <PerspectiveSupport perspective={perspective} />
       <PerspectiveReflections
         perspective={perspective}
         topicName={topicName}
