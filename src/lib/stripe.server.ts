@@ -1,7 +1,11 @@
 import "@tanstack/react-start/server-only";
 import Stripe from "stripe";
 import { getServerEnv } from "@/lib/env.server";
-import { resolveStripeEnvironment } from "@/lib/paymentEnvironment";
+import {
+  isLivePaymentsEnabled,
+  isPaymentEnvironmentAllowed,
+  resolveStripeEnvironment,
+} from "@/lib/paymentEnvironment";
 import {
   getSupportTier,
   SUPPORT_CURRENCY,
@@ -38,11 +42,17 @@ export const getStripePublicConfig = () => {
   );
   const secretKey = getStripeSecretKey();
   const environment = resolveStripeEnvironment({ publishableKey, secretKey });
+  const environmentAllowed = isPaymentEnvironmentAllowed({
+    environment,
+    livePaymentsEnabled: isLivePaymentsEnabled(
+      getServerEnv("PAYMENTS_LIVE_ENABLED"),
+    ),
+  });
   const webhookConfigured = Boolean(getServerEnv("STRIPE_WEBHOOK_SECRET"));
   return {
     currency: SUPPORT_CURRENCY,
     enabled: Boolean(
-      environment &&
+      environmentAllowed &&
         (process.env.NODE_ENV !== "production" || webhookConfigured),
     ),
     environment: environment ?? "sandbox",
@@ -57,8 +67,19 @@ export const getStripeClient = () => {
     "STRIPE_PUBLISHABLE_KEY",
     "VITE_STRIPE_PUBLISHABLE_KEY",
   );
-  if (!resolveStripeEnvironment({ publishableKey, secretKey })) {
+  const environment = resolveStripeEnvironment({ publishableKey, secretKey });
+  if (!environment) {
     throw new Error("Stripe publishable and secret keys must use the same mode.");
+  }
+  if (
+    !isPaymentEnvironmentAllowed({
+      environment,
+      livePaymentsEnabled: isLivePaymentsEnabled(
+        getServerEnv("PAYMENTS_LIVE_ENABLED"),
+      ),
+    })
+  ) {
+    throw new Error("Live Stripe payments are not enabled.");
   }
   if (
     !globalCache.__pxl8Stripe ||

@@ -1,5 +1,18 @@
 export type PaymentEnvironment = "live" | "sandbox";
 
+export const isLivePaymentsEnabled = (value: string | undefined) =>
+  ["1", "true", "yes"].includes(value?.trim().toLowerCase() ?? "");
+
+export const isPaymentEnvironmentAllowed = ({
+  environment,
+  livePaymentsEnabled,
+}: {
+  environment: PaymentEnvironment | null;
+  livePaymentsEnabled: boolean;
+}) =>
+  environment === "sandbox" ||
+  (environment === "live" && livePaymentsEnabled);
+
 const normalizeEnvironmentValue = (value: string | undefined) =>
   value?.trim().toLowerCase() || undefined;
 

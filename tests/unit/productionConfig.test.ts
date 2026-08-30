@@ -61,4 +61,27 @@ describe("production configuration", () => {
       "At least one payment provider must be fully configured",
     );
   });
+
+  it("does not activate live credentials without an explicit opt-in", () => {
+    const disabled = checkProductionConfig({
+      ...baseEnvironment,
+      STRIPE_PUBLISHABLE_KEY: "pk_live_example",
+      STRIPE_SECRET_KEY: "sk_live_example",
+      STRIPE_WEBHOOK_SECRET: "whsec_example",
+    });
+    expect(disabled.paymentProviders).toEqual([]);
+    expect(disabled.warnings).toContain(
+      "Live payment credentials are disabled until PAYMENTS_LIVE_ENABLED=true",
+    );
+
+    const enabled = checkProductionConfig({
+      ...baseEnvironment,
+      PAYMENTS_LIVE_ENABLED: "true",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_example",
+      STRIPE_SECRET_KEY: "sk_live_example",
+      STRIPE_WEBHOOK_SECRET: "whsec_example",
+    });
+    expect(enabled.errors).toEqual([]);
+    expect(enabled.paymentProviders).toEqual(["stripe"]);
+  });
 });

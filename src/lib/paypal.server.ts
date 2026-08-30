@@ -1,6 +1,10 @@
 import "@tanstack/react-start/server-only";
 import { getServerEnv } from "@/lib/env.server";
-import { resolvePayPalEnvironment } from "@/lib/paymentEnvironment";
+import {
+  isLivePaymentsEnabled,
+  isPaymentEnvironmentAllowed,
+  resolvePayPalEnvironment,
+} from "@/lib/paymentEnvironment";
 import {
   formatPayPalAmount,
   getSupportTier,
@@ -45,6 +49,12 @@ const resolveEnvironment = () =>
 export const getPayPalPublicConfig = () => {
   const clientId = getServerEnv("PAYPAL_CLIENT_ID");
   const environment = resolveEnvironment();
+  const environmentAllowed = isPaymentEnvironmentAllowed({
+    environment,
+    livePaymentsEnabled: isLivePaymentsEnabled(
+      getServerEnv("PAYMENTS_LIVE_ENABLED"),
+    ),
+  });
   const webhookConfigured = Boolean(getServerEnv("PAYPAL_WEBHOOK_ID"));
   return {
     clientId: clientId ?? null,
@@ -52,7 +62,7 @@ export const getPayPalPublicConfig = () => {
     enabled: Boolean(
       clientId &&
         getServerEnv("PAYPAL_CLIENT_SECRET") &&
-        environment &&
+        environmentAllowed &&
         (process.env.NODE_ENV !== "production" || webhookConfigured),
     ),
     environment: environment ?? "sandbox",
@@ -68,6 +78,16 @@ const getPayPalConfig = (): PayPalConfig => {
   const environment = resolveEnvironment();
   if (!environment) {
     throw new Error("PAYPAL_ENVIRONMENT must be sandbox or live.");
+  }
+  if (
+    !isPaymentEnvironmentAllowed({
+      environment,
+      livePaymentsEnabled: isLivePaymentsEnabled(
+        getServerEnv("PAYMENTS_LIVE_ENABLED"),
+      ),
+    })
+  ) {
+    throw new Error("Live PayPal payments are not enabled.");
   }
   return {
     apiBaseUrl:

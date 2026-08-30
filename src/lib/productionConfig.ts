@@ -1,4 +1,6 @@
 import {
+  isLivePaymentsEnabled,
+  isPaymentEnvironmentAllowed,
   resolvePayPalEnvironment,
   resolveStripeEnvironment,
 } from "@/lib/paymentEnvironment";
@@ -22,6 +24,9 @@ export const checkProductionConfig = (
   const errors: string[] = [];
   const warnings: string[] = [];
   const paymentProviders: Array<"paypal" | "stripe"> = [];
+  const livePaymentsEnabled = isLivePaymentsEnabled(
+    value(environment, "PAYMENTS_LIVE_ENABLED"),
+  );
 
   const appBaseUrl = value(environment, "APP_BASE_URL");
   if (!appBaseUrl) {
@@ -67,7 +72,10 @@ export const checkProductionConfig = (
     secretKey: stripeSecretKey,
   });
   const stripeComplete = Boolean(
-    stripeEnvironment && value(environment, "STRIPE_WEBHOOK_SECRET"),
+    isPaymentEnvironmentAllowed({
+      environment: stripeEnvironment,
+      livePaymentsEnabled,
+    }) && value(environment, "STRIPE_WEBHOOK_SECRET"),
   );
   if (stripeComplete) paymentProviders.push("stripe");
   else if (stripeHasAny) {
@@ -86,7 +94,11 @@ export const checkProductionConfig = (
     value(environment, "PAYPAL_ENVIRONMENT"),
   );
   const paypalComplete =
-    hasAll(environment, paypalKeys) && Boolean(paypalEnvironment);
+    hasAll(environment, paypalKeys) &&
+    isPaymentEnvironmentAllowed({
+      environment: paypalEnvironment,
+      livePaymentsEnabled,
+    });
   if (paypalComplete) paymentProviders.push("paypal");
   else if (paypalHasAny) {
     warnings.push(
@@ -96,6 +108,14 @@ export const checkProductionConfig = (
 
   if (paymentProviders.length === 0) {
     errors.push("At least one payment provider must be fully configured");
+  }
+  if (
+    !livePaymentsEnabled &&
+    (stripeEnvironment === "live" || paypalEnvironment === "live")
+  ) {
+    warnings.push(
+      "Live payment credentials are disabled until PAYMENTS_LIVE_ENABLED=true",
+    );
   }
 
   if (!value(environment, "TS_KEY") && !value(environment, "EL_KEY")) {

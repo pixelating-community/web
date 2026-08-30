@@ -15,6 +15,8 @@ import {
   reconcileStripeContributionSchema,
 } from "@/lib/perspectiveSupport.schema";
 import {
+  isLivePaymentsEnabled,
+  isPaymentEnvironmentAllowed,
   resolvePayPalEnvironment,
   resolveStripeEnvironment,
 } from "@/lib/paymentEnvironment";
@@ -121,6 +123,30 @@ describe("perspective support", () => {
     expect(resolvePayPalEnvironment(undefined)).toBe("sandbox");
     expect(resolvePayPalEnvironment(" LIVE ")).toBe("live");
     expect(resolvePayPalEnvironment("production")).toBeNull();
+  });
+
+  it("requires an explicit opt-in before allowing live payments", () => {
+    expect(isLivePaymentsEnabled(undefined)).toBe(false);
+    expect(isLivePaymentsEnabled("false")).toBe(false);
+    expect(isLivePaymentsEnabled("true")).toBe(true);
+    expect(
+      isPaymentEnvironmentAllowed({
+        environment: "sandbox",
+        livePaymentsEnabled: false,
+      }),
+    ).toBe(true);
+    expect(
+      isPaymentEnvironmentAllowed({
+        environment: "live",
+        livePaymentsEnabled: false,
+      }),
+    ).toBe(false);
+    expect(
+      isPaymentEnvironmentAllowed({
+        environment: "live",
+        livePaymentsEnabled: true,
+      }),
+    ).toBe(true);
   });
 
   it("requires an explicit HTTPS application origin in production", () => {
