@@ -14,6 +14,7 @@ import { SWEFooter, type SampleBoundSaveStatus } from "@/components/SWEFooter";
 import { AudioImport } from "@/components/AudioImport";
 import { LineLengthIndicator } from "@/components/LineLengthIndicator";
 import { PerspectiveExportImport } from "@/components/PerspectiveExportImport";
+import { coerceTimingEntry } from "@/components/sw/editorUtils";
 import {
   hasPlayableAudioSource,
   perspectiveRuntimeReducer,
@@ -56,6 +57,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { setPerspectiveBounds } from "@/lib/perspectiveBounds.functions";
 import { getPublicAudioBaseUrl } from "@/lib/publicAudioBase";
 import { setTimestampSearchParams } from "@/lib/routeSearch";
+import { getTimingDuration } from "@/lib/swPlayback";
 import {
   buildTopicPerspectivePath,
   buildTopicViewerPerspectivePath,
@@ -341,6 +343,20 @@ export const SW = ({
     selectedWords,
     selectedWordIndex,
   });
+  const selectedWordTiming =
+    selectedWordIndex !== undefined && selectedWordIndex >= 0
+      ? coerceTimingEntry(selectedTimings, selectedWordIndex)
+      : null;
+  const selectedWordStart =
+    selectedWordIndex !== undefined && selectedWordIndex >= 0
+      ? selectedWordTiming?.start ?? currentTime
+      : undefined;
+  const selectedWordDuration =
+    selectedWordIndex !== undefined &&
+    selectedWordIndex >= 0 &&
+    selectedWordTiming
+      ? getTimingDuration(selectedTimings, selectedWordIndex)
+      : undefined;
   const selectedAnalysis = selectAnalysis(selectedRuntime);
   const playheadPercent = selectPlayheadPercent({
     analysis: selectedAnalysis,
@@ -417,6 +433,7 @@ export const SW = ({
     markCurrentEnd,
     markStart,
     rewindToPrevious,
+    setWordStartToCurrent,
     shiftWordStartBackward,
     shiftWordStartForward,
   } = useSwTimingEditor({
@@ -863,6 +880,8 @@ export const SW = ({
           selectedWordCount={selectedWordCount}
           selectedWordIndex={selectedWordIndex}
           selectedWord={selectedWord}
+          selectedWordDuration={selectedWordDuration}
+          selectedWordStart={selectedWordStart}
           currentTrack={currentTrack}
           selectedAnalysis={selectedAnalysis}
           playheadPercent={playheadPercent}
@@ -879,6 +898,7 @@ export const SW = ({
           onMarkStart={markStart}
           onMarkEndAndForward={markEndAndForward}
           onMarkCurrentEnd={markCurrentEnd}
+          onSetWordStartToCurrent={setWordStartToCurrent}
           onClearCurrentMark={handleClearCurrentMark}
           isClearCurrentMarkArmed={isClearCurrentMarkArmed}
           onClearAllMarks={clearAllMarks}

@@ -34,6 +34,17 @@ describe("topic route guards", () => {
     expect(source).toMatch(/playbackProfile: "full-file" as const/);
   });
 
+  it("allows the timing editor flag to use the requested production perspective", () => {
+    const source = readSource("src/routes/t.$.tsx");
+    const routeSource = readSource("src/routes/timing-editor.tsx");
+    expect(source).toMatch(/lazy\(\(\) =>\s*import\("@\/components\/TimingEditorSurface"\)/);
+    expect(routeSource).toMatch(/lazy\(\(\) =>\s*import\("@\/components\/TimingEditorSurface"\)/);
+    expect(source).toMatch(/shouldUseTimingEditor\(search\.timingEditor\)/);
+    expect(source).toMatch(/<TimingEditorSurface/);
+    expect(source).toMatch(/urlStartTime=\{search\.s\}/);
+    expect(source).toMatch(/urlEndTime=\{search\.e\}/);
+  });
+
   it("keeps dedicated listen routes on the simplified listener surface", () => {
     const source = readSource("src/routes/t.$.tsx");
     expect(source).toMatch(/else if \(resolvedRequestedViewerId\)/);

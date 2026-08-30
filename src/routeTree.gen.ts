@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TimingEditorRouteImport } from './routes/timing-editor'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TSplatRouteImport } from './routes/t.$'
 import { Route as PIdRouteImport } from './routes/p.$id'
@@ -29,6 +30,11 @@ import { Route as ApiPIdAudioSnippetsRouteImport } from './routes/api/p/$id/audi
 import { Route as ApiPIdAudioMixRouteImport } from './routes/api/p/$id/audio-mix'
 import { Route as ApiPIdAlignRouteImport } from './routes/api/p/$id/align'
 
+const TimingEditorRoute = TimingEditorRouteImport.update({
+  id: '/timing-editor',
+  path: '/timing-editor',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -127,6 +133,7 @@ const ApiPIdAlignRoute = ApiPIdAlignRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/timing-editor': typeof TimingEditorRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
   '/p/$id': typeof PIdRouteWithChildren
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/timing-editor': typeof TimingEditorRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
   '/p/$id': typeof PIdRouteWithChildren
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/timing-editor': typeof TimingEditorRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
   '/p/$id': typeof PIdRouteWithChildren
@@ -193,6 +202,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/timing-editor'
     | '/api/obj'
     | '/api/p'
     | '/p/$id'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/timing-editor'
     | '/api/obj'
     | '/api/p'
     | '/p/$id'
@@ -235,6 +246,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/timing-editor'
     | '/api/obj'
     | '/api/p'
     | '/p/$id'
@@ -257,6 +269,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  TimingEditorRoute: typeof TimingEditorRoute
   ApiObjRoute: typeof ApiObjRouteWithChildren
   ApiPRoute: typeof ApiPRouteWithChildren
   PIdRoute: typeof PIdRouteWithChildren
@@ -270,6 +283,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/timing-editor': {
+      id: '/timing-editor'
+      path: '/timing-editor'
+      fullPath: '/timing-editor'
+      preLoaderRoute: typeof TimingEditorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -460,6 +480,7 @@ const PIdRouteWithChildren = PIdRoute._addFileChildren(PIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  TimingEditorRoute: TimingEditorRoute,
   ApiObjRoute: ApiObjRouteWithChildren,
   ApiPRoute: ApiPRouteWithChildren,
   PIdRoute: PIdRouteWithChildren,

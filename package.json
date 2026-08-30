@@ -21,26 +21,26 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@tanstack/react-pacer": "^0.22.0",
-    "@tanstack/react-query": "5.100.10",
-    "@tanstack/react-router": "1.169.2",
-    "@tanstack/react-start": "1.167.65",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6",
+    "@tanstack/react-pacer": "^0.22.1",
+    "@tanstack/react-query": "5.101.1",
+    "@tanstack/react-router": "1.170.16",
+    "@tanstack/react-start": "1.168.26",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.3.0",
-    "@tanstack/router-plugin": "1.167.35",
-    "@types/node": "25.7.0",
-    "@types/react": "19.2.14",
+    "@tailwindcss/vite": "^4.3.1",
+    "@tanstack/router-plugin": "1.168.18",
+    "@types/node": "26.0.0",
+    "@types/react": "19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "oxfmt": "^0.49.0",
-    "oxlint": "^1.64.0",
-    "tailwindcss": "^4.3.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0",
+    "tailwindcss": "^4.3.1",
     "typescript": "6.0.3",
-    "vite": "8.0.12",
-    "vitest": "4.1.6"
+    "vite": "8.1.0",
+    "vitest": "4.1.9"
   }
 }

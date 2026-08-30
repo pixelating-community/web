@@ -3,6 +3,7 @@
 import { useRef, type ReactNode, type RefObject } from "react";
 import { Audio } from "@/components/Audio";
 import { AudioRecorder } from "@/components/AudioRecorder";
+import { AudioWaveform } from "@/components/AudioWaveform";
 import { useConfirmAction } from "@/components/sw/useConfirmAction";
 import type { AudioAnalysis } from "@/lib/audioProcessing";
 import type { Perspective } from "@/types/perspectives";
@@ -33,6 +34,11 @@ const getSampleBoundButtonClass = (status: SampleBoundSaveStatus) => {
   return `px-2 py-0.5 text-[10px] border-0 rounded-md bg-white/10 touch-manipulation hover:bg-white/20 disabled:cursor-not-allowed disabled:opacity-40 ${statusClass}`;
 };
 
+const formatWordTimingValue = (value: number | undefined) =>
+  typeof value === "number" && Number.isFinite(value)
+    ? value.toFixed(2)
+    : "--";
+
 type SWEFooterProps = {
   isViewer: boolean;
   showViewerAudioControls?: boolean;
@@ -47,6 +53,8 @@ type SWEFooterProps = {
   selectedWordCount: number;
   selectedWordIndex?: number;
   selectedWord: string;
+  selectedWordDuration?: number;
+  selectedWordStart?: number;
   currentTrack: Perspective | null;
   selectedAnalysis: AudioAnalysis | null;
   playheadPercent: number;
@@ -63,6 +71,7 @@ type SWEFooterProps = {
   onMarkStart: () => void;
   onMarkEndAndForward: () => void;
   onMarkCurrentEnd: () => void;
+  onSetWordStartToCurrent?: () => void;
   onClearCurrentMark: () => void;
   isClearCurrentMarkArmed?: boolean;
   onClearAllMarks: () => void;
@@ -100,6 +109,8 @@ export const SWEFooter = ({
   selectedWordCount,
   selectedWordIndex,
   selectedWord,
+  selectedWordDuration,
+  selectedWordStart,
   currentTrack,
   selectedAnalysis,
   playheadPercent,
@@ -116,6 +127,7 @@ export const SWEFooter = ({
   onMarkStart,
   onMarkEndAndForward,
   onMarkCurrentEnd,
+  onSetWordStartToCurrent,
   onClearCurrentMark,
   isClearCurrentMarkArmed = false,
   onClearAllMarks,
@@ -429,12 +441,44 @@ export const SWEFooter = ({
             !isMinimized &&
             selectedWordIndex !== undefined &&
             selectedWordIndex >= 0 && (
-              <div className="flex items-center gap-2 rounded-xl bg-white/5 px-2 py-1 text-[10px] uppercase text-white/50 tracking-[0.2em]">
-                <span>Word {selectedWordIndex + 1}</span>
-                {selectedWord ? (
-                  <span className="max-w-48 truncate text-[11px] normal-case text-white/70 tracking-normal">
-                    "{selectedWord}"
-                  </span>
+              <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white/50">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span>Word {selectedWordIndex + 1}</span>
+                  {selectedWord ? (
+                    <span className="max-w-48 truncate text-[11px] normal-case tracking-normal text-white/70">
+                      "{selectedWord}"
+                    </span>
+                  ) : null}
+                </div>
+                {typeof selectedWordStart === "number" ? (
+                  <div className="hidden grid-cols-2 gap-1 tracking-normal sm:grid">
+                    <button
+                      type="button"
+                      onClick={onSetWordStartToCurrent}
+                      className="rounded-md border-0 bg-white/10 px-2 py-1 text-left text-[11px] normal-case text-white/80 touch-manipulation hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={isBusy || !onSetWordStartToCurrent}
+                      aria-label="Set selected word start to playback position"
+                      title="Set selected word start to playback position"
+                    >
+                      <span className="mr-1 text-white/45">Start</span>
+                      <span className="font-mono">
+                        {formatWordTimingValue(selectedWordStart)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onMarkCurrentEnd}
+                      className="rounded-md border-0 bg-white/10 px-2 py-1 text-left text-[11px] normal-case text-white/80 touch-manipulation hover:bg-white/15 disabled:cursor-not-allowed disabled:opacity-40"
+                      disabled={isBusy}
+                      aria-label="Set selected word duration from playback position"
+                      title="Set selected word duration from playback position"
+                    >
+                      <span className="mr-1 text-white/45">Duration</span>
+                      <span className="font-mono">
+                        {formatWordTimingValue(selectedWordDuration)}s
+                      </span>
+                    </button>
+                  </div>
                 ) : null}
               </div>
             )}
@@ -519,33 +563,15 @@ export const SWEFooter = ({
               </div>
               {!isMinimized && selectedAnalysis && (
                 <div className="w-full mt-2">
-                  <div className="relative w-full h-10 overflow-hidden rounded-lg bg-white/5">
-                    <div className="absolute inset-0 flex items-end px-1 py-1 gap-px">
-                      {(() => {
-                        const valueCounts = new Map<string, number>();
-                        return selectedAnalysis.waveform.map((value) => {
-                          const token = value.toFixed(6);
-                          const seen = valueCounts.get(token) ?? 0;
-                          valueCounts.set(token, seen + 1);
-                          const barKey = `wf-${token}-${seen}`;
-                          const height = Math.max(8, Math.round(value * 100));
-                          return (
-                            <div
-                              key={barKey}
-                              className="w-0.5 rounded-sm bg-white/45"
-                              style={{ height: `${height}%` }}
-                            />
-                          );
-                        });
-                      })()}
-                    </div>
-                    <div
-                      className="absolute inset-y-0 left-0 w-px bg-purple-300/80 transition-transform duration-100 linear will-change-transform"
-                      style={{
-                        transform: `translateX(calc(${playheadPercent}% - 0.5px))`,
-                      }}
-                    />
-                  </div>
+                  <AudioWaveform
+                    waveform={selectedAnalysis.waveform}
+                    className="h-10 w-full rounded-lg bg-white/5"
+                    barsClassName="px-1 py-1"
+                    barClassName="bg-white/45"
+                    barWidthClassName="w-0.5"
+                    playheadPercent={playheadPercent}
+                    playheadClassName="bg-purple-300/80 transition-transform duration-100 linear will-change-transform"
+                  />
                 </div>
               )}
             </div>

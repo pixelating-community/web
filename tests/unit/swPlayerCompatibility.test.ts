@@ -80,4 +80,20 @@ describe("sw player compatibility", () => {
     expect(timingSource).toMatch(/const handleKeyUp = \(event: KeyboardEvent\) => \{/);
     expect(timingSource).toMatch(/markEndAndForward\(\);/);
   });
+
+  it("keeps selected word start and duration controls wired to editor timing state", () => {
+    const swSource = readSource("src/components/SW.tsx");
+    const footerSource = readSource("src/components/SWEFooter.tsx");
+
+    expect(swSource).toMatch(/coerceTimingEntry\(selectedTimings, selectedWordIndex\)/);
+    expect(swSource).toMatch(/getTimingDuration\(selectedTimings, selectedWordIndex\)/);
+    expect(swSource).toMatch(/selectedWordStart=\{selectedWordStart\}/);
+    expect(swSource).toMatch(/selectedWordDuration=\{selectedWordDuration\}/);
+    expect(swSource).toMatch(/onSetWordStartToCurrent=\{setWordStartToCurrent\}/);
+
+    expect(footerSource).toMatch(/selectedWordStart/);
+    expect(footerSource).toMatch(/selectedWordDuration/);
+    expect(footerSource).toMatch(/onSetWordStartToCurrent/);
+    expect(footerSource).toMatch(/Set selected word duration from playback position/);
+  });
 });

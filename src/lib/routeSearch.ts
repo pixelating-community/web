@@ -4,6 +4,23 @@ const normalizeOptionalString = (value: unknown) => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const normalizeOptionalSearchFlag = (value: unknown) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return String(value);
+  }
+  const normalized = normalizeOptionalString(value);
+  if (!normalized) return undefined;
+  if (!(normalized.startsWith('"') && normalized.endsWith('"'))) {
+    return normalized;
+  }
+  try {
+    const parsed = JSON.parse(normalized);
+    return normalizeOptionalString(parsed) ?? normalized;
+  } catch {
+    return normalized;
+  }
+};
+
 const MIN_TIMESTAMP_RANGE_SECONDS = 0.2;
 
 const normalizeFiniteTimestamp = (value: number | null | undefined) =>
@@ -73,6 +90,7 @@ const normalizeOptionalTimestamp = (value: unknown) => {
 };
 
 export type TopicRouteSearch = {
+  timingEditor?: string;
   p?: string;
   r?: string;
   w?: string;
@@ -89,6 +107,7 @@ export const parseTopicRouteSearch = (
   const s = normalizeOptionalTimestamp(search.s);
   const e = normalizeOptionalTimestamp(search.e);
   return {
+    timingEditor: normalizeOptionalSearchFlag(search.timingEditor),
     p: normalizeOptionalString(search.p),
     r: normalizeOptionalString(search.r),
     w: normalizeOptionalString(search.w),

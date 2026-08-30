@@ -20,6 +20,7 @@ describe("route search parsing", () => {
       p: "perspective-view",
       r: "perspective-edit",
       s: undefined,
+      timingEditor: undefined,
       v: undefined,
       w: undefined,
     });
@@ -52,6 +53,20 @@ describe("route search parsing", () => {
       start: 246.755671,
     });
     expect(params.toString()).toBe("s=246.755671");
+  });
+
+  it("accepts an explicit timing editor search mode", () => {
+    expect(parseTopicRouteSearch({ timingEditor: "1" }).timingEditor).toBe("1");
+    expect(parseTopicRouteSearch({ timingEditor: 1 }).timingEditor).toBe("1");
+    expect(parseTopicRouteSearch({ timingEditor: '"1"' }).timingEditor).toBe(
+      "1",
+    );
+    expect(parseTopicRouteSearch({ timingEditor: " full " }).timingEditor).toBe(
+      "full",
+    );
+    expect(
+      parseTopicRouteSearch({ timingEditor: "  " }).timingEditor,
+    ).toBeUndefined();
   });
 
   it("keeps only meaningful unlock search params", () => {

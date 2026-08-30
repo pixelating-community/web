@@ -2,12 +2,13 @@ import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query"
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { KaraokeListener } from "@/components/KaraokeListener";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { PerspectiveListener } from "@/components/PerspectiveListener";
 import { SW } from "@/components/SW";
 import { WritePerspective } from "@/components/WritePerspective";
+import { shouldUseTimingEditor } from "@/lib/featureFlags";
 import { loadPerspectiveById } from "@/lib/getPerspectiveById.functions";
 import { loadTopicPayload } from "@/lib/topicPayloadRoute.functions";
 import { parseTopicRouteSearch } from "@/lib/routeSearch";
@@ -68,6 +69,12 @@ const isDarkTopicName = (topicName: string | null | undefined) =>
 
 const getTopicShellClassName = (topicName: string | null | undefined) =>
   isDarkTopicName(topicName) ? DARK_TOPIC_SHELL_CLASS : TOPIC_SHELL_CLASS;
+
+const TimingEditorSurface = lazy(() =>
+  import("@/components/TimingEditorSurface").then((module) => ({
+    default: module.TimingEditorSurface,
+  })),
+);
 
 const getTopicPayloadQueryOptions = ({
   loadTopicPayloadFn,
@@ -281,6 +288,18 @@ function TopicRoute() {
           (p: TopicPayload["perspectives"][number]) => p.id === requestedKaraokeEditorId,
         )?.id ?? (childPerspective?.id === requestedKaraokeEditorId ? requestedKaraokeEditorId : undefined))
       : undefined;
+    const requestedTimingEditorId =
+      resolvedRequestedEditorId ??
+      resolvedRequestedViewerId ??
+      resolvedRequestedKaraokeId ??
+      resolvedRequestedKaraokeEditorId;
+    const timingEditorPerspective = requestedTimingEditorId
+      ? (perspectives.find(
+          (p: TopicPayload["perspectives"][number]) => p.id === requestedTimingEditorId,
+        ) ?? (childPerspective?.id === requestedTimingEditorId
+          ? (childPerspective as TopicPayload["perspectives"][number])
+          : null))
+      : null;
     const shouldShowEmptyWriteSurface =
       perspectives.length === 0 && topic.canWrite;
     const shouldShowNewWriteSurface =
@@ -329,7 +348,28 @@ function TopicRoute() {
       playbackProfile: "full-file" as const,
     };
 
-    if (resolvedRequestedEditorId) {
+    if (
+      shouldUseTimingEditor(search.timingEditor) &&
+      requestedTimingEditorId &&
+      timingEditorPerspective
+    ) {
+      content = (
+        <Suspense
+          fallback={
+            <div className={getTopicShellClassName(topic.name)} aria-hidden="true" />
+          }
+        >
+          <TimingEditorSurface
+            key={`timing-editor-${requestedTimingEditorId}`}
+            canWrite={topic.canWrite}
+            perspective={timingEditorPerspective}
+            topicName={topic.name}
+            urlStartTime={search.s}
+            urlEndTime={search.e}
+          />
+        </Suspense>
+      );
+    } else if (resolvedRequestedEditorId) {
       content = (
         <SW
           key={`editor-${resolvedRequestedEditorId}`}
