@@ -467,8 +467,38 @@ jobs:
           nginx -t
           systemctl reload nginx
 
-          curl --fail --silent --show-error --noproxy '*' \
-            http://127.0.0.1:3100/api/obj/health >/dev/null
+          port_healthy=0
+          for attempt in $(seq 1 10); do
+            if curl --fail --silent --show-error --noproxy '*' \
+              http://127.0.0.1:3100/api/obj/health >/dev/null; then
+              port_healthy=1
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "${port_healthy}" -ne 1 ]; then
+            echo "PXL8 host port is unavailable; restarting Docker once to restore port forwarding."
+            systemctl restart docker
+            for attempt in $(seq 1 60); do
+              if curl --fail --silent --show-error --noproxy '*' \
+                http://127.0.0.1:3100/api/obj/health >/dev/null; then
+                port_healthy=1
+                break
+              fi
+              sleep 2
+            done
+          fi
+
+          if [ "${port_healthy}" -ne 1 ]; then
+            echo "PXL8 host port did not become ready after Docker restart." >&2
+            docker ps --all --filter 'name=pxl8-prod-web-1' \
+              --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+            if command -v ss >/dev/null 2>&1; then
+              ss -lnt | grep ':3100' || true
+            fi
+            exit 1
+          fi
 
           origin_healthy=0
           for attempt in $(seq 1 20); do
