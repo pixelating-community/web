@@ -404,6 +404,76 @@ jobs:
           fi
           REMOTE
 
+      - name: Configure PXL8 origin TLS and Nginx
+        env:
+          HOST: ${{ steps.vault_deploy.outputs.HOST || secrets.HOST }}
+          PORT: ${{ steps.vault_deploy.outputs.PORT || secrets.PORT }}
+          USERNAME: ${{ steps.vault_deploy.outputs.USERNAME || secrets.USERNAME }}
+          PXL8_ORIGIN_CERT_B64: ${{ secrets.PXL8_ORIGIN_CERT_B64 }}
+          PXL8_ORIGIN_KEY_B64: ${{ secrets.PXL8_ORIGIN_KEY_B64 }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${PXL8_ORIGIN_CERT_B64:-}" ] || [ -z "${PXL8_ORIGIN_KEY_B64:-}" ]; then
+            echo "::error::PXL8 Origin CA certificate secrets are missing."
+            exit 1
+          fi
+
+          SSH_PORT="${PORT:-22}"
+          CERT_FILE="${RUNNER_TEMP}/pxl8.pem"
+          KEY_FILE="${RUNNER_TEMP}/pxl8.key"
+          trap 'rm -f "${CERT_FILE}" "${KEY_FILE}"' EXIT
+
+          printf '%s' "${PXL8_ORIGIN_CERT_B64}" | base64 --decode > "${CERT_FILE}"
+          printf '%s' "${PXL8_ORIGIN_KEY_B64}" | base64 --decode > "${KEY_FILE}"
+          chmod 600 "${CERT_FILE}" "${KEY_FILE}"
+
+          scp -i ~/.ssh/id_ed25519 -P "${SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            "${CERT_FILE}" "${USERNAME}@${HOST}:/tmp/pxl8.pem"
+          scp -i ~/.ssh/id_ed25519 -P "${SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            "${KEY_FILE}" "${USERNAME}@${HOST}:/tmp/pxl8.key"
+          scp -i ~/.ssh/id_ed25519 -P "${SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            infra/nginx/pxl8.conf.example "${USERNAME}@${HOST}:/tmp/pxl8.conf"
+
+          ssh -i ~/.ssh/id_ed25519 -p "${SSH_PORT}" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o PreferredAuthentications=publickey \
+            -o PasswordAuthentication=no \
+            -o StrictHostKeyChecking=yes \
+            "${USERNAME}@${HOST}" 'bash -se' <<'REMOTE'
+          set -euo pipefail
+          trap 'rm -f /tmp/pxl8.pem /tmp/pxl8.key /tmp/pxl8.conf' EXIT
+
+          install -m 0644 /tmp/pxl8.pem /etc/nginx/pxl8.pem
+          install -m 0600 /tmp/pxl8.key /etc/nginx/pxl8.key
+          install -m 0644 /tmp/pxl8.conf /etc/nginx/sites-available/pxl8.conf
+          ln -sfn /etc/nginx/sites-available/pxl8.conf /etc/nginx/sites-enabled/pxl8.conf
+          nginx -t
+          systemctl reload nginx
+
+          curl --fail --silent --show-error --insecure \
+            --resolve pxl8.ing:443:127.0.0.1 \
+            -H 'CF-Connecting-IP: 127.0.0.1' \
+            https://pxl8.ing/api/obj/health >/dev/null
+          echo "PXL8 origin HTTPS health check passed."
+          REMOTE
+
       - name: Purge Cloudflare cache (optional)
         env:
           CF_ZONE_ID: ${{ steps.vault_optional.outputs.CF_ZONE_ID || vars.CF_ZONE_ID || secrets.CF_ZONE_ID }}
