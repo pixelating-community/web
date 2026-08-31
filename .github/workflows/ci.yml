@@ -474,9 +474,14 @@ jobs:
           web_container_ip="$(docker inspect --format \
             '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
             "${web_container_id}")"
+          if [ -z "${web_container_ip}" ]; then
+            web_container_ip="$(docker exec "${web_container_id}" hostname -i | awk '{print $1}')"
+          fi
           case "${web_container_ip}" in
             ''|*[!0-9.]*)
               echo "Could not resolve the PXL8 web container IPv4 address." >&2
+              docker inspect --format '{{json .NetworkSettings.Networks}}' \
+                "${web_container_id}"
               exit 1
               ;;
           esac
