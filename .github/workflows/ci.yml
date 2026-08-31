@@ -467,10 +467,24 @@ jobs:
           nginx -t
           systemctl reload nginx
 
-          curl --fail --silent --show-error --insecure \
-            --resolve pxl8.ing:443:127.0.0.1 \
-            -H 'CF-Connecting-IP: 127.0.0.1' \
-            https://pxl8.ing/api/obj/health >/dev/null
+          curl --fail --silent --show-error --noproxy '*' \
+            http://127.0.0.1:3100/api/obj/health >/dev/null
+
+          origin_healthy=0
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error --insecure --noproxy '*' \
+              --resolve pxl8.ing:443:127.0.0.1 \
+              -H 'CF-Connecting-IP: 127.0.0.1' \
+              https://pxl8.ing/api/obj/health >/dev/null; then
+              origin_healthy=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "${origin_healthy}" -ne 1 ]; then
+            echo "PXL8 origin HTTPS health check did not become ready." >&2
+            exit 1
+          fi
           echo "PXL8 origin HTTPS health check passed."
           REMOTE
 
