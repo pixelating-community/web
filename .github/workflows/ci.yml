@@ -475,6 +475,24 @@ jobs:
             '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
             "${web_container_id}")"
           if [ -z "${web_container_ip}" ]; then
+            web_network="$(docker inspect --format \
+              '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{end}}' \
+              "${web_container_id}")"
+            case "${web_network}" in
+              ''|*[!a-zA-Z0-9_.-]*)
+                echo "Could not resolve the PXL8 Docker network." >&2
+                exit 1
+                ;;
+            esac
+
+            echo "Repairing the missing PXL8 web-container network endpoint."
+            docker network disconnect --force "${web_network}" "${web_container_id}" || true
+            docker network connect --alias web "${web_network}" "${web_container_id}"
+            web_container_ip="$(docker inspect --format \
+              '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+              "${web_container_id}")"
+          fi
+          if [ -z "${web_container_ip}" ]; then
             web_container_ip="$(docker exec "${web_container_id}" hostname -i | awk '{print $1}')"
           fi
           case "${web_container_ip}" in
