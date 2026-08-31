@@ -29,6 +29,12 @@ services:
       - ./:/app:cached
       - node_modules_data:/app/node_modules
     env_file: .env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     depends_on:
       postgres:
         condition: service_healthy
@@ -47,6 +53,12 @@ services:
       - node_modules_data:/app/node_modules
       - ./models:/models:ro
     env_file: .env
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
     depends_on:
       postgres:
         condition: service_healthy
