@@ -460,45 +460,51 @@ jobs:
           set -euo pipefail
           trap 'rm -f /tmp/pxl8.pem /tmp/pxl8.key /tmp/pxl8.conf' EXIT
 
+          web_container_id="$(docker ps \
+            --filter 'label=com.docker.compose.project=pxl8-prod' \
+            --filter 'label=com.docker.compose.service=web' \
+            --format '{{.ID}}' | head -n 1)"
+          if [ -z "${web_container_id}" ]; then
+            echo "The PXL8 web container is not running." >&2
+            docker ps --all --filter 'label=com.docker.compose.project=pxl8-prod' \
+              --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+            exit 1
+          fi
+
+          web_container_ip="$(docker inspect --format \
+            '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' \
+            "${web_container_id}")"
+          case "${web_container_ip}" in
+            ''|*[!0-9.]*)
+              echo "Could not resolve the PXL8 web container IPv4 address." >&2
+              exit 1
+              ;;
+          esac
+
+          sed -i "s#127\\.0\\.0\\.1:3100#${web_container_ip}:3000#g" /tmp/pxl8.conf
+
+          upstream_healthy=0
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --noproxy '*' \
+              "http://${web_container_ip}:3000/api/obj/health" >/dev/null; then
+              upstream_healthy=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "${upstream_healthy}" -ne 1 ]; then
+            echo "The PXL8 Docker-network upstream did not become ready." >&2
+            docker ps --all --filter "id=${web_container_id}" \
+              --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+            exit 1
+          fi
+
           install -m 0644 /tmp/pxl8.pem /etc/nginx/pxl8.pem
           install -m 0600 /tmp/pxl8.key /etc/nginx/pxl8.key
           install -m 0644 /tmp/pxl8.conf /etc/nginx/sites-available/pxl8.conf
           ln -sfn /etc/nginx/sites-available/pxl8.conf /etc/nginx/sites-enabled/pxl8.conf
           nginx -t
           systemctl reload nginx
-
-          port_healthy=0
-          for attempt in $(seq 1 10); do
-            if curl --fail --silent --show-error --noproxy '*' \
-              http://127.0.0.1:3100/api/obj/health >/dev/null; then
-              port_healthy=1
-              break
-            fi
-            sleep 1
-          done
-
-          if [ "${port_healthy}" -ne 1 ]; then
-            echo "PXL8 host port is unavailable; restarting Docker once to restore port forwarding."
-            systemctl restart docker
-            for attempt in $(seq 1 60); do
-              if curl --fail --silent --show-error --noproxy '*' \
-                http://127.0.0.1:3100/api/obj/health >/dev/null; then
-                port_healthy=1
-                break
-              fi
-              sleep 2
-            done
-          fi
-
-          if [ "${port_healthy}" -ne 1 ]; then
-            echo "PXL8 host port did not become ready after Docker restart." >&2
-            docker ps --all --filter 'name=pxl8-prod-web-1' \
-              --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
-            if command -v ss >/dev/null 2>&1; then
-              ss -lnt | grep ':3100' || true
-            fi
-            exit 1
-          fi
 
           origin_healthy=0
           for attempt in $(seq 1 20); do
