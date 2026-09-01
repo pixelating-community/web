@@ -120,9 +120,20 @@ resource "cloudflare_ruleset" "pxl8_waf_custom" {
 
   rules = [
     {
-      action      = "block"
-      expression  = "(cf.client.bot) and (http.request.uri.path contains \"/api/\") and (http.request.uri.path ne \"/api/obj/health\") and (http.request.uri.path ne \"/api/obj/stripe-webhook\") and (http.request.uri.path ne \"/api/obj/paypal-webhook\")"
-      description = "Block bots on API except health and signed payment webhooks"
+      action = "block"
+      expression = join(" or ", [
+        "((cf.client.bot) and (http.request.uri.path contains \"/api/\") and (http.request.uri.path ne \"/api/obj/health\") and (http.request.uri.path ne \"/api/obj/stripe-webhook\") and (http.request.uri.path ne \"/api/obj/paypal-webhook\"))",
+        "lower(http.user_agent) contains \"amazonbot\"",
+        "lower(http.user_agent) contains \"applebot-extended\"",
+        "lower(http.user_agent) contains \"bytespider\"",
+        "lower(http.user_agent) contains \"ccbot\"",
+        "lower(http.user_agent) contains \"claudebot\"",
+        "lower(http.user_agent) contains \"google-extended\"",
+        "lower(http.user_agent) contains \"gptbot\"",
+        "lower(http.user_agent) contains \"meta-externalagent\"",
+        "lower(http.user_agent) contains \"perplexitybot\"",
+      ])
+      description = "Block bots on APIs and declared AI crawlers"
       enabled     = true
     },
     {
@@ -148,6 +159,33 @@ resource "cloudflare_ruleset" "pxl8_waf_custom" {
       expression  = format("(lower(http.host) ne \"%s\") and (not ends_with(lower(http.host), \".%s\"))", lower(var.pxl8_domain), lower(var.pxl8_domain))
       description = "Block requests outside the PXL8 domain"
       enabled     = true
+    },
+  ]
+}
+
+resource "cloudflare_ruleset" "pxl8_noindex_headers" {
+  count       = local.pxl8_enabled ? 1 : 0
+  zone_id     = var.pxl8_zone_id
+  name        = "PXL8 no-index response headers"
+  description = "Keep the public sandbox out of search and AI indexes"
+  kind        = "zone"
+  phase       = "http_response_headers_transform"
+
+  rules = [
+    {
+      ref         = "set_pxl8_noindex_header"
+      action      = "rewrite"
+      description = "Set X-Robots-Tag on every PXL8 response"
+      enabled     = true
+      expression  = "true"
+      action_parameters = {
+        headers = {
+          "X-Robots-Tag" = {
+            operation = "set"
+            value     = "noindex, nofollow, noarchive, nosnippet, noimageindex"
+          }
+        }
+      }
     },
   ]
 }

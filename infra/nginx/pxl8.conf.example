@@ -29,6 +29,7 @@ server {
 
   client_max_body_size 110m;
   limit_conn pxl8_conn 40;
+  add_header X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex" always;
 
   # Only Cloudflare should reach this origin virtual host.
   if ($http_cf_connecting_ip = "") {
@@ -86,6 +87,7 @@ server {
     proxy_http_version 1.1;
     proxy_set_header Host $host;
     add_header Cache-Control "public, max-age=31536000, immutable";
+    add_header X-Robots-Tag "noindex, nofollow, noarchive, nosnippet, noimageindex" always;
   }
 
   location / {

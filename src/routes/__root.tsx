@@ -29,7 +29,10 @@ export const Route = createRootRouteWithContext<{
       { name: "theme-color", content: "#a855f7" },
       { title: SITE_TITLE },
       { name: "description", content: SITE_DESCRIPTION },
-      { name: "robots", content: "noindex" },
+      {
+        name: "robots",
+        content: "noindex, nofollow, noarchive, nosnippet, noimageindex",
+      },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: SITE_TITLE },
       {
