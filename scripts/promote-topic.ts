@@ -31,7 +31,6 @@ type PerspectiveRecord = {
   symbols: unknown;
   topic_id: string | null;
   updated_at: Date | string;
-  video_mix_src: string | null;
   video_src: string | null;
   words_json: string | null;
 };
@@ -50,7 +49,6 @@ const MEDIA_FIELDS = [
   "raw_recording_src",
   "recording_src",
   "remix_audio_src",
-  "video_mix_src",
   "video_src",
 ] as const satisfies ReadonlyArray<keyof PerspectiveRecord>;
 
@@ -121,7 +119,6 @@ const loadTopic = async (topicName: string) => {
       remix_waveform_json,
       remix_updated_at,
       video_src,
-      video_mix_src,
       recording_src,
       raw_recording_src,
       audio_mix_input_src,
@@ -282,7 +279,6 @@ const importPerspective = async (
       remix_waveform_json,
       remix_updated_at,
       video_src,
-      video_mix_src,
       recording_src,
       raw_recording_src,
       audio_mix_input_src,
@@ -306,7 +302,6 @@ const importPerspective = async (
       ${waveform}::jsonb,
       ${perspective.remix_updated_at},
       ${perspective.video_src},
-      ${perspective.video_mix_src},
       ${perspective.recording_src},
       ${perspective.raw_recording_src},
       ${perspective.audio_mix_input_src},
