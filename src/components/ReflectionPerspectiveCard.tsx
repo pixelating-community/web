@@ -47,7 +47,7 @@ export const ReflectionPerspectiveCard = memo(function ReflectionPerspectiveCard
       <div className="mt-2 flex items-center gap-3 text-xs text-white/40">
         <span>♡ {perspective.virtual_vote_count ?? 0}</span>
         <span>
-          ✦ {formatContributionTotal(
+          💰 {formatContributionTotal(
             perspective.contribution_total_minor ?? 0,
             perspective.contribution_currency,
           )}

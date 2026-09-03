@@ -266,6 +266,7 @@ export const PerspectiveListener = ({
       logAudioState("playing", audio);
       syncVideoToAudio(audio, true);
       setPlaybackError("");
+      setNeedsPlayGesture(false);
       commitCurrentTime(audio.currentTime, true);
       setIsPlaying(true);
     };
@@ -466,7 +467,9 @@ export const PerspectiveListener = ({
     ? "Audio unavailable"
     : isPlaying
       ? "Pause audio"
-      : "Play audio";
+      : needsPlayGesture
+        ? "Tap to play audio"
+        : "Play audio";
 
   const parentPerspectiveId = perspective.parent_perspective_id;
 
@@ -497,32 +500,6 @@ export const PerspectiveListener = ({
         />
       )}
       <div className="relative z-10 flex h-dvh w-full shrink-0 flex-col overflow-hidden">
-        {needsPlayGesture && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
-            <button
-              type="button"
-              aria-label="Tap to play audio"
-              title="Tap to play audio"
-              onClick={() => {
-                const audio = audioRef.current;
-                if (!audio) return;
-                seekToStart(audio);
-                audio.muted = false;
-                audio.volume = 1;
-                void audio
-                  .play()
-                  .then(() => {
-                    setNeedsPlayGesture(false);
-                    setIsPlaying(true);
-                  })
-                  .catch(console.error);
-              }}
-              className="flex h-20 w-20 touch-manipulation items-center justify-center border-0 bg-transparent p-0 text-white"
-            >
-              <span className="text-4xl">▶</span>
-            </button>
-          </div>
-        )}
         <PerspectiveModeNav
           canWrite={canWrite}
           currentMode="listen"
@@ -533,26 +510,49 @@ export const PerspectiveListener = ({
         <div className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden [scrollbar-gutter:stable]">
           <div className="h-full w-[80vw] overflow-y-auto scrollbar-transparent">
             <div className="flex min-h-full items-center justify-center p-4">
-              <div className="flex w-full flex-col items-center">
-                <SWEditor
-                  perspective={perspective}
-                  timings={timings}
-                  audioRef={audioRef}
-                  currentTime={currentTime}
-                  isPlaying={isPlaying}
-                  enablePlaybackSync
-                  isActive
-                  readOnly
-                  showTimingLabels={false}
-                />
-                {(perspective.reflection_count ?? 0) > 0 && (
-                  <a
-                    href="#reflections"
-                    className="unstyled-link mt-2 text-xs text-white/40 hover:text-white/70"
+              <div className="flex w-full items-center">
+                <div className="flex w-11 shrink-0 flex-col items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={handleTogglePlayback}
+                    disabled={!resolvedAudioSrc}
+                    aria-label={playControlLabel}
+                    title={playControlLabel}
+                    className={`inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-[10px] border border-transparent bg-transparent p-0 leading-none transition-[color,transform,width,height] duration-150 ${
+                      !resolvedAudioSrc
+                        ? "cursor-not-allowed text-white/35"
+                        : showPlaybackError
+                          ? "text-red-100"
+                          : isPlaying
+                            ? "text-teal-100 text-[1rem]"
+                            : "text-(--color-neon-teal-light) text-[1.2rem]"
+                    }`}
                   >
-                    💭 x {perspective.reflection_count}
-                  </a>
-                )}
+                    {showPlaybackError ? "!" : isPlaying ? "■" : "▶"}
+                  </button>
+                  <PerspectiveSupport perspective={perspective} />
+                </div>
+                <div className="flex min-w-0 flex-1 flex-col items-center">
+                  <SWEditor
+                    perspective={perspective}
+                    timings={timings}
+                    audioRef={audioRef}
+                    currentTime={currentTime}
+                    isPlaying={isPlaying}
+                    enablePlaybackSync
+                    isActive
+                    readOnly
+                    showTimingLabels={false}
+                  />
+                  {(perspective.reflection_count ?? 0) > 0 && (
+                    <a
+                      href="#reflections"
+                      className="unstyled-link mt-2 text-xs text-white/40 hover:text-white/70"
+                    >
+                      💭 x {perspective.reflection_count}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -569,27 +569,6 @@ export const PerspectiveListener = ({
             audio unavailable for this perspective ({playbackError})
           </output>
         ) : null}
-        <div className="flex shrink-0 justify-center px-4 py-2">
-          <button
-            type="button"
-            onClick={handleTogglePlayback}
-            disabled={!resolvedAudioSrc}
-            aria-label={playControlLabel}
-            title={playControlLabel}
-            className={`inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-[10px] border border-transparent bg-transparent p-0 leading-none transition-[color,transform,width,height] duration-150 ${
-              !resolvedAudioSrc
-                ? "cursor-not-allowed text-white/35"
-                : showPlaybackError
-                  ? "text-red-100"
-                  : isPlaying
-                    ? "text-teal-100 text-[1rem]"
-                    : "text-(--color-neon-teal-light) text-[1.2rem]"
-            }`}
-          >
-            {showPlaybackError ? "!" : isPlaying ? "■" : "▶"}
-          </button>
-        </div>
-        <PerspectiveSupport perspective={perspective} />
       </div>
       <PerspectiveReflections
         perspective={perspective}

@@ -202,11 +202,11 @@ export const PerspectiveSupport = ({
   return (
     <section
       aria-label="Support this story"
-      className="scrollbar-transparent relative z-10 max-h-[55dvh] shrink-0 overflow-y-auto border-t-2 border-white/10 bg-black/55 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)]"
+      className="relative z-20 flex w-11 shrink-0 flex-col items-center"
     >
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4">
-        <div className="flex max-w-full items-start justify-center gap-2">
-          <div className="flex w-fit max-w-full flex-col items-stretch gap-1 text-left">
+      <div className="flex w-11 flex-col items-center gap-0.5">
+        <div className="flex max-w-full flex-col items-center gap-0.5">
+          <div className="flex w-fit max-w-full flex-col items-center gap-0.5 text-center">
             <button
               type="button"
               onClick={() => void handleVote()}
@@ -216,10 +216,10 @@ export const PerspectiveSupport = ({
                   ? `${virtualVoteCount} virtual votes. Your vote is counted.`
                   : `Add a virtual vote. ${virtualVoteCount} votes so far.`
               }
-              className={`group inline-flex min-h-11 w-full items-center justify-between gap-3 border-0 bg-transparent px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
+              className={`inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
                 support?.hasVoted
                   ? "text-pink-100"
-                  : "text-white enabled:hover:text-pink-100"
+                  : "text-white/45 enabled:hover:text-pink-100"
               }`}
             >
               <span aria-hidden="true">
@@ -229,25 +229,29 @@ export const PerspectiveSupport = ({
             </button>
             <button
               type="button"
-              onClick={() => setShowContribution((value) => !value)}
-              className="group inline-flex min-h-11 w-full items-center justify-between gap-3 border-0 bg-transparent px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-amber-100"
+              onClick={() => {
+                setShowSupportInfo(false);
+                setShowContribution((value) => !value);
+              }}
+              className="inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none text-white/45 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-amber-100"
               aria-expanded={showContribution}
               aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
             >
               <span aria-hidden="true">💰</span>
-              <span>
-                {formatContributionTotal(contributionTotalMinor, currency)}
-              </span>
+              <span>{formatContributionTotal(contributionTotalMinor, currency)}</span>
             </button>
           </div>
           <button
             type="button"
-            onClick={() => setShowSupportInfo((value) => !value)}
+            onClick={() => {
+              setShowContribution(false);
+              setShowSupportInfo((value) => !value);
+            }}
             aria-controls="support-info"
             aria-expanded={showSupportInfo}
             aria-label="About votes and support"
             title="About votes and support"
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center border-0 bg-transparent text-lg text-white/65 transition-colors hover:text-white"
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center border-0 bg-transparent text-sm text-white/45 transition-colors hover:text-white"
           >
             <span aria-hidden="true">ⅈ</span>
           </button>
@@ -256,8 +260,17 @@ export const PerspectiveSupport = ({
         {showSupportInfo ? (
           <aside
             id="support-info"
-            className="w-full max-w-sm space-y-1 border-t border-white/10 bg-black/20 px-3 py-2 text-[11px] leading-relaxed text-white/65"
+            className="fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto w-auto max-w-sm space-y-1 bg-black/90 p-4 text-[11px] leading-relaxed text-white/70 backdrop-blur-md"
           >
+            <button
+              type="button"
+              onClick={() => setShowSupportInfo(false)}
+              aria-label="Close support information"
+              title="Close"
+              className="float-right inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-white/65 hover:text-white"
+            >
+              ×
+            </button>
             <p className="m-0">♡ Virtual vote. No charge.</p>
             <p className="m-0">💰 Completed payments.</p>
             <p className="m-0">
@@ -271,7 +284,16 @@ export const PerspectiveSupport = ({
         ) : null}
 
         {showContribution ? (
-          <div className="mx-auto flex w-full max-w-sm flex-col gap-3 bg-black/20 p-4">
+          <div className="scrollbar-transparent fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto flex max-h-[calc(100dvh-2rem)] w-auto max-w-sm flex-col gap-3 overflow-y-auto bg-black/90 p-4 backdrop-blur-md">
+            <button
+              type="button"
+              onClick={() => setShowContribution(false)}
+              aria-label="Close support options"
+              title="Close"
+              className="ml-auto inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-white/65 hover:text-white"
+            >
+              ×
+            </button>
             {stripeSession ? (
               <div className="flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
                 <span>
@@ -389,7 +411,7 @@ export const PerspectiveSupport = ({
 
         {status ? (
           <output
-            className="w-full max-w-sm text-center text-xs text-emerald-200"
+            className="absolute top-0 left-full ml-2 w-48 text-left text-xs text-emerald-200"
             aria-live="polite"
           >
             {status}
@@ -397,7 +419,7 @@ export const PerspectiveSupport = ({
         ) : null}
         {error ? (
           <output
-            className="w-full max-w-sm text-center text-xs text-red-200"
+            className="absolute top-0 left-full ml-2 w-48 text-left text-xs text-red-200"
             aria-live="polite"
           >
             {error}

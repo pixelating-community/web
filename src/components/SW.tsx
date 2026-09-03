@@ -795,7 +795,7 @@ export const SW = ({
                         ♡ {perspective.virtual_vote_count ?? 0}
                       </span>
                       <span>
-                        ✦ {formatContributionTotal(
+                        💰 {formatContributionTotal(
                           perspective.contribution_total_minor ?? 0,
                           perspective.contribution_currency,
                         )}

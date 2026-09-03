@@ -35,8 +35,9 @@ describe("layout widths", () => {
       /className="h-full w-\[80vw\] overflow-y-auto scrollbar-transparent"/,
     );
     expect(source).toMatch(
-      /<PerspectiveSupport perspective=\{perspective\} \/>\s*<\/div>\s*<PerspectiveReflections/,
+      /className="flex w-11 shrink-0 flex-col items-center gap-0\.5"[\s\S]*?<PerspectiveSupport perspective=\{perspective\} \/>[\s\S]*?<SWEditor/,
     );
+    expect(source.match(/"▶"/g) ?? []).toHaveLength(1);
     expect(source).toMatch(/<PerspectiveReflections/);
     expect(source).toMatch(
       /aria-label="Add reflection"[\s\S]*?<span aria-hidden="true">💭<\/span>/,
@@ -77,6 +78,12 @@ describe("layout widths", () => {
     expect(supportSource).not.toContain("💸");
     expect(supportSource).not.toContain("ℹ️");
     expect(supportSource).not.toContain("pixel-ui-");
+    expect(supportSource).toContain(
+      'className="relative z-20 flex w-11 shrink-0 flex-col items-center"',
+    );
+    expect(readSource("src/components/SW.tsx")).toContain(
+      "💰 {formatContributionTotal(",
+    );
     expect(listenerSource).not.toContain("pixel-ui-");
     expect(cssSource).not.toContain(".pixel-ui-");
   });

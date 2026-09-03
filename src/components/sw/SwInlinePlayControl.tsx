@@ -54,6 +54,7 @@ export const SwInlinePlayControl = ({
         <Link
           to={previewHref}
           preload="intent"
+          viewTransition
           onClick={(event) => {
             if (playDisabled) {
               event.preventDefault();
