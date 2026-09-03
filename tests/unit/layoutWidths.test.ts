@@ -34,7 +34,14 @@ describe("layout widths", () => {
     expect(source).toMatch(
       /className="h-full w-\[80vw\] overflow-y-auto scrollbar-transparent"/,
     );
+    expect(source).toMatch(
+      /<PerspectiveSupport perspective=\{perspective\} \/>\s*<\/div>\s*<PerspectiveReflections/,
+    );
     expect(source).toMatch(/<PerspectiveReflections/);
+    expect(source).toMatch(
+      /aria-label="Add reflection"[\s\S]*?<span aria-hidden="true">💭<\/span>/,
+    );
+    expect(source).not.toMatch(/⊕ Add reflection/);
   });
 
   it("uses a single stable scrollbar gutter on the root document", () => {

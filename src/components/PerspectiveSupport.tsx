@@ -58,6 +58,7 @@ export const PerspectiveSupport = ({
   const [support, setSupport] = useState<SupportData | null>(null);
   const [amountMinor, setAmountMinor] = useState(300);
   const [showContribution, setShowContribution] = useState(false);
+  const [showSupportInfo, setShowSupportInfo] = useState(false);
   const [showAlternativePayments, setShowAlternativePayments] = useState(false);
   const [stripeSession, setStripeSession] = useState<StripeSession | null>(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
@@ -201,54 +202,78 @@ export const PerspectiveSupport = ({
   return (
     <section
       aria-label="Support this story"
-      className="relative z-10 border-t border-white/10 bg-black/55 px-4 py-6 backdrop-blur-md"
+      className="scrollbar-transparent relative z-10 max-h-[55dvh] shrink-0 overflow-y-auto border-t-2 border-white/10 bg-black/55 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),1rem)]"
     >
-      <div className="mr-auto flex w-full max-w-3xl flex-col items-start gap-4">
-        <div className="flex w-fit max-w-full flex-col items-start gap-0.5 bg-black/20 px-2 py-1.5 text-left">
-          <span
-            aria-hidden="true"
-            className="px-1 text-[10px] font-bold uppercase leading-none tracking-[0.18em] text-white/65 [text-shadow:2px_2px_0_rgba(0,0,0,0.95)]"
-          >
-            Support this story
-          </span>
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4">
+        <div className="flex max-w-full items-start justify-center gap-2">
+          <div className="pixel-ui-frame flex w-fit max-w-full flex-col items-stretch gap-1 p-2 text-left">
+            <button
+              type="button"
+              onClick={() => void handleVote()}
+              disabled={isVoting || support?.hasVoted}
+              aria-label={
+                support?.hasVoted
+                  ? `${virtualVoteCount} virtual votes. Your vote is counted.`
+                  : `Add a virtual vote. ${virtualVoteCount} votes so far.`
+              }
+              className={`pixel-ui-control group inline-flex min-h-11 w-full items-center justify-between gap-3 bg-white/[0.04] px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
+                support?.hasVoted
+                  ? "text-pink-100"
+                  : "text-white enabled:hover:bg-pink-300/15 enabled:hover:text-pink-100"
+              }`}
+            >
+              <span aria-hidden="true">
+                {support?.hasVoted ? "♥" : "♡"}
+              </span>
+              <span>{virtualVoteCount}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowContribution((value) => !value)}
+              className="pixel-ui-control group inline-flex min-h-11 w-full items-center justify-between gap-3 bg-white/[0.04] px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:bg-amber-300/15 hover:text-amber-100"
+              aria-expanded={showContribution}
+              aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
+            >
+              <span aria-hidden="true">💸</span>
+              <span>
+                {formatContributionTotal(contributionTotalMinor, currency)}
+              </span>
+            </button>
+          </div>
           <button
             type="button"
-            onClick={() => void handleVote()}
-            disabled={isVoting || support?.hasVoted}
-            className={`group inline-flex min-h-11 w-full items-center justify-start gap-2 px-1 py-1 text-left text-base font-black uppercase leading-none tracking-[-0.035em] transition [text-shadow:2px_2px_0_rgba(0,0,0,0.95),0_0_4px_rgba(0,0,0,0.8)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 enabled:hover:translate-x-1 ${
-              support?.hasVoted
-                ? "text-pink-100"
-                : "text-white hover:text-pink-100"
-            }`}
+            onClick={() => setShowSupportInfo((value) => !value)}
+            aria-controls="support-info"
+            aria-expanded={showSupportInfo}
+            aria-label="About votes and support"
+            title="About votes and support"
+            className="pixel-ui-control inline-flex h-9 w-9 shrink-0 items-center justify-center bg-black/55 text-sm text-white/65 transition-colors hover:text-white"
           >
-            <span>{virtualVoteCount} virtual votes</span>
-            <span aria-hidden="true">
-              {support?.hasVoted ? "♥" : "♡"}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowContribution((value) => !value)}
-            className="group inline-flex min-h-11 w-full items-center justify-start gap-2 px-1 py-1 text-left text-base font-black uppercase italic leading-none tracking-[-0.035em] text-white transition [text-shadow:2px_2px_0_rgba(0,0,0,0.95),0_0_4px_rgba(0,0,0,0.8)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:translate-x-1 hover:text-amber-100"
-            aria-expanded={showContribution}
-          >
-            <span>
-              {formatContributionTotal(contributionTotalMinor, currency)} backed
-            </span>
-            <span aria-hidden="true" className="not-italic">
-              ✦
-            </span>
+            <span aria-hidden="true">ℹ️</span>
           </button>
         </div>
 
-        {showContribution ? (
-          <div className="mr-auto flex w-full max-w-sm flex-col gap-3 rounded-2xl border border-white/10 bg-black/35 p-4">
-            <p className="m-0 text-center text-sm text-white/80">
-              Choose a tier.
+        {showSupportInfo ? (
+          <aside
+            id="support-info"
+            className="pixel-ui-frame w-full max-w-sm space-y-1 p-3 text-[11px] leading-relaxed text-white/65"
+          >
+            <p className="m-0">♡ Virtual vote. No charge.</p>
+            <p className="m-0">💸 Completed payments.</p>
+            <p className="m-0">
+              Payments purchase the selected tier. They do not buy ownership or
+              guarantee a journey or date.
             </p>
+            <p className="m-0">
+              $25 Handwritten Copy is mailed to your checkout address.
+            </p>
+          </aside>
+        ) : null}
 
+        {showContribution ? (
+          <div className="pixel-ui-frame mx-auto flex w-full max-w-sm flex-col gap-3 p-4">
             {stripeSession ? (
-              <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/75">
+              <div className="pixel-ui-control flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
                 <span>
                   {selectedTier.name} — {formatContributionTotal(amountMinor, currency)}
                 </span>
@@ -258,9 +283,11 @@ export const PerspectiveSupport = ({
                     setStripeSession(null);
                     setError("");
                   }}
-                  className="text-xs text-amber-100 underline decoration-amber-200/40 underline-offset-2"
+                  aria-label="Change support tier"
+                  title="Change support tier"
+                  className="text-base text-amber-100"
                 >
-                  Change
+                  ↺
                 </button>
               </div>
             ) : (
@@ -274,7 +301,7 @@ export const PerspectiveSupport = ({
                     type="button"
                     disabled={amountLocked}
                     onClick={() => setAmountMinor(tier.amountMinor)}
-                    className={`flex min-h-20 flex-col items-start justify-between rounded-lg border px-3 py-2 text-left transition ${
+                    className={`pixel-ui-control flex min-h-20 flex-col items-start justify-between px-3 py-2 text-left transition-colors ${
                       amountMinor === tier.amountMinor
                         ? "border-amber-200/50 bg-amber-300/20 text-amber-50"
                         : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
@@ -312,15 +339,20 @@ export const PerspectiveSupport = ({
                   type="button"
                   disabled={isStartingCheckout}
                   onClick={() => void beginStripeCheckout()}
-                  className="min-h-11 rounded-xl border border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-medium text-amber-50 transition hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
+                  aria-label={
+                    isStartingCheckout
+                      ? "Starting secure checkout"
+                      : "Continue with card or wallet"
+                  }
+                  className="pixel-ui-control min-h-11 border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-bold uppercase text-amber-50 transition-colors hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
                 >
                   {isStartingCheckout
-                    ? "Starting secure checkout…"
-                    : "Continue with card or wallet"}
+                    ? "…"
+                    : "💳 Card / wallet"}
                 </button>
               )
             ) : (
-              <p className="m-0 rounded-lg bg-white/5 px-3 py-2 text-center text-xs text-white/55">
+              <p className="pixel-ui-control m-0 bg-white/5 px-3 py-2 text-center text-xs text-white/55">
                 Card and wallet checkout is not configured yet.
               </p>
             )}
@@ -352,16 +384,12 @@ export const PerspectiveSupport = ({
                 ) : null}
               </div>
             ) : null}
-
-            <p className="m-0 text-center text-[11px] leading-relaxed text-white/45">
-              $25 Handwritten Copy is mailed to your checkout address.
-            </p>
           </div>
         ) : null}
 
         {status ? (
           <output
-            className="w-full max-w-sm text-left text-xs text-emerald-200"
+            className="w-full max-w-sm text-center text-xs text-emerald-200"
             aria-live="polite"
           >
             {status}
@@ -369,7 +397,7 @@ export const PerspectiveSupport = ({
         ) : null}
         {error ? (
           <output
-            className="w-full max-w-sm text-left text-xs text-red-200"
+            className="w-full max-w-sm text-center text-xs text-red-200"
             aria-live="polite"
           >
             {error}

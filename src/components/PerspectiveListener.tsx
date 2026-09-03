@@ -94,9 +94,11 @@ const PerspectiveReflections = memo(function PerspectiveReflections({
               topicName,
               parentPerspectiveId: perspective.id,
             })}
-            className="unstyled-link inline-flex items-center gap-2 text-sm text-white/60 hover:text-white/90 transition"
+            aria-label="Add reflection"
+            title="Add reflection"
+            className="unstyled-link inline-flex h-11 w-11 items-center justify-center text-lg text-white/60 transition hover:text-white/90"
           >
-            ⊕ Add reflection
+            <span aria-hidden="true">💭</span>
           </Link>
         )}
       </div>
@@ -499,6 +501,8 @@ export const PerspectiveListener = ({
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/70">
             <button
               type="button"
+              aria-label="Tap to play audio"
+              title="Tap to play audio"
               onClick={() => {
                 const audio = audioRef.current;
                 if (!audio) return;
@@ -513,10 +517,9 @@ export const PerspectiveListener = ({
                   })
                   .catch(console.error);
               }}
-              className="flex flex-col items-center gap-3 rounded-2xl border-0 bg-white/10 px-8 py-6 text-white backdrop-blur-sm touch-manipulation"
+              className="pixel-ui-frame flex touch-manipulation items-center justify-center p-6 text-white"
             >
-              <span className="text-5xl">▶</span>
-              <span className="text-sm text-white/70">Tap to play</span>
+              <span className="pixel-ui-label text-4xl">▶</span>
             </button>
           </div>
         )}
@@ -566,7 +569,7 @@ export const PerspectiveListener = ({
             audio unavailable for this perspective ({playbackError})
           </output>
         ) : null}
-        <div className="shrink-0 flex justify-center px-4 pt-2 pb-[max(env(safe-area-inset-bottom),1rem)]">
+        <div className="flex shrink-0 justify-center px-4 py-2">
           <button
             type="button"
             onClick={handleTogglePlayback}
@@ -586,8 +589,8 @@ export const PerspectiveListener = ({
             {showPlaybackError ? "!" : isPlaying ? "■" : "▶"}
           </button>
         </div>
+        <PerspectiveSupport perspective={perspective} />
       </div>
-      <PerspectiveSupport perspective={perspective} />
       <PerspectiveReflections
         perspective={perspective}
         topicName={topicName}
