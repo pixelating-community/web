@@ -62,4 +62,22 @@ describe("layout widths", () => {
     expect(cssSource).toMatch(/\.karaoke-view button\.sw-word\.karaoke-word/);
     expect(cssSource).toMatch(/padding-bottom: 0\.14em;/);
   });
+
+  it("keeps support controls flat and currency-neutral", () => {
+    const supportSource = readSource(
+      "src/components/PerspectiveSupport.tsx",
+    );
+    const listenerSource = readSource(
+      "src/components/PerspectiveListener.tsx",
+    );
+    const cssSource = readSource("src/styles/globals.css");
+
+    expect(supportSource).toContain('<span aria-hidden="true">💰</span>');
+    expect(supportSource).toContain('<span aria-hidden="true">ⅈ</span>');
+    expect(supportSource).not.toContain("💸");
+    expect(supportSource).not.toContain("ℹ️");
+    expect(supportSource).not.toContain("pixel-ui-");
+    expect(listenerSource).not.toContain("pixel-ui-");
+    expect(cssSource).not.toContain(".pixel-ui-");
+  });
 });

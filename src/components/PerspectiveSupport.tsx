@@ -206,7 +206,7 @@ export const PerspectiveSupport = ({
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4">
         <div className="flex max-w-full items-start justify-center gap-2">
-          <div className="pixel-ui-frame flex w-fit max-w-full flex-col items-stretch gap-1 p-2 text-left">
+          <div className="flex w-fit max-w-full flex-col items-stretch gap-1 text-left">
             <button
               type="button"
               onClick={() => void handleVote()}
@@ -216,10 +216,10 @@ export const PerspectiveSupport = ({
                   ? `${virtualVoteCount} virtual votes. Your vote is counted.`
                   : `Add a virtual vote. ${virtualVoteCount} votes so far.`
               }
-              className={`pixel-ui-control group inline-flex min-h-11 w-full items-center justify-between gap-3 bg-white/[0.04] px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
+              className={`group inline-flex min-h-11 w-full items-center justify-between gap-3 border-0 bg-transparent px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
                 support?.hasVoted
                   ? "text-pink-100"
-                  : "text-white enabled:hover:bg-pink-300/15 enabled:hover:text-pink-100"
+                  : "text-white enabled:hover:text-pink-100"
               }`}
             >
               <span aria-hidden="true">
@@ -230,11 +230,11 @@ export const PerspectiveSupport = ({
             <button
               type="button"
               onClick={() => setShowContribution((value) => !value)}
-              className="pixel-ui-control group inline-flex min-h-11 w-full items-center justify-between gap-3 bg-white/[0.04] px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:bg-amber-300/15 hover:text-amber-100"
+              className="group inline-flex min-h-11 w-full items-center justify-between gap-3 border-0 bg-transparent px-2 py-2 text-left text-sm font-black uppercase leading-none tracking-[-0.04em] text-white transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-amber-100"
               aria-expanded={showContribution}
               aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
             >
-              <span aria-hidden="true">💸</span>
+              <span aria-hidden="true">💰</span>
               <span>
                 {formatContributionTotal(contributionTotalMinor, currency)}
               </span>
@@ -247,19 +247,19 @@ export const PerspectiveSupport = ({
             aria-expanded={showSupportInfo}
             aria-label="About votes and support"
             title="About votes and support"
-            className="pixel-ui-control inline-flex h-9 w-9 shrink-0 items-center justify-center bg-black/55 text-sm text-white/65 transition-colors hover:text-white"
+            className="inline-flex h-9 w-9 shrink-0 items-center justify-center border-0 bg-transparent text-lg text-white/65 transition-colors hover:text-white"
           >
-            <span aria-hidden="true">ℹ️</span>
+            <span aria-hidden="true">ⅈ</span>
           </button>
         </div>
 
         {showSupportInfo ? (
           <aside
             id="support-info"
-            className="pixel-ui-frame w-full max-w-sm space-y-1 p-3 text-[11px] leading-relaxed text-white/65"
+            className="w-full max-w-sm space-y-1 border-t border-white/10 bg-black/20 px-3 py-2 text-[11px] leading-relaxed text-white/65"
           >
             <p className="m-0">♡ Virtual vote. No charge.</p>
-            <p className="m-0">💸 Completed payments.</p>
+            <p className="m-0">💰 Completed payments.</p>
             <p className="m-0">
               Payments purchase the selected tier. They do not buy ownership or
               guarantee a journey or date.
@@ -271,9 +271,9 @@ export const PerspectiveSupport = ({
         ) : null}
 
         {showContribution ? (
-          <div className="pixel-ui-frame mx-auto flex w-full max-w-sm flex-col gap-3 p-4">
+          <div className="mx-auto flex w-full max-w-sm flex-col gap-3 bg-black/20 p-4">
             {stripeSession ? (
-              <div className="pixel-ui-control flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
+              <div className="flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
                 <span>
                   {selectedTier.name} — {formatContributionTotal(amountMinor, currency)}
                 </span>
@@ -301,7 +301,7 @@ export const PerspectiveSupport = ({
                     type="button"
                     disabled={amountLocked}
                     onClick={() => setAmountMinor(tier.amountMinor)}
-                    className={`pixel-ui-control flex min-h-20 flex-col items-start justify-between px-3 py-2 text-left transition-colors ${
+                    className={`flex min-h-20 flex-col items-start justify-between border px-3 py-2 text-left transition-colors ${
                       amountMinor === tier.amountMinor
                         ? "border-amber-200/50 bg-amber-300/20 text-amber-50"
                         : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
@@ -344,7 +344,7 @@ export const PerspectiveSupport = ({
                       ? "Starting secure checkout"
                       : "Continue with card or wallet"
                   }
-                  className="pixel-ui-control min-h-11 border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-bold uppercase text-amber-50 transition-colors hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
+                  className="min-h-11 border border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-bold uppercase text-amber-50 transition-colors hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
                 >
                   {isStartingCheckout
                     ? "…"
@@ -352,7 +352,7 @@ export const PerspectiveSupport = ({
                 </button>
               )
             ) : (
-              <p className="pixel-ui-control m-0 bg-white/5 px-3 py-2 text-center text-xs text-white/55">
+              <p className="m-0 bg-white/5 px-3 py-2 text-center text-xs text-white/55">
                 Card and wallet checkout is not configured yet.
               </p>
             )}

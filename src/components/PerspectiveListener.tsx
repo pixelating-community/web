@@ -517,9 +517,9 @@ export const PerspectiveListener = ({
                   })
                   .catch(console.error);
               }}
-              className="pixel-ui-frame flex touch-manipulation items-center justify-center p-6 text-white"
+              className="flex h-20 w-20 touch-manipulation items-center justify-center border-0 bg-transparent p-0 text-white"
             >
-              <span className="pixel-ui-label text-4xl">▶</span>
+              <span className="text-4xl">▶</span>
             </button>
           </div>
         )}
