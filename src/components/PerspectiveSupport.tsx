@@ -58,7 +58,6 @@ export const PerspectiveSupport = ({
   const [support, setSupport] = useState<SupportData | null>(null);
   const [amountMinor, setAmountMinor] = useState(300);
   const [showContribution, setShowContribution] = useState(false);
-  const [showSupportInfo, setShowSupportInfo] = useState(false);
   const [showAlternativePayments, setShowAlternativePayments] = useState(false);
   const [stripeSession, setStripeSession] = useState<StripeSession | null>(null);
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
@@ -229,10 +228,7 @@ export const PerspectiveSupport = ({
             </button>
             <button
               type="button"
-              onClick={() => {
-                setShowSupportInfo(false);
-                setShowContribution((value) => !value);
-              }}
+              onClick={() => setShowContribution((value) => !value)}
               className="inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none text-white/45 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-amber-100"
               aria-expanded={showContribution}
               aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
@@ -241,47 +237,7 @@ export const PerspectiveSupport = ({
               <span>{formatContributionTotal(contributionTotalMinor, currency)}</span>
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              setShowContribution(false);
-              setShowSupportInfo((value) => !value);
-            }}
-            aria-controls="support-info"
-            aria-expanded={showSupportInfo}
-            aria-label="About votes and support"
-            title="About votes and support"
-            className="inline-flex h-7 w-7 shrink-0 items-center justify-center border-0 bg-transparent text-sm text-white/45 transition-colors hover:text-white"
-          >
-            <span aria-hidden="true">ⅈ</span>
-          </button>
         </div>
-
-        {showSupportInfo ? (
-          <aside
-            id="support-info"
-            className="fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto w-auto max-w-sm space-y-1 bg-black/90 p-4 text-[11px] leading-relaxed text-white/70 backdrop-blur-md"
-          >
-            <button
-              type="button"
-              onClick={() => setShowSupportInfo(false)}
-              aria-label="Close support information"
-              title="Close"
-              className="float-right inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-white/65 hover:text-white"
-            >
-              ×
-            </button>
-            <p className="m-0">♡ Virtual vote. No charge.</p>
-            <p className="m-0">💰 Completed payments.</p>
-            <p className="m-0">
-              Payments purchase the selected tier. They do not buy ownership or
-              guarantee a journey or date.
-            </p>
-            <p className="m-0">
-              $25 Handwritten Copy is mailed to your checkout address.
-            </p>
-          </aside>
-        ) : null}
 
         {showContribution ? (
           <div className="scrollbar-transparent fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto flex max-h-[calc(100dvh-2rem)] w-auto max-w-sm flex-col gap-3 overflow-y-auto bg-black/90 p-4 backdrop-blur-md">

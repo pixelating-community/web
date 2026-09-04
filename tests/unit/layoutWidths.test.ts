@@ -74,13 +74,14 @@ describe("layout widths", () => {
     const cssSource = readSource("src/styles/globals.css");
 
     expect(supportSource).toContain('<span aria-hidden="true">💰</span>');
-    expect(supportSource).toContain('<span aria-hidden="true">ⅈ</span>');
+    expect(supportSource).not.toContain("ⅈ");
     expect(supportSource).not.toContain("💸");
     expect(supportSource).not.toContain("ℹ️");
     expect(supportSource).not.toContain("pixel-ui-");
     expect(supportSource).toContain(
       'className="relative z-20 flex w-11 shrink-0 flex-col items-center"',
     );
+    expect(supportSource).not.toContain("support-info");
     expect(readSource("src/components/SW.tsx")).toContain(
       "💰 {formatContributionTotal(",
     );
