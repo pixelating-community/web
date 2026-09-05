@@ -508,8 +508,8 @@ export const PerspectiveListener = ({
           parentPerspectiveId={parentPerspectiveId ?? undefined}
         />
         <div className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden [scrollbar-gutter:stable]">
-          <div className="h-full w-[80vw] overflow-y-auto scrollbar-transparent">
-            <div className="flex min-h-full items-center justify-center p-4">
+          <div className="h-full w-screen overflow-y-auto scrollbar-transparent">
+            <div className="flex min-h-full items-center justify-center px-4 pt-16 pb-4">
               <div className="flex w-full items-center">
                 <div className="flex w-11 shrink-0 flex-col items-center gap-0.5">
                   <button

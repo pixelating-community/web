@@ -32,7 +32,10 @@ describe("layout widths", () => {
       /className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden/,
     );
     expect(source).toMatch(
-      /className="h-full w-\[80vw\] overflow-y-auto scrollbar-transparent"/,
+      /className="h-full w-screen overflow-y-auto scrollbar-transparent"/,
+    );
+    expect(source).toMatch(
+      /className="flex min-h-full items-center justify-center px-4 pt-16 pb-4"/,
     );
     expect(source).toMatch(
       /className="flex w-11 shrink-0 flex-col items-center gap-0\.5"[\s\S]*?<PerspectiveSupport perspective=\{perspective\} \/>[\s\S]*?<SWEditor/,
