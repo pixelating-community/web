@@ -38,7 +38,7 @@ describe("layout widths", () => {
       /className="flex min-h-full items-center justify-center px-4 pt-16 pb-4"/,
     );
     expect(source).toMatch(
-      /className="flex w-11 shrink-0 flex-col items-center gap-0\.5"[\s\S]*?<PerspectiveSupport perspective=\{perspective\} \/>[\s\S]*?<SWEditor/,
+      /className="-ml-4 flex w-15 shrink-0 flex-col items-center gap-0\.5"[\s\S]*?<PerspectiveSupport perspective=\{perspective\} \/>[\s\S]*?<SWEditor/,
     );
     expect(source.match(/"▶"/g) ?? []).toHaveLength(1);
     expect(source).toMatch(/<PerspectiveReflections/);

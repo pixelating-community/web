@@ -511,7 +511,7 @@ export const PerspectiveListener = ({
           <div className="h-full w-screen overflow-y-auto scrollbar-transparent">
             <div className="flex min-h-full items-center justify-center px-4 pt-16 pb-4">
               <div className="flex w-full items-center">
-                <div className="flex w-11 shrink-0 flex-col items-center gap-0.5">
+                <div className="-ml-4 flex w-15 shrink-0 flex-col items-center gap-0.5">
                   <button
                     type="button"
                     onClick={handleTogglePlayback}
