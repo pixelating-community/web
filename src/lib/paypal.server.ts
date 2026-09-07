@@ -5,11 +5,7 @@ import {
   isPaymentEnvironmentAllowed,
   resolvePayPalEnvironment,
 } from "@/lib/paymentEnvironment";
-import {
-  formatPayPalAmount,
-  getSupportTier,
-  SUPPORT_CURRENCY,
-} from "@/lib/perspectiveSupport";
+import { formatPayPalAmount, SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
 
 type PayPalConfig = {
   apiBaseUrl: string;
@@ -61,9 +57,9 @@ export const getPayPalPublicConfig = () => {
     currency: SUPPORT_CURRENCY,
     enabled: Boolean(
       clientId &&
-        getServerEnv("PAYPAL_CLIENT_SECRET") &&
-        environmentAllowed &&
-        (process.env.NODE_ENV !== "production" || webhookConfigured),
+      getServerEnv("PAYPAL_CLIENT_SECRET") &&
+      environmentAllowed &&
+      (process.env.NODE_ENV !== "production" || webhookConfigured),
     ),
     environment: environment ?? "sandbox",
   };
@@ -126,7 +122,8 @@ const getAccessToken = async (config: PayPalConfig) => {
     body: "grant_type=client_credentials",
   });
   const body = await parseResponse<{ access_token?: string }>(response);
-  if (!body.access_token) throw new Error("PayPal did not return an access token.");
+  if (!body.access_token)
+    throw new Error("PayPal did not return an access token.");
   return body.access_token;
 };
 
@@ -164,8 +161,6 @@ export const createPayPalOrder = async ({
   amountMinor: number;
   contributionId: string;
 }) => {
-  const tier = getSupportTier(amountMinor);
-  if (!tier) throw new Error("Unknown story support tier.");
   const formattedAmount = formatPayPalAmount(amountMinor);
   const order = await requestPayPal<PayPalOrder>({
     method: "POST",
@@ -173,46 +168,18 @@ export const createPayPalOrder = async ({
     requestId: contributionId,
     body: {
       application_context: {
-        shipping_preference: tier.requiresShipping
-          ? "GET_FROM_FILE"
-          : "NO_SHIPPING",
+        shipping_preference: "NO_SHIPPING",
       },
       intent: "CAPTURE",
       purchase_units: [
         {
           reference_id: contributionId,
           custom_id: contributionId,
-          description: tier.description,
+          description: "Support this story on PXL8.",
           amount: {
             currency_code: SUPPORT_CURRENCY,
             value: formattedAmount,
-            ...(tier.requiresShipping
-              ? {
-                  breakdown: {
-                    item_total: {
-                      currency_code: SUPPORT_CURRENCY,
-                      value: formattedAmount,
-                    },
-                  },
-                }
-              : {}),
           },
-          ...(tier.requiresShipping
-            ? {
-                items: [
-                  {
-                    name: tier.name,
-                    description: tier.description,
-                    quantity: "1",
-                    category: "PHYSICAL_GOODS",
-                    unit_amount: {
-                      currency_code: SUPPORT_CURRENCY,
-                      value: formattedAmount,
-                    },
-                  },
-                ],
-              }
-            : {}),
         },
       ],
     },
@@ -266,9 +233,9 @@ export const verifyPayPalWebhookSignature = async ({
 };
 
 export const readCompletedPayPalCapture = (order: PayPalOrder) => {
-  const capture = order.purchase_units?.flatMap(
-    (unit) => unit.payments?.captures ?? [],
-  ).find((candidate) => candidate.status === "COMPLETED");
+  const capture = order.purchase_units
+    ?.flatMap((unit) => unit.payments?.captures ?? [])
+    .find((candidate) => candidate.status === "COMPLETED");
   if (!capture?.id || !capture.amount?.currency_code || !capture.amount.value) {
     return null;
   }

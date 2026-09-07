@@ -1,5 +1,5 @@
 import * as z from "zod/v4";
-import { getSupportTier } from "@/lib/perspectiveSupport";
+import { isValidContributionAmount } from "@/lib/perspectiveSupport";
 
 const perspectiveIdSchema = z.uuid();
 
@@ -12,8 +12,8 @@ export const castPerspectiveVoteSchema = loadPerspectiveSupportSchema;
 const contributionAmountSchema = z
   .number()
   .int()
-  .refine((amountMinor) => getSupportTier(amountMinor) !== null, {
-    message: "Choose an available story tier.",
+  .refine(isValidContributionAmount, {
+    message: "Enter a contribution of at least $1.00.",
   });
 
 export const createPayPalContributionOrderSchema = z.object({
@@ -28,10 +28,20 @@ export const createStripeContributionSessionSchema = z.object({
 
 export const reconcileStripeContributionSchema = z.object({
   perspectiveId: perspectiveIdSchema,
-  sessionId: z.string().trim().min(8).max(128).regex(/^cs_[A-Za-z0-9_]+$/),
+  sessionId: z
+    .string()
+    .trim()
+    .min(8)
+    .max(128)
+    .regex(/^cs_[A-Za-z0-9_]+$/),
 });
 
 export const capturePayPalContributionOrderSchema = z.object({
-  orderId: z.string().trim().min(8).max(128).regex(/^[A-Za-z0-9-]+$/),
+  orderId: z
+    .string()
+    .trim()
+    .min(8)
+    .max(128)
+    .regex(/^[A-Za-z0-9-]+$/),
   perspectiveId: perspectiveIdSchema,
 });

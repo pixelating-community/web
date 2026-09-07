@@ -3,10 +3,9 @@ import {
   coerceSupportCount,
   formatContributionTotal,
   formatPayPalAmount,
-  getSupportTier,
-  SUPPORT_MAX_AMOUNT_MINOR,
+  parseContributionAmount,
+  SUPPORT_DEFAULT_AMOUNT_MINOR,
   SUPPORT_MIN_AMOUNT_MINOR,
-  SUPPORT_TIERS,
 } from "@/lib/perspectiveSupport";
 import {
   capturePayPalContributionOrderSchema,
@@ -33,39 +32,40 @@ describe("perspective support", () => {
     expect(formatContributionTotal(1250, "USD")).toBe("$12.50");
   });
 
-  it("accepts only the named story tiers", () => {
-    expect(SUPPORT_TIERS).toMatchObject([
-      { amountMinor: 300, name: "Three Dream", requiresShipping: false },
-      {
-        amountMinor: 2500,
-        name: "Handwritten Copy",
-        requiresShipping: true,
-      },
-    ]);
-    expect(formatContributionTotal(SUPPORT_TIERS[0].amountMinor)).toBe("$3.00");
-    expect(formatContributionTotal(SUPPORT_TIERS[1].amountMinor)).toBe("$25.00");
-
-    for (const tier of SUPPORT_TIERS) {
+  it("accepts custom support amounts from one dollar without an app maximum", () => {
+    expect(SUPPORT_DEFAULT_AMOUNT_MINOR).toBe(300);
+    expect(SUPPORT_MIN_AMOUNT_MINOR).toBe(100);
+    for (const amountMinor of [100, 300, 850, 250_000, 99_999_999]) {
       expect(
         createStripeContributionSessionSchema.safeParse({
-          amountMinor: tier.amountMinor,
+          amountMinor,
           perspectiveId: PERSPECTIVE_ID,
         }).success,
       ).toBe(true);
-      expect(getSupportTier(tier.amountMinor)?.id).toBe(tier.id);
     }
     expect(
       createPayPalContributionOrderSchema.safeParse({
-        amountMinor: SUPPORT_MAX_AMOUNT_MINOR + 1,
+        amountMinor: 99,
         perspectiveId: PERSPECTIVE_ID,
       }).success,
     ).toBe(false);
     expect(
       createStripeContributionSessionSchema.safeParse({
-        amountMinor: SUPPORT_MIN_AMOUNT_MINOR + 1,
+        amountMinor: 100.5,
         perspectiveId: PERSPECTIVE_ID,
       }).success,
     ).toBe(false);
+  });
+
+  it("parses decimal support input into exact minor units", () => {
+    expect(parseContributionAmount("1")).toBe(100);
+    expect(parseContributionAmount("3.00")).toBe(300);
+    expect(parseContributionAmount("8.5")).toBe(850);
+    expect(parseContributionAmount("2500")).toBe(250_000);
+    expect(parseContributionAmount("0.99")).toBeNull();
+    expect(parseContributionAmount("3.001")).toBeNull();
+    expect(parseContributionAmount("1e3")).toBeNull();
+    expect(parseContributionAmount("not money")).toBeNull();
   });
 
   it("constrains provider order identifiers before interpolation into requests", () => {

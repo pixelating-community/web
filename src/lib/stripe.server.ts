@@ -6,10 +6,7 @@ import {
   isPaymentEnvironmentAllowed,
   resolveStripeEnvironment,
 } from "@/lib/paymentEnvironment";
-import {
-  getSupportTier,
-  SUPPORT_CURRENCY,
-} from "@/lib/perspectiveSupport";
+import { SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
 
 const globalCache = globalThis as typeof globalThis & {
   __pxl8Stripe?: Stripe;
@@ -18,22 +15,8 @@ const globalCache = globalThis as typeof globalThis & {
 
 const getStripeSecretKey = () => getServerEnv("STRIPE_SECRET_KEY");
 
-type StripeAllowedCountry =
-  Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry;
-
-const getShippingCountries = (): StripeAllowedCountry[] => {
-  const countries = (getServerEnv("SUPPORT_SHIPPING_COUNTRIES") ?? "US")
-    .split(",")
-    .map((country) => country.trim().toUpperCase())
-    .filter(Boolean);
-  if (
-    countries.length === 0 ||
-    countries.some((country) => !/^[A-Z]{2}$/.test(country))
-  ) {
-    throw new Error("SUPPORT_SHIPPING_COUNTRIES must contain ISO country codes.");
-  }
-  return [...new Set(countries)] as StripeAllowedCountry[];
-};
+const isEnabled = (value: string | undefined) =>
+  value ? ["1", "true", "yes"].includes(value.trim().toLowerCase()) : false;
 
 export const getStripePublicConfig = () => {
   const publishableKey = getServerEnv(
@@ -53,10 +36,26 @@ export const getStripePublicConfig = () => {
     currency: SUPPORT_CURRENCY,
     enabled: Boolean(
       environmentAllowed &&
-        (process.env.NODE_ENV !== "production" || webhookConfigured),
+      (process.env.NODE_ENV !== "production" || webhookConfigured),
     ),
     environment: environment ?? "sandbox",
     publishableKey: publishableKey ?? null,
+  };
+};
+
+export const getStripeConnectConfig = () => {
+  const stripe = getStripePublicConfig();
+  const requested = isEnabled(getServerEnv("STRIPE_CONNECT_ENABLED"));
+  const approved = isEnabled(getServerEnv("STRIPE_CONNECT_APPROVED"));
+  const approvalRequired = stripe.environment === "live" && !approved;
+  return {
+    approvalRequired,
+    enabled: Boolean(
+      requested &&
+        stripe.enabled &&
+        getServerEnv("STRIPE_CONNECT_WEBHOOK_SECRET") &&
+        !approvalRequired,
+    ),
   };
 };
 
@@ -69,7 +68,9 @@ export const getStripeClient = () => {
   );
   const environment = resolveStripeEnvironment({ publishableKey, secretKey });
   if (!environment) {
-    throw new Error("Stripe publishable and secret keys must use the same mode.");
+    throw new Error(
+      "Stripe publishable and secret keys must use the same mode.",
+    );
   }
   if (
     !isPaymentEnvironmentAllowed({
@@ -98,18 +99,17 @@ export const getStripeClient = () => {
 
 export const createStripeCheckoutSession = async ({
   amountMinor,
+  connectedAccountId,
   contributionId,
   perspectiveId,
   returnUrl,
 }: {
   amountMinor: number;
+  connectedAccountId?: string | null;
   contributionId: string;
   perspectiveId: string;
   returnUrl: string;
 }) => {
-  const tier = getSupportTier(amountMinor);
-  if (!tier) throw new Error("Unknown story support tier.");
-
   const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create(
     {
@@ -119,8 +119,8 @@ export const createStripeCheckoutSession = async ({
           price_data: {
             currency: SUPPORT_CURRENCY.toLowerCase(),
             product_data: {
-              name: tier.name,
-              description: tier.description,
+              name: "Story support",
+              description: "Support this story on PXL8.",
             },
             unit_amount: amountMinor,
           },
@@ -130,24 +130,22 @@ export const createStripeCheckoutSession = async ({
       metadata: {
         contributionId,
         perspectiveId,
-        tierId: tier.id,
       },
       mode: "payment",
       payment_intent_data: {
-        description: `PXL8 — ${tier.name}`,
+        description: "PXL8 — Story support",
         metadata: {
           contributionId,
           perspectiveId,
-          tierId: tier.id,
         },
       },
       return_url: returnUrl,
-      shipping_address_collection: tier.requiresShipping
-        ? { allowed_countries: getShippingCountries() }
-        : undefined,
       ui_mode: "elements",
     },
-    { idempotencyKey: contributionId },
+    {
+      idempotencyKey: contributionId,
+      ...(connectedAccountId ? { stripeAccount: connectedAccountId } : {}),
+    },
   );
   if (!session.client_secret) {
     throw new Error("Stripe did not return a Checkout client secret.");
@@ -155,8 +153,47 @@ export const createStripeCheckoutSession = async ({
   return session;
 };
 
-export const retrieveStripeCheckoutSession = (sessionId: string) =>
-  getStripeClient().checkout.sessions.retrieve(sessionId);
+export const retrieveStripeCheckoutSession = (
+  sessionId: string,
+  connectedAccountId?: string | null,
+) =>
+  getStripeClient().checkout.sessions.retrieve(
+    sessionId,
+    {},
+    connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
+  );
+
+export const createStripeConnectedAccount = (creatorId: string) =>
+  getStripeClient().accounts.create(
+    {
+      capabilities: {
+        card_payments: { requested: true },
+        transfers: { requested: true },
+      },
+      type: "express",
+      metadata: { creatorId },
+    },
+    { idempotencyKey: `creator-connect-${creatorId}` },
+  );
+
+export const retrieveStripeConnectedAccount = (accountId: string) =>
+  getStripeClient().accounts.retrieve(accountId);
+
+export const createStripeConnectedAccountLink = ({
+  accountId,
+  refreshUrl,
+  returnUrl,
+}: {
+  accountId: string;
+  refreshUrl: string;
+  returnUrl: string;
+}) =>
+  getStripeClient().accountLinks.create({
+    account: accountId,
+    refresh_url: refreshUrl,
+    return_url: returnUrl,
+    type: "account_onboarding",
+  });
 
 export const constructStripeWebhookEvent = ({
   payload,
@@ -167,5 +204,19 @@ export const constructStripeWebhookEvent = ({
 }) => {
   const secret = getServerEnv("STRIPE_WEBHOOK_SECRET");
   if (!secret) throw new Error("STRIPE_WEBHOOK_SECRET is not configured.");
+  return getStripeClient().webhooks.constructEvent(payload, signature, secret);
+};
+
+export const constructStripeConnectWebhookEvent = ({
+  payload,
+  signature,
+}: {
+  payload: string;
+  signature: string;
+}) => {
+  const secret = getServerEnv("STRIPE_CONNECT_WEBHOOK_SECRET");
+  if (!secret) {
+    throw new Error("STRIPE_CONNECT_WEBHOOK_SECRET is not configured.");
+  }
   return getStripeClient().webhooks.constructEvent(payload, signature, secret);
 };

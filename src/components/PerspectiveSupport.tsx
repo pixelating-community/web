@@ -12,15 +12,19 @@ import {
 } from "@/lib/perspectiveSupport.functions";
 import {
   formatContributionTotal,
-  getSupportTier,
+  parseContributionAmount,
   SUPPORT_CURRENCY,
-  SUPPORT_TIERS,
+  SUPPORT_DEFAULT_AMOUNT_MINOR,
   type PerspectiveSupportStats,
 } from "@/lib/perspectiveSupport";
 import type { Perspective } from "@/types/perspectives";
 
 type SupportData = PerspectiveSupportStats & {
-  maxAmountMinor: number;
+  creatorSupport: {
+    displayName: string;
+    paypalMeUrl: string | null;
+    venmoUrl: string | null;
+  } | null;
   minAmountMinor: number;
   providers: {
     paypal: {
@@ -30,6 +34,7 @@ type SupportData = PerspectiveSupportStats & {
       environment: "live" | "sandbox";
     };
     stripe: {
+      connectedAccountId: string | null;
       currency: string;
       enabled: boolean;
       environment: "live" | "sandbox";
@@ -41,6 +46,7 @@ type SupportData = PerspectiveSupportStats & {
 type StripeSession = {
   amountMinor: number;
   clientSecret: string;
+  connectedAccountId: string | null;
   returnUrl: string;
   sessionId: string;
 };
@@ -56,10 +62,14 @@ export const PerspectiveSupport = ({
   const reconcileStripeFn = useServerFn(reconcileStripeContribution);
   const reconciledSessionRef = useRef<string | null>(null);
   const [support, setSupport] = useState<SupportData | null>(null);
-  const [amountMinor, setAmountMinor] = useState(300);
+  const [amountInput, setAmountInput] = useState(
+    (SUPPORT_DEFAULT_AMOUNT_MINOR / 100).toFixed(2),
+  );
   const [showContribution, setShowContribution] = useState(false);
   const [showAlternativePayments, setShowAlternativePayments] = useState(false);
-  const [stripeSession, setStripeSession] = useState<StripeSession | null>(null);
+  const [stripeSession, setStripeSession] = useState<StripeSession | null>(
+    null,
+  );
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
   const [status, setStatus] = useState("");
@@ -102,7 +112,9 @@ export const PerspectiveSupport = ({
           : "Your vote was already counted.",
       );
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not add vote.");
+      setError(
+        reason instanceof Error ? reason.message : "Could not add vote.",
+      );
     } finally {
       setIsVoting(false);
     }
@@ -158,8 +170,9 @@ export const PerspectiveSupport = ({
       setError("Card checkout is not configured yet.");
       return;
     }
-    if (!getSupportTier(amountMinor)) {
-      setError("Choose Three Dream or Handwritten Copy.");
+    const amountMinor = parseContributionAmount(amountInput);
+    if (amountMinor === null) {
+      setError("Enter a support amount of at least $1.00.");
       return;
     }
 
@@ -195,8 +208,15 @@ export const PerspectiveSupport = ({
     SUPPORT_CURRENCY;
   const paypal = support?.providers.paypal;
   const stripe = support?.providers.stripe;
+  const creatorSupport = support?.creatorSupport;
+  const hasDirectSupport = Boolean(
+    creatorSupport?.paypalMeUrl || creatorSupport?.venmoUrl,
+  );
+  const hasCreatorManagedCheckout = Boolean(
+    creatorSupport && stripe?.enabled && stripe.publishableKey,
+  );
   const amountLocked = Boolean(stripeSession || isStartingCheckout);
-  const selectedTier = getSupportTier(amountMinor) ?? SUPPORT_TIERS[0];
+  const amountMinor = parseContributionAmount(amountInput);
 
   return (
     <section
@@ -221,9 +241,7 @@ export const PerspectiveSupport = ({
                   : "text-white/45 enabled:hover:text-pink-100"
               }`}
             >
-              <span aria-hidden="true">
-                {support?.hasVoted ? "♥" : "♡"}
-              </span>
+              <span aria-hidden="true">{support?.hasVoted ? "♥" : "♡"}</span>
               <span>{virtualVoteCount}</span>
             </button>
             <button
@@ -234,7 +252,9 @@ export const PerspectiveSupport = ({
               aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
             >
               <span aria-hidden="true">💰</span>
-              <span>{formatContributionTotal(contributionTotalMinor, currency)}</span>
+              <span>
+                {formatContributionTotal(contributionTotalMinor, currency)}
+              </span>
             </button>
           </div>
         </div>
@@ -250,117 +270,154 @@ export const PerspectiveSupport = ({
             >
               ×
             </button>
-            {stripeSession ? (
-              <div className="flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
-                <span>
-                  {selectedTier.name} — {formatContributionTotal(amountMinor, currency)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStripeSession(null);
-                    setError("");
-                  }}
-                  aria-label="Change support tier"
-                  title="Change support tier"
-                  className="text-base text-amber-100"
-                >
-                  ↺
-                </button>
+            {creatorSupport ? (
+              <div className="flex flex-col gap-2">
+                <p className="m-0 text-sm font-bold text-white/85">
+                  {creatorSupport.displayName}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {creatorSupport.paypalMeUrl ? (
+                    <a
+                      href={creatorSupport.paypalMeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-white/20 px-3 py-2 text-sm text-white/80 hover:border-white/40 hover:text-white"
+                    >
+                      PayPal ↗
+                    </a>
+                  ) : null}
+                  {creatorSupport.venmoUrl ? (
+                    <a
+                      href={creatorSupport.venmoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border border-white/20 px-3 py-2 text-sm text-white/80 hover:border-white/40 hover:text-white"
+                    >
+                      Venmo ↗
+                    </a>
+                  ) : null}
+                </div>
+                {hasDirectSupport ? (
+                  <p className="m-0 text-[11px] text-white/45">
+                    Direct links · not counted here
+                  </p>
+                ) : (
+                  <p className="m-0 text-xs text-white/55">
+                    Support links are not ready yet.
+                  </p>
+                )}
               </div>
-            ) : (
-              <div
-                className="grid grid-cols-2 gap-2"
-                aria-label="Story tier"
-              >
-                {SUPPORT_TIERS.map((tier) => (
-                  <button
-                    key={tier.id}
-                    type="button"
-                    disabled={amountLocked}
-                    onClick={() => setAmountMinor(tier.amountMinor)}
-                    className={`flex min-h-20 flex-col items-start justify-between border px-3 py-2 text-left transition-colors ${
-                      amountMinor === tier.amountMinor
-                        ? "border-amber-200/50 bg-amber-300/20 text-amber-50"
-                        : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                    }`}
-                  >
-                    <span className="text-xs font-bold uppercase leading-tight">
-                      {tier.name}
+            ) : null}
+            {!creatorSupport || hasCreatorManagedCheckout ? (
+              <>
+                {stripeSession ? (
+                  <div className="flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
+                    <span>
+                      {formatContributionTotal(
+                        stripeSession.amountMinor,
+                        currency,
+                      )}
                     </span>
-                    <span className="text-lg font-black">
-                      {formatContributionTotal(tier.amountMinor, currency)}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStripeSession(null);
+                        setError("");
+                      }}
+                      aria-label="Change support amount"
+                      title="Change support amount"
+                      className="text-base text-amber-100"
+                    >
+                      ↺
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex min-h-16 items-center gap-2 border border-white/10 bg-white/5 px-4 text-white/85 focus-within:border-amber-200/50">
+                    <span aria-hidden="true" className="text-lg">
+                      $
                     </span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {stripe?.enabled && stripe.publishableKey ? (
-              stripeSession ? (
-                <StripeContributionCheckout
-                  key={stripeSession.clientSecret}
-                  amountMinor={stripeSession.amountMinor}
-                  clientSecret={stripeSession.clientSecret}
-                  currency={stripe.currency}
-                  publishableKey={stripe.publishableKey}
-                  requiresShipping={
-                    getSupportTier(stripeSession.amountMinor)?.requiresShipping ??
-                    false
-                  }
-                  returnUrl={stripeSession.returnUrl}
-                  onConfirmed={verifyStripeContribution}
-                  onError={setError}
-                />
-              ) : (
-                <button
-                  type="button"
-                  disabled={isStartingCheckout}
-                  onClick={() => void beginStripeCheckout()}
-                  aria-label={
-                    isStartingCheckout
-                      ? "Starting secure checkout"
-                      : "Continue with card or wallet"
-                  }
-                  className="min-h-11 border border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-bold uppercase text-amber-50 transition-colors hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
-                >
-                  {isStartingCheckout
-                    ? "…"
-                    : "💳 Card / wallet"}
-                </button>
-              )
-            ) : (
-              <p className="m-0 bg-white/5 px-3 py-2 text-center text-xs text-white/55">
-                Card and wallet checkout is not configured yet.
-              </p>
-            )}
-
-            {paypal?.enabled && paypal.clientId ? (
-              <div className="border-t border-white/10 pt-3">
-                <button
-                  type="button"
-                  className="mx-auto block text-xs text-white/55 underline decoration-white/20 underline-offset-4 hover:text-white/75"
-                  onClick={() =>
-                    setShowAlternativePayments((value) => !value)
-                  }
-                  aria-expanded={showAlternativePayments}
-                >
-                  {showAlternativePayments ? "Hide" : "Use"} PayPal or Venmo
-                </button>
-                {showAlternativePayments ? (
-                  <div className="mt-3">
-                    <PayPalContributionCheckout
-                      amountMinor={amountMinor}
-                      clientId={paypal.clientId}
-                      currency={paypal.currency}
-                      perspectiveId={perspective.id}
-                      onConfirmed={applyStats}
-                      onError={setError}
-                      onStatus={setStatus}
+                    <span className="sr-only">Support amount in dollars</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      autoComplete="off"
+                      disabled={amountLocked}
+                      value={amountInput}
+                      onChange={(event) => {
+                        setAmountInput(event.target.value);
+                        setError("");
+                      }}
+                      aria-invalid={amountMinor === null}
+                      className="min-w-0 flex-1 border-0 bg-transparent p-0 text-2xl font-black text-white outline-none"
                     />
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-white/40">
+                      USD
+                    </span>
+                  </label>
+                )}
+
+                {stripe?.enabled && stripe.publishableKey ? (
+                  stripeSession ? (
+                    <StripeContributionCheckout
+                      key={stripeSession.clientSecret}
+                      amountMinor={stripeSession.amountMinor}
+                      clientSecret={stripeSession.clientSecret}
+                      connectedAccountId={stripeSession.connectedAccountId}
+                      currency={stripe.currency}
+                      publishableKey={stripe.publishableKey}
+                      returnUrl={stripeSession.returnUrl}
+                      onConfirmed={verifyStripeContribution}
+                      onError={setError}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isStartingCheckout || amountMinor === null}
+                      onClick={() => void beginStripeCheckout()}
+                      aria-label={
+                        isStartingCheckout
+                          ? "Starting secure checkout"
+                          : "Continue with card or wallet"
+                      }
+                      className="min-h-11 border border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-bold uppercase text-amber-50 transition-colors hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
+                    >
+                      {isStartingCheckout ? "…" : "💳 Card / wallet"}
+                    </button>
+                  )
+                ) : (
+                  <p className="m-0 bg-white/5 px-3 py-2 text-center text-xs text-white/55">
+                    Card and wallet checkout is not configured yet.
+                  </p>
+                )}
+
+                {paypal?.enabled && paypal.clientId ? (
+                  <div className="border-t border-white/10 pt-3">
+                    <button
+                      type="button"
+                      className="mx-auto block text-xs text-white/55 underline decoration-white/20 underline-offset-4 hover:text-white/75"
+                      onClick={() =>
+                        setShowAlternativePayments((value) => !value)
+                      }
+                      aria-expanded={showAlternativePayments}
+                    >
+                      {showAlternativePayments ? "Hide" : "Use"} PayPal or Venmo
+                    </button>
+                    {showAlternativePayments && amountMinor !== null ? (
+                      <div className="mt-3">
+                        <PayPalContributionCheckout
+                          amountMinor={amountMinor}
+                          clientId={paypal.clientId}
+                          currency={paypal.currency}
+                          perspectiveId={perspective.id}
+                          onConfirmed={applyStats}
+                          onError={setError}
+                          onStatus={setStatus}
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
-              </div>
+              </>
             ) : null}
           </div>
         ) : null}

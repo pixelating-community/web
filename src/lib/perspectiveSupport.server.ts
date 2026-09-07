@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import type Stripe from "stripe";
 import type { z } from "zod/v4";
 import { sql } from "@/lib/db.server";
+import { getCreatorSupportForPerspective } from "@/lib/creatorSupport.server";
 import { getServerEnv } from "@/lib/env.server";
 import { resolvePaymentApplicationOrigin } from "@/lib/paymentUrls";
 import {
@@ -15,9 +16,7 @@ import {
 } from "@/lib/paypal.server";
 import {
   coerceSupportCount,
-  getSupportTier,
   SUPPORT_CURRENCY,
-  SUPPORT_MAX_AMOUNT_MINOR,
   SUPPORT_MIN_AMOUNT_MINOR,
   type PerspectiveSupportStats,
 } from "@/lib/perspectiveSupport";
@@ -35,6 +34,7 @@ import {
 } from "@/lib/perspectiveSupportIdentity.server";
 import {
   createStripeCheckoutSession,
+  getStripeConnectConfig,
   getStripePublicConfig,
   retrieveStripeCheckoutSession,
 } from "@/lib/stripe.server";
@@ -46,6 +46,7 @@ type ContributionRow = {
   perspective_id: string;
   provider_capture_id: string | null;
   provider_order_id: string | null;
+  recipient_provider_account_id: string | null;
   refunded_minor: number | string;
   status: string;
 };
@@ -125,15 +126,44 @@ export const loadPerspectiveSupportServer = async ({
   if (!stats) {
     return { ok: false as const, error: "Perspective not found." };
   }
+  const creatorSupport = await getCreatorSupportForPerspective(
+    data.perspectiveId,
+  );
+  const paypal = getPayPalPublicConfig();
+  const stripe = getStripePublicConfig();
+  const managedStripeReady = Boolean(
+    creatorSupport &&
+    getStripeConnectConfig().enabled &&
+    creatorSupport.stripeAccountId &&
+    creatorSupport.stripeChargesEnabled &&
+    creatorSupport.stripePayoutsEnabled,
+  );
   return {
     ok: true as const,
     data: {
       ...stats,
-      maxAmountMinor: SUPPORT_MAX_AMOUNT_MINOR,
+      creatorSupport: creatorSupport
+        ? {
+            displayName: creatorSupport.displayName,
+            paypalMeUrl: creatorSupport.paypalMeUrl,
+            venmoUrl: creatorSupport.venmoUrl,
+          }
+        : null,
       minAmountMinor: SUPPORT_MIN_AMOUNT_MINOR,
       providers: {
-        paypal: getPayPalPublicConfig(),
-        stripe: getStripePublicConfig(),
+        paypal: creatorSupport
+          ? { ...paypal, clientId: null, enabled: false }
+          : paypal,
+        stripe: creatorSupport
+          ? {
+              ...stripe,
+              connectedAccountId: managedStripeReady
+                ? creatorSupport.stripeAccountId
+                : null,
+              enabled: managedStripeReady && stripe.enabled,
+              publishableKey: managedStripeReady ? stripe.publishableKey : null,
+            }
+          : { ...stripe, connectedAccountId: null },
       },
     },
   };
@@ -187,6 +217,12 @@ export const createPayPalContributionOrderServer = async ({
 }) => {
   if (!(await perspectiveAcceptsSupport(data.perspectiveId))) {
     return { ok: false as const, error: "Perspective not found." };
+  }
+  if (await getCreatorSupportForPerspective(data.perspectiveId)) {
+    return {
+      ok: false as const,
+      error: "Use this creator's direct support link.",
+    };
   }
 
   const contributionId = randomUUID();
@@ -267,6 +303,23 @@ export const createStripeContributionSessionServer = async ({
   if (!(await perspectiveAcceptsSupport(data.perspectiveId))) {
     return { ok: false as const, error: "Perspective not found." };
   }
+  const creatorSupport = await getCreatorSupportForPerspective(
+    data.perspectiveId,
+  );
+  const connectedAccountId =
+    creatorSupport &&
+    getStripeConnectConfig().enabled &&
+    creatorSupport.stripeAccountId &&
+    creatorSupport.stripeChargesEnabled &&
+    creatorSupport.stripePayoutsEnabled
+      ? creatorSupport.stripeAccountId
+      : null;
+  if (creatorSupport && !connectedAccountId) {
+    return {
+      ok: false as const,
+      error: "Use this creator's direct support link.",
+    };
+  }
 
   const contributionId = randomUUID();
   await sql`
@@ -276,14 +329,20 @@ export const createStripeContributionSessionServer = async ({
       provider,
       amount_minor,
       currency,
-      status
+      status,
+      recipient_creator_id,
+      recipient_provider_account_id,
+      payment_flow
     ) VALUES (
       ${contributionId},
       ${data.perspectiveId},
       'stripe',
       ${data.amountMinor},
       ${SUPPORT_CURRENCY},
-      'initializing'
+      'initializing',
+      ${creatorSupport?.creatorId ?? null},
+      ${connectedAccountId},
+      ${connectedAccountId ? "stripe_direct" : "platform"}
     );
   `;
 
@@ -294,6 +353,7 @@ export const createStripeContributionSessionServer = async ({
   try {
     const session = await createStripeCheckoutSession({
       amountMinor: data.amountMinor,
+      connectedAccountId,
       contributionId,
       perspectiveId: data.perspectiveId,
       returnUrl,
@@ -309,6 +369,7 @@ export const createStripeContributionSessionServer = async ({
       ok: true as const,
       data: {
         clientSecret: session.client_secret as string,
+        connectedAccountId,
         returnUrl,
         sessionId: session.id,
       },
@@ -339,10 +400,12 @@ const getStripePaymentIntentId = (session: Stripe.Checkout.Session) => {
 const settleStripeSession = async (
   tx: SupportSqlClient,
   session: Stripe.Checkout.Session,
+  connectedAccountId: string | null = null,
 ) => {
   const rows = await tx<ContributionRow>`
     SELECT id, perspective_id, amount_minor, refunded_minor, currency,
-      provider_order_id, provider_capture_id, status
+      provider_order_id, provider_capture_id, recipient_provider_account_id,
+      status
     FROM perspective_contributions
     WHERE provider = 'stripe' AND provider_order_id = ${session.id}
     LIMIT 1
@@ -352,14 +415,12 @@ const settleStripeSession = async (
   if (!contribution) return null;
 
   const expectedAmount = coerceSupportCount(contribution.amount_minor);
-  const expectedTier = getSupportTier(expectedAmount);
   const receivedCurrency = session.currency?.toUpperCase();
   if (
-    !expectedTier ||
+    contribution.recipient_provider_account_id !== connectedAccountId ||
     session.client_reference_id !== contribution.id ||
     session.metadata?.contributionId !== contribution.id ||
     session.metadata?.perspectiveId !== contribution.perspective_id ||
-    session.metadata?.tierId !== expectedTier.id ||
     session.amount_total !== expectedAmount ||
     receivedCurrency !== contribution.currency
   ) {
@@ -370,7 +431,9 @@ const settleStripeSession = async (
   if (paid) {
     const paymentIntentId = getStripePaymentIntentId(session);
     if (!paymentIntentId) {
-      throw new Error("Paid Stripe Checkout Session is missing a Payment Intent.");
+      throw new Error(
+        "Paid Stripe Checkout Session is missing a Payment Intent.",
+      );
     }
     await tx`
       UPDATE perspective_contributions
@@ -394,8 +457,11 @@ export const reconcileStripeContributionServer = async ({
   data: z.infer<typeof reconcileStripeContributionSchema>;
   request: Request;
 }) => {
-  const rows = await sql<{ id: string }>`
-    SELECT id
+  const rows = await sql<{
+    id: string;
+    recipient_provider_account_id: string | null;
+  }>`
+    SELECT id, recipient_provider_account_id
     FROM perspective_contributions
     WHERE provider = 'stripe'
       AND perspective_id = ${data.perspectiveId}
@@ -407,8 +473,14 @@ export const reconcileStripeContributionServer = async ({
   }
 
   try {
-    const session = await retrieveStripeCheckoutSession(data.sessionId);
-    const settlement = await sql.begin((tx) => settleStripeSession(tx, session));
+    const connectedAccountId = rows[0]?.recipient_provider_account_id ?? null;
+    const session = await retrieveStripeCheckoutSession(
+      data.sessionId,
+      connectedAccountId,
+    );
+    const settlement = await sql.begin((tx) =>
+      settleStripeSession(tx, session, connectedAccountId),
+    );
     if (!settlement) {
       return { ok: false as const, error: "Contribution session not found." };
     }
@@ -438,17 +510,20 @@ export const reconcileStripeContributionServer = async ({
 const markStripeSessionFailed = (
   tx: SupportSqlClient,
   session: Stripe.Checkout.Session,
+  connectedAccountId: string | null,
 ) => tx`
   UPDATE perspective_contributions
   SET status = 'failed', updated_at = NOW()
   WHERE provider = 'stripe'
     AND provider_order_id = ${session.id}
+    AND recipient_provider_account_id IS NOT DISTINCT FROM ${connectedAccountId}
     AND status IN ('initializing', 'created', 'capturing');
 `;
 
 const refundStripeCharge = async (
   tx: SupportSqlClient,
   charge: Stripe.Charge,
+  connectedAccountId: string | null,
 ) => {
   const paymentIntent = charge.payment_intent;
   const paymentIntentId =
@@ -459,7 +534,8 @@ const refundStripeCharge = async (
 
   const rows = await tx<ContributionRow>`
     SELECT id, perspective_id, amount_minor, refunded_minor, currency,
-      provider_order_id, provider_capture_id, status
+      provider_order_id, provider_capture_id, recipient_provider_account_id,
+      status
     FROM perspective_contributions
     WHERE provider = 'stripe' AND provider_capture_id = ${paymentIntentId}
     LIMIT 1
@@ -467,6 +543,9 @@ const refundStripeCharge = async (
   `;
   const contribution = rows[0];
   if (!contribution) return;
+  if (contribution.recipient_provider_account_id !== connectedAccountId) {
+    throw new Error("Stripe refund account did not match its ledger entry.");
+  }
   if (charge.currency.toUpperCase() !== contribution.currency) {
     throw new Error("Stripe refund currency did not match its ledger entry.");
   }
@@ -491,6 +570,8 @@ export const processStripeWebhookServer = async (event: Stripe.Event) => {
   }
 
   return sql.begin(async (tx) => {
+    const connectedAccountId =
+      typeof event.account === "string" ? event.account : null;
     const inserted = await tx<{ event_id: string }>`
       INSERT INTO payment_webhook_events (provider, event_id, event_type)
       VALUES ('stripe', ${event.id}, ${event.type})
@@ -502,14 +583,27 @@ export const processStripeWebhookServer = async (event: Stripe.Event) => {
     switch (event.type) {
       case "checkout.session.completed":
       case "checkout.session.async_payment_succeeded":
-        await settleStripeSession(tx, event.data.object);
+        await settleStripeSession(tx, event.data.object, connectedAccountId);
         break;
       case "checkout.session.async_payment_failed":
       case "checkout.session.expired":
-        await markStripeSessionFailed(tx, event.data.object);
+        await markStripeSessionFailed(
+          tx,
+          event.data.object,
+          connectedAccountId,
+        );
         break;
       case "charge.refunded":
-        await refundStripeCharge(tx, event.data.object);
+        await refundStripeCharge(tx, event.data.object, connectedAccountId);
+        break;
+      case "account.updated":
+        await tx`
+          UPDATE creator_support_methods
+          SET stripe_charges_enabled = ${Boolean(event.data.object.charges_enabled)},
+              stripe_payouts_enabled = ${Boolean(event.data.object.payouts_enabled)},
+              updated_at = NOW()
+          WHERE stripe_account_id = ${event.data.object.id};
+        `;
         break;
       case "payment_intent.payment_failed": {
         const contributionId = event.data.object.metadata.contributionId;
@@ -519,6 +613,7 @@ export const processStripeWebhookServer = async (event: Stripe.Event) => {
             SET status = 'failed', updated_at = NOW()
             WHERE provider = 'stripe'
               AND id = ${contributionId}
+              AND recipient_provider_account_id IS NOT DISTINCT FROM ${connectedAccountId}
               AND status IN ('initializing', 'created', 'capturing');
           `;
         }
@@ -585,7 +680,10 @@ export const capturePayPalContributionOrderServer = async ({
     RETURNING id;
   `;
   if (claimed.length === 0) {
-    return { ok: false as const, error: "This contribution is still processing." };
+    return {
+      ok: false as const,
+      error: "This contribution is still processing.",
+    };
   }
 
   let order;
@@ -631,13 +729,16 @@ export const capturePayPalContributionOrderServer = async ({
     capture.currency !== existing.currency
   ) {
     await markContributionReadyToRetry(existing.id);
-    console.error("PayPal contribution capture did not match its ledger entry", {
-      contributionId: existing.id,
-      expectedAmount,
-      expectedCurrency: existing.currency,
-      receivedAmount: capture?.amountMinor,
-      receivedCurrency: capture?.currency,
-    });
+    console.error(
+      "PayPal contribution capture did not match its ledger entry",
+      {
+        contributionId: existing.id,
+        expectedAmount,
+        expectedCurrency: existing.currency,
+        receivedAmount: capture?.amountMinor,
+        receivedCurrency: capture?.currency,
+      },
+    );
     return {
       ok: false as const,
       error: "PayPal returned an unexpected contribution result.",
@@ -686,7 +787,12 @@ export const processPayPalWebhookServer = async (event: unknown) => {
   const parsed = event as PayPalWebhookEvent;
   const eventId = parsed.id?.trim();
   const eventType = parsed.event_type?.trim();
-  if (!eventId || eventId.length > 128 || !eventType || eventType.length > 128) {
+  if (
+    !eventId ||
+    eventId.length > 128 ||
+    !eventType ||
+    eventType.length > 128
+  ) {
     throw new Error("Invalid PayPal webhook event.");
   }
 
@@ -700,7 +806,8 @@ export const processPayPalWebhookServer = async (event: unknown) => {
     if (inserted.length === 0) return { duplicate: true };
 
     if (eventType === "PAYMENT.CAPTURE.COMPLETED") {
-      const orderId = parsed.resource?.supplementary_data?.related_ids?.order_id;
+      const orderId =
+        parsed.resource?.supplementary_data?.related_ids?.order_id;
       const captureId = parsed.resource?.id;
       const amount = readWebhookAmount(parsed);
       if (!orderId || !captureId || !amount) {
@@ -739,7 +846,9 @@ export const processPayPalWebhookServer = async (event: unknown) => {
       if (!captureId || !amount) {
         throw new Error("Incomplete PayPal refund webhook.");
       }
-      const rows = await tx<ContributionRow & { refunded_minor: number | string }>`
+      const rows = await tx<
+        ContributionRow & { refunded_minor: number | string }
+      >`
         SELECT id, amount_minor, refunded_minor, currency, provider_capture_id, status
         FROM perspective_contributions
         WHERE provider = 'paypal' AND provider_capture_id = ${captureId}

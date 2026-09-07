@@ -122,7 +122,7 @@ resource "cloudflare_ruleset" "pxl8_waf_custom" {
     {
       action = "block"
       expression = join(" or ", [
-        "((cf.client.bot) and (http.request.uri.path contains \"/api/\") and (http.request.uri.path ne \"/api/obj/health\") and (http.request.uri.path ne \"/api/obj/stripe-webhook\") and (http.request.uri.path ne \"/api/obj/paypal-webhook\"))",
+        "((cf.client.bot) and (http.request.uri.path contains \"/api/\") and (http.request.uri.path ne \"/api/obj/health\") and (http.request.uri.path ne \"/api/obj/stripe-webhook\") and (http.request.uri.path ne \"/api/obj/stripe-connect-webhook\") and (http.request.uri.path ne \"/api/obj/paypal-webhook\"))",
         "lower(http.user_agent) contains \"amazonbot\"",
         "lower(http.user_agent) contains \"applebot-extended\"",
         "lower(http.user_agent) contains \"bytespider\"",

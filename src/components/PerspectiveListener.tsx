@@ -560,7 +560,7 @@ export const PerspectiveListener = ({
           <audio
             ref={audioRef}
             className="opacity-0 w-px h-px absolute"
-            src={resolvedAudioSrc}
+            src={resolvedAudioSrc || undefined}
             preload="none"
           />
         </div>

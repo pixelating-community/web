@@ -64,8 +64,8 @@ export const checkProductionConfig = (
   const stripeSecretKey = value(environment, "STRIPE_SECRET_KEY");
   const stripeHasAny = Boolean(
     stripePublishableKey ||
-      stripeSecretKey ||
-      value(environment, "STRIPE_WEBHOOK_SECRET"),
+    stripeSecretKey ||
+    value(environment, "STRIPE_WEBHOOK_SECRET"),
   );
   const stripeEnvironment = resolveStripeEnvironment({
     publishableKey: stripePublishableKey,
@@ -84,12 +84,41 @@ export const checkProductionConfig = (
     );
   }
 
+  const stripeConnectEnabled = isLivePaymentsEnabled(
+    value(environment, "STRIPE_CONNECT_ENABLED"),
+  );
+  const stripeConnectApproved = isLivePaymentsEnabled(
+    value(environment, "STRIPE_CONNECT_APPROVED"),
+  );
+  if (stripeConnectEnabled && !stripeComplete) {
+    errors.push(
+      "STRIPE_CONNECT_ENABLED requires complete Stripe configuration",
+    );
+  }
+  if (
+    stripeConnectEnabled &&
+    !value(environment, "STRIPE_CONNECT_WEBHOOK_SECRET")
+  ) {
+    errors.push(
+      "STRIPE_CONNECT_ENABLED requires STRIPE_CONNECT_WEBHOOK_SECRET",
+    );
+  }
+  if (
+    stripeConnectEnabled &&
+    stripeEnvironment === "live" &&
+    !stripeConnectApproved
+  ) {
+    errors.push("Live Stripe Connect requires STRIPE_CONNECT_APPROVED=true");
+  }
+
   const paypalKeys = [
     "PAYPAL_CLIENT_ID",
     "PAYPAL_CLIENT_SECRET",
     "PAYPAL_WEBHOOK_ID",
   ];
-  const paypalHasAny = paypalKeys.some((key) => Boolean(value(environment, key)));
+  const paypalHasAny = paypalKeys.some((key) =>
+    Boolean(value(environment, key)),
+  );
   const paypalEnvironment = resolvePayPalEnvironment(
     value(environment, "PAYPAL_ENVIRONMENT"),
   );
@@ -119,7 +148,9 @@ export const checkProductionConfig = (
   }
 
   if (!value(environment, "TS_KEY") && !value(environment, "EL_KEY")) {
-    warnings.push("TS_KEY or EL_KEY is recommended for production topic administration");
+    warnings.push(
+      "TS_KEY or EL_KEY is recommended for production topic administration",
+    );
   }
 
   return { errors, warnings, paymentProviders };

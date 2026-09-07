@@ -84,4 +84,47 @@ describe("production configuration", () => {
     expect(enabled.errors).toEqual([]);
     expect(enabled.paymentProviders).toEqual(["stripe"]);
   });
+
+  it("keeps live Stripe Connect gated on explicit approval", () => {
+    const result = checkProductionConfig({
+      ...baseEnvironment,
+      PAYMENTS_LIVE_ENABLED: "true",
+      STRIPE_CONNECT_ENABLED: "true",
+      STRIPE_CONNECT_WEBHOOK_SECRET: "whsec_connect_example",
+      STRIPE_PUBLISHABLE_KEY: "pk_live_example",
+      STRIPE_SECRET_KEY: "sk_live_example",
+      STRIPE_WEBHOOK_SECRET: "whsec_example",
+    });
+
+    expect(result.errors).toContain(
+      "Live Stripe Connect requires STRIPE_CONNECT_APPROVED=true",
+    );
+  });
+
+  it("allows Stripe Connect in sandbox without a live approval flag", () => {
+    const result = checkProductionConfig({
+      ...baseEnvironment,
+      STRIPE_CONNECT_ENABLED: "true",
+      STRIPE_CONNECT_WEBHOOK_SECRET: "whsec_connect_example",
+      STRIPE_PUBLISHABLE_KEY: "pk_test_example",
+      STRIPE_SECRET_KEY: "sk_test_example",
+      STRIPE_WEBHOOK_SECRET: "whsec_example",
+    });
+
+    expect(result.errors).toEqual([]);
+  });
+
+  it("requires a separate connected-account webhook secret", () => {
+    const result = checkProductionConfig({
+      ...baseEnvironment,
+      STRIPE_CONNECT_ENABLED: "true",
+      STRIPE_PUBLISHABLE_KEY: "pk_test_example",
+      STRIPE_SECRET_KEY: "sk_test_example",
+      STRIPE_WEBHOOK_SECRET: "whsec_example",
+    });
+
+    expect(result.errors).toContain(
+      "STRIPE_CONNECT_ENABLED requires STRIPE_CONNECT_WEBHOOK_SECRET",
+    );
+  });
 });

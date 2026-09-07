@@ -293,8 +293,8 @@ const perspectiveSupportStatements = [
       provider TEXT NOT NULL,
       provider_order_id TEXT,
       provider_capture_id TEXT,
-      amount_minor INTEGER NOT NULL CHECK (amount_minor > 0),
-      refunded_minor INTEGER NOT NULL DEFAULT 0 CHECK (refunded_minor >= 0),
+      amount_minor BIGINT NOT NULL CHECK (amount_minor > 0),
+      refunded_minor BIGINT NOT NULL DEFAULT 0 CHECK (refunded_minor >= 0),
       currency CHAR(3) NOT NULL,
       status TEXT NOT NULL CHECK (
         status IN ('initializing', 'created', 'capturing', 'completed', 'failed', 'refunded')
@@ -335,7 +335,12 @@ const perspectiveSupportStatements = [
   `,
   `
     ALTER TABLE perspective_contributions
-    ADD COLUMN IF NOT EXISTS refunded_minor INTEGER NOT NULL DEFAULT 0;
+    ADD COLUMN IF NOT EXISTS refunded_minor BIGINT NOT NULL DEFAULT 0;
+  `,
+  `
+    ALTER TABLE perspective_contributions
+    ALTER COLUMN amount_minor TYPE BIGINT,
+    ALTER COLUMN refunded_minor TYPE BIGINT;
   `,
   `
     CREATE UNIQUE INDEX IF NOT EXISTS idx_perspective_contributions_provider_order
@@ -362,6 +367,82 @@ const perspectiveSupportStatements = [
   `,
 ] as const;
 
+const creatorSupportStatements = [
+  `
+    CREATE TABLE IF NOT EXISTS creators (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      display_name VARCHAR(80) NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS topic_owners (
+      topic_id uuid PRIMARY KEY REFERENCES topics(id) ON DELETE CASCADE,
+      creator_id uuid NOT NULL REFERENCES creators(id) ON DELETE RESTRICT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS creator_support_methods (
+      creator_id uuid PRIMARY KEY REFERENCES creators(id) ON DELETE CASCADE,
+      paypal_me_url TEXT,
+      venmo_url TEXT,
+      stripe_account_id TEXT UNIQUE,
+      stripe_charges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+      stripe_payouts_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS topic_owner_invites (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      topic_id uuid NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+      creator_id uuid NOT NULL REFERENCES creators(id) ON DELETE CASCADE,
+      token_hash CHAR(64) NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS creator_setup_sessions (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      invite_id uuid NOT NULL UNIQUE REFERENCES topic_owner_invites(id) ON DELETE CASCADE,
+      topic_id uuid NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+      creator_id uuid NOT NULL REFERENCES creators(id) ON DELETE CASCADE,
+      token_hash CHAR(64) NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      revoked_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+  `
+    ALTER TABLE perspective_contributions
+    ADD COLUMN IF NOT EXISTS recipient_creator_id uuid REFERENCES creators(id) ON DELETE RESTRICT,
+    ADD COLUMN IF NOT EXISTS recipient_provider_account_id TEXT,
+    ADD COLUMN IF NOT EXISTS payment_flow TEXT NOT NULL DEFAULT 'platform';
+  `,
+  `
+    DO $$ BEGIN
+      ALTER TABLE perspective_contributions
+      ADD CONSTRAINT perspective_contributions_payment_flow_check
+      CHECK (payment_flow IN ('platform', 'stripe_direct', 'paypal_multiparty'));
+    EXCEPTION WHEN duplicate_object THEN NULL;
+    END $$;
+  `,
+  `
+    CREATE INDEX IF NOT EXISTS idx_topic_owners_creator
+    ON topic_owners (creator_id);
+  `,
+  `
+    CREATE INDEX IF NOT EXISTS idx_creator_setup_sessions_active
+    ON creator_setup_sessions (topic_id, expires_at)
+    WHERE revoked_at IS NULL;
+  `,
+] as const;
+
 const indexStatements = [
   "CREATE INDEX IF NOT EXISTS idx_topics_name ON topics (name);",
   "CREATE INDEX IF NOT EXISTS idx_perspectives_topic ON perspectives (topic_id);",
@@ -381,6 +462,7 @@ const migrationGroups = [
   legacyAudioRenameStatements,
   audioMixStatements,
   perspectiveSupportStatements,
+  creatorSupportStatements,
   indexStatements,
 ] as const;
 

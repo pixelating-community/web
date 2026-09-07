@@ -1,27 +1,17 @@
 export const SUPPORT_CURRENCY = "USD";
+export const SUPPORT_DEFAULT_AMOUNT_MINOR = 300;
+export const SUPPORT_MIN_AMOUNT_MINOR = 100;
 
-export const SUPPORT_TIERS = [
-  {
-    amountMinor: 300,
-    description: "Three Dream story contribution for this perspective.",
-    id: "three-dream",
-    name: "Three Dream",
-    requiresShipping: false,
-  },
-  {
-    amountMinor: 2500,
-    description: "One physical handwritten copy of this story, mailed to the checkout address.",
-    id: "handwritten-copy",
-    name: "Handwritten Copy",
-    requiresShipping: true,
-  },
-] as const;
+export const isValidContributionAmount = (amountMinor: number) =>
+  Number.isSafeInteger(amountMinor) && amountMinor >= SUPPORT_MIN_AMOUNT_MINOR;
 
-export const SUPPORT_MIN_AMOUNT_MINOR = SUPPORT_TIERS[0].amountMinor;
-export const SUPPORT_MAX_AMOUNT_MINOR = SUPPORT_TIERS[1].amountMinor;
-
-export const getSupportTier = (amountMinor: number) =>
-  SUPPORT_TIERS.find((tier) => tier.amountMinor === amountMinor) ?? null;
+export const parseContributionAmount = (value: string) => {
+  const normalized = value.trim();
+  if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return null;
+  const [whole, fraction = ""] = normalized.split(".");
+  const amountMinor = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
+  return isValidContributionAmount(amountMinor) ? amountMinor : null;
+};
 
 export type PerspectiveSupportStats = {
   contributionCurrency: string;

@@ -4,7 +4,6 @@ import {
   CheckoutElementsProvider,
   ExpressCheckoutElement,
   PaymentElement,
-  ShippingAddressElement,
   useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout";
 import {
@@ -17,22 +16,29 @@ import { formatContributionTotal } from "@/lib/perspectiveSupport";
 
 const stripePromises = new Map<string, Promise<Stripe | null>>();
 
-const getStripe = (publishableKey: string) => {
-  const existing = stripePromises.get(publishableKey);
+const getStripe = (
+  publishableKey: string,
+  connectedAccountId: string | null,
+) => {
+  const cacheKey = `${publishableKey}:${connectedAccountId ?? "platform"}`;
+  const existing = stripePromises.get(cacheKey);
   if (existing) return existing;
-  const promise = loadStripe(publishableKey);
-  stripePromises.set(publishableKey, promise);
+  const promise = loadStripe(
+    publishableKey,
+    connectedAccountId ? { stripeAccount: connectedAccountId } : undefined,
+  );
+  stripePromises.set(cacheKey, promise);
   return promise;
 };
 
 type StripeContributionCheckoutProps = {
   amountMinor: number;
   clientSecret: string;
+  connectedAccountId: string | null;
   currency: string;
   onConfirmed: (sessionId: string) => Promise<void>;
   onError: (message: string) => void;
   publishableKey: string;
-  requiresShipping: boolean;
   returnUrl: string;
 };
 
@@ -41,18 +47,19 @@ const StripeCheckoutForm = ({
   currency,
   onConfirmed,
   onError,
-  requiresShipping,
   returnUrl,
 }: Omit<
   StripeContributionCheckoutProps,
-  "clientSecret" | "publishableKey"
+  "clientSecret" | "connectedAccountId" | "publishableKey"
 >) => {
   const checkoutState = useCheckoutElements();
   const [busy, setBusy] = useState(false);
   const [expressAvailable, setExpressAvailable] = useState(false);
 
   const confirm = useCallback(
-    async (expressCheckoutConfirmEvent?: StripeExpressCheckoutElementConfirmEvent) => {
+    async (
+      expressCheckoutConfirmEvent?: StripeExpressCheckoutElementConfirmEvent,
+    ) => {
       if (checkoutState.type !== "success" || busy) return;
       setBusy(true);
       onError("");
@@ -80,7 +87,8 @@ const StripeCheckoutForm = ({
       } finally {
         setBusy(false);
       }
-    }, [busy, checkoutState, onConfirmed, onError, returnUrl],
+    },
+    [busy, checkoutState, onConfirmed, onError, returnUrl],
   );
 
   if (checkoutState.type === "loading") {
@@ -107,7 +115,7 @@ const StripeCheckoutForm = ({
             setExpressAvailable(
               Boolean(
                 event.availablePaymentMethods &&
-                  Object.values(event.availablePaymentMethods).some(Boolean),
+                Object.values(event.availablePaymentMethods).some(Boolean),
               ),
             )
           }
@@ -128,7 +136,6 @@ const StripeCheckoutForm = ({
           void confirm();
         }}
       >
-        {requiresShipping ? <ShippingAddressElement /> : null}
         <PaymentElement options={{ layout: "accordion" }} />
         <button
           type="submit"
@@ -148,7 +155,7 @@ export const StripeContributionCheckout = (
   props: StripeContributionCheckoutProps,
 ) => (
   <CheckoutElementsProvider
-    stripe={getStripe(props.publishableKey)}
+    stripe={getStripe(props.publishableKey, props.connectedAccountId)}
     options={{
       clientSecret: props.clientSecret,
       elementsOptions: {

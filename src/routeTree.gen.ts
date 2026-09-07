@@ -24,10 +24,13 @@ import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
 import { Route as ApiPIdRouteImport } from './routes/api/p/$id'
 import { Route as ApiObjYtRouteImport } from './routes/api/obj/yt'
 import { Route as ApiObjUploadRouteImport } from './routes/api/obj/upload'
+import { Route as ApiObjTopicOwnerInvitesRouteImport } from './routes/api/obj/topic-owner-invites'
 import { Route as ApiObjStripeWebhookRouteImport } from './routes/api/obj/stripe-webhook'
+import { Route as ApiObjStripeConnectWebhookRouteImport } from './routes/api/obj/stripe-connect-webhook'
 import { Route as ApiObjPaypalWebhookRouteImport } from './routes/api/obj/paypal-webhook'
 import { Route as ApiObjMergeStatusRouteImport } from './routes/api/obj/merge-status'
 import { Route as ApiObjHealthRouteImport } from './routes/api/obj/health'
+import { Route as TTopicSupportClaimRouteImport } from './routes/t.$topic.support.claim'
 import { Route as ApiPIdPromptRouteImport } from './routes/api/p/$id/prompt'
 import { Route as ApiPIdAudioSnippetsRouteImport } from './routes/api/p/$id/audio-snippets'
 import { Route as ApiPIdAudioMixRouteImport } from './routes/api/p/$id/audio-mix'
@@ -108,11 +111,22 @@ const ApiObjUploadRoute = ApiObjUploadRouteImport.update({
   path: '/upload',
   getParentRoute: () => ApiObjRoute,
 } as any)
+const ApiObjTopicOwnerInvitesRoute = ApiObjTopicOwnerInvitesRouteImport.update({
+  id: '/topic-owner-invites',
+  path: '/topic-owner-invites',
+  getParentRoute: () => ApiObjRoute,
+} as any)
 const ApiObjStripeWebhookRoute = ApiObjStripeWebhookRouteImport.update({
   id: '/stripe-webhook',
   path: '/stripe-webhook',
   getParentRoute: () => ApiObjRoute,
 } as any)
+const ApiObjStripeConnectWebhookRoute =
+  ApiObjStripeConnectWebhookRouteImport.update({
+    id: '/stripe-connect-webhook',
+    path: '/stripe-connect-webhook',
+    getParentRoute: () => ApiObjRoute,
+  } as any)
 const ApiObjPaypalWebhookRoute = ApiObjPaypalWebhookRouteImport.update({
   id: '/paypal-webhook',
   path: '/paypal-webhook',
@@ -127,6 +141,11 @@ const ApiObjHealthRoute = ApiObjHealthRouteImport.update({
   id: '/health',
   path: '/health',
   getParentRoute: () => ApiObjRoute,
+} as any)
+const TTopicSupportClaimRoute = TTopicSupportClaimRouteImport.update({
+  id: '/t/$topic/support/claim',
+  path: '/t/$topic/support/claim',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPIdPromptRoute = ApiPIdPromptRouteImport.update({
   id: '/prompt',
@@ -159,7 +178,9 @@ export interface FileRoutesByFullPath {
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
+  '/api/obj/stripe-connect-webhook': typeof ApiObjStripeConnectWebhookRoute
   '/api/obj/stripe-webhook': typeof ApiObjStripeWebhookRoute
+  '/api/obj/topic-owner-invites': typeof ApiObjTopicOwnerInvitesRoute
   '/api/obj/upload': typeof ApiObjUploadRoute
   '/api/obj/yt': typeof ApiObjYtRoute
   '/api/p/$id': typeof ApiPIdRouteWithChildren
@@ -173,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
   '/api/p/$id/prompt': typeof ApiPIdPromptRoute
+  '/t/$topic/support/claim': typeof TTopicSupportClaimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -184,7 +206,9 @@ export interface FileRoutesByTo {
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
+  '/api/obj/stripe-connect-webhook': typeof ApiObjStripeConnectWebhookRoute
   '/api/obj/stripe-webhook': typeof ApiObjStripeWebhookRoute
+  '/api/obj/topic-owner-invites': typeof ApiObjTopicOwnerInvitesRoute
   '/api/obj/upload': typeof ApiObjUploadRoute
   '/api/obj/yt': typeof ApiObjYtRoute
   '/api/p/$id': typeof ApiPIdRouteWithChildren
@@ -198,6 +222,7 @@ export interface FileRoutesByTo {
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
   '/api/p/$id/prompt': typeof ApiPIdPromptRoute
+  '/t/$topic/support/claim': typeof TTopicSupportClaimRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -210,7 +235,9 @@ export interface FileRoutesById {
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
+  '/api/obj/stripe-connect-webhook': typeof ApiObjStripeConnectWebhookRoute
   '/api/obj/stripe-webhook': typeof ApiObjStripeWebhookRoute
+  '/api/obj/topic-owner-invites': typeof ApiObjTopicOwnerInvitesRoute
   '/api/obj/upload': typeof ApiObjUploadRoute
   '/api/obj/yt': typeof ApiObjYtRoute
   '/api/p/$id': typeof ApiPIdRouteWithChildren
@@ -224,6 +251,7 @@ export interface FileRoutesById {
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
   '/api/p/$id/prompt': typeof ApiPIdPromptRoute
+  '/t/$topic/support/claim': typeof TTopicSupportClaimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -237,7 +265,9 @@ export interface FileRouteTypes {
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
+    | '/api/obj/stripe-connect-webhook'
     | '/api/obj/stripe-webhook'
+    | '/api/obj/topic-owner-invites'
     | '/api/obj/upload'
     | '/api/obj/yt'
     | '/api/p/$id'
@@ -251,6 +281,7 @@ export interface FileRouteTypes {
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
     | '/api/p/$id/prompt'
+    | '/t/$topic/support/claim'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -262,7 +293,9 @@ export interface FileRouteTypes {
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
+    | '/api/obj/stripe-connect-webhook'
     | '/api/obj/stripe-webhook'
+    | '/api/obj/topic-owner-invites'
     | '/api/obj/upload'
     | '/api/obj/yt'
     | '/api/p/$id'
@@ -276,6 +309,7 @@ export interface FileRouteTypes {
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
     | '/api/p/$id/prompt'
+    | '/t/$topic/support/claim'
   id:
     | '__root__'
     | '/'
@@ -287,7 +321,9 @@ export interface FileRouteTypes {
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
+    | '/api/obj/stripe-connect-webhook'
     | '/api/obj/stripe-webhook'
+    | '/api/obj/topic-owner-invites'
     | '/api/obj/upload'
     | '/api/obj/yt'
     | '/api/p/$id'
@@ -301,6 +337,7 @@ export interface FileRouteTypes {
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
     | '/api/p/$id/prompt'
+    | '/t/$topic/support/claim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -315,6 +352,7 @@ export interface RootRouteChildren {
   ApiTTokenRoute: typeof ApiTTokenRoute
   TTopicToolsRoute: typeof TTopicToolsRoute
   TTopicUlRoute: typeof TTopicUlRoute
+  TTopicSupportClaimRoute: typeof TTopicSupportClaimRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -424,11 +462,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiObjUploadRouteImport
       parentRoute: typeof ApiObjRoute
     }
+    '/api/obj/topic-owner-invites': {
+      id: '/api/obj/topic-owner-invites'
+      path: '/topic-owner-invites'
+      fullPath: '/api/obj/topic-owner-invites'
+      preLoaderRoute: typeof ApiObjTopicOwnerInvitesRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
     '/api/obj/stripe-webhook': {
       id: '/api/obj/stripe-webhook'
       path: '/stripe-webhook'
       fullPath: '/api/obj/stripe-webhook'
       preLoaderRoute: typeof ApiObjStripeWebhookRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/stripe-connect-webhook': {
+      id: '/api/obj/stripe-connect-webhook'
+      path: '/stripe-connect-webhook'
+      fullPath: '/api/obj/stripe-connect-webhook'
+      preLoaderRoute: typeof ApiObjStripeConnectWebhookRouteImport
       parentRoute: typeof ApiObjRoute
     }
     '/api/obj/paypal-webhook': {
@@ -451,6 +503,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/obj/health'
       preLoaderRoute: typeof ApiObjHealthRouteImport
       parentRoute: typeof ApiObjRoute
+    }
+    '/t/$topic/support/claim': {
+      id: '/t/$topic/support/claim'
+      path: '/t/$topic/support/claim'
+      fullPath: '/t/$topic/support/claim'
+      preLoaderRoute: typeof TTopicSupportClaimRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/p/$id/prompt': {
       id: '/api/p/$id/prompt'
@@ -487,7 +546,9 @@ interface ApiObjRouteChildren {
   ApiObjHealthRoute: typeof ApiObjHealthRoute
   ApiObjMergeStatusRoute: typeof ApiObjMergeStatusRoute
   ApiObjPaypalWebhookRoute: typeof ApiObjPaypalWebhookRoute
+  ApiObjStripeConnectWebhookRoute: typeof ApiObjStripeConnectWebhookRoute
   ApiObjStripeWebhookRoute: typeof ApiObjStripeWebhookRoute
+  ApiObjTopicOwnerInvitesRoute: typeof ApiObjTopicOwnerInvitesRoute
   ApiObjUploadRoute: typeof ApiObjUploadRoute
   ApiObjYtRoute: typeof ApiObjYtRoute
 }
@@ -496,7 +557,9 @@ const ApiObjRouteChildren: ApiObjRouteChildren = {
   ApiObjHealthRoute: ApiObjHealthRoute,
   ApiObjMergeStatusRoute: ApiObjMergeStatusRoute,
   ApiObjPaypalWebhookRoute: ApiObjPaypalWebhookRoute,
+  ApiObjStripeConnectWebhookRoute: ApiObjStripeConnectWebhookRoute,
   ApiObjStripeWebhookRoute: ApiObjStripeWebhookRoute,
+  ApiObjTopicOwnerInvitesRoute: ApiObjTopicOwnerInvitesRoute,
   ApiObjUploadRoute: ApiObjUploadRoute,
   ApiObjYtRoute: ApiObjYtRoute,
 }
@@ -553,6 +616,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTTokenRoute: ApiTTokenRoute,
   TTopicToolsRoute: TTopicToolsRoute,
   TTopicUlRoute: TTopicUlRoute,
+  TTopicSupportClaimRoute: TTopicSupportClaimRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

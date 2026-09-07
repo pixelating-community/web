@@ -18,6 +18,8 @@ describe("payment ledger retention policy", () => {
     expect(migration).toMatch(
       /FOREIGN KEY \(perspective_id\) REFERENCES perspectives\(id\) ON DELETE RESTRICT/,
     );
+    expect(migration).toMatch(/amount_minor BIGINT NOT NULL/);
+    expect(migration).toMatch(/ALTER COLUMN amount_minor TYPE BIGINT/);
   });
 
   it("guards direct, descendant, topic, and topic-reset deletion paths", () => {
