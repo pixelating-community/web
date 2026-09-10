@@ -247,7 +247,7 @@ export const PerspectiveSupport = ({
             <button
               type="button"
               onClick={() => setShowContribution((value) => !value)}
-              className="inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none text-white/45 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-amber-100"
+              className="inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none text-white/45 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-[color:var(--color-neon-teal-light)]"
               aria-expanded={showContribution}
               aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
             >
@@ -260,19 +260,19 @@ export const PerspectiveSupport = ({
         </div>
 
         {showContribution ? (
-          <div className="scrollbar-transparent fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto flex max-h-[calc(100dvh-2rem)] w-auto max-w-sm flex-col gap-3 overflow-y-auto bg-black/90 p-4 backdrop-blur-md">
+          <div className="support-surface scrollbar-transparent fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto flex max-h-[calc(100dvh-2rem)] w-auto max-w-sm flex-col gap-3 overflow-y-auto p-4">
             <button
               type="button"
               onClick={() => setShowContribution(false)}
               aria-label="Close support options"
               title="Close"
-              className="ml-auto inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-white/65 hover:text-white"
+              className="ml-auto inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-[color:color-mix(in_oklch,var(--color-white)_65%,transparent)] hover:text-[color:var(--color-white)]"
             >
               ×
             </button>
             {creatorSupport ? (
               <div className="flex flex-col gap-2">
-                <p className="m-0 text-sm font-bold text-white/85">
+                <p className="m-0 text-sm font-bold text-[color:var(--color-white)]">
                   {creatorSupport.displayName}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -281,7 +281,7 @@ export const PerspectiveSupport = ({
                       href={creatorSupport.paypalMeUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="border border-white/20 px-3 py-2 text-sm text-white/80 hover:border-white/40 hover:text-white"
+                      className="support-secondary-action px-3 py-2 text-sm transition-colors"
                     >
                       PayPal ↗
                     </a>
@@ -291,18 +291,18 @@ export const PerspectiveSupport = ({
                       href={creatorSupport.venmoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="border border-white/20 px-3 py-2 text-sm text-white/80 hover:border-white/40 hover:text-white"
+                      className="support-secondary-action px-3 py-2 text-sm transition-colors"
                     >
                       Venmo ↗
                     </a>
                   ) : null}
                 </div>
                 {hasDirectSupport ? (
-                  <p className="m-0 text-[11px] text-white/45">
+                  <p className="m-0 text-[11px] text-[color:color-mix(in_oklch,var(--color-white)_48%,transparent)]">
                     Direct links · not counted here
                   </p>
                 ) : (
-                  <p className="m-0 text-xs text-white/55">
+                  <p className="m-0 text-xs text-[color:color-mix(in_oklch,var(--color-white)_58%,transparent)]">
                     Support links are not ready yet.
                   </p>
                 )}
@@ -311,7 +311,7 @@ export const PerspectiveSupport = ({
             {!creatorSupport || hasCreatorManagedCheckout ? (
               <>
                 {stripeSession ? (
-                  <div className="flex items-center justify-between bg-white/5 px-3 py-2 text-sm text-white/75">
+                  <div className="support-subtle-panel flex items-center justify-between px-3 py-2 text-sm">
                     <span>
                       {formatContributionTotal(
                         stripeSession.amountMinor,
@@ -326,13 +326,13 @@ export const PerspectiveSupport = ({
                       }}
                       aria-label="Change support amount"
                       title="Change support amount"
-                      className="text-base text-amber-100"
+                      className="text-base text-[color:var(--color-neon-magenta)]"
                     >
                       ↺
                     </button>
                   </div>
                 ) : (
-                  <label className="flex min-h-16 items-center gap-2 border border-white/10 bg-white/5 px-4 text-white/85 focus-within:border-amber-200/50">
+                  <label className="support-field flex min-h-16 items-center gap-2 px-4">
                     <span aria-hidden="true" className="text-lg">
                       $
                     </span>
@@ -348,9 +348,9 @@ export const PerspectiveSupport = ({
                         setError("");
                       }}
                       aria-invalid={amountMinor === null}
-                      className="min-w-0 flex-1 border-0 bg-transparent p-0 text-2xl font-black text-white outline-none"
+                      className="min-w-0 flex-1 border-0 bg-transparent p-0 text-2xl font-black text-[color:var(--color-white)] outline-none"
                     />
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-white/40">
+                    <span className="text-[10px] uppercase tracking-[0.15em] text-[color:color-mix(in_oklch,var(--color-white)_44%,transparent)]">
                       USD
                     </span>
                   </label>
@@ -379,22 +379,22 @@ export const PerspectiveSupport = ({
                           ? "Starting secure checkout"
                           : "Continue with card or wallet"
                       }
-                      className="min-h-11 border border-amber-200/40 bg-amber-300/20 px-4 py-2 text-sm font-bold uppercase text-amber-50 transition-colors hover:bg-amber-300/25 disabled:cursor-wait disabled:opacity-55"
+                      className="support-primary-action min-h-11 px-4 py-2 text-sm font-bold uppercase transition-colors disabled:cursor-wait disabled:opacity-55"
                     >
                       {isStartingCheckout ? "…" : "💳 Card / wallet"}
                     </button>
                   )
                 ) : (
-                  <p className="m-0 bg-white/5 px-3 py-2 text-center text-xs text-white/55">
+                  <p className="support-subtle-panel m-0 px-3 py-2 text-center text-xs text-[color:color-mix(in_oklch,var(--color-white)_58%,transparent)]">
                     Card and wallet checkout is not configured yet.
                   </p>
                 )}
 
                 {paypal?.enabled && paypal.clientId ? (
-                  <div className="border-t border-white/10 pt-3">
+                  <div className="border-t border-[color:color-mix(in_oklch,var(--color-neon-teal)_24%,transparent)] pt-3">
                     <button
                       type="button"
-                      className="mx-auto block text-xs text-white/55 underline decoration-white/20 underline-offset-4 hover:text-white/75"
+                      className="support-secondary-action mx-auto block min-h-11 w-full px-4 py-2 text-sm font-bold transition-colors"
                       onClick={() =>
                         setShowAlternativePayments((value) => !value)
                       }

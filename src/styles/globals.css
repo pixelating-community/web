@@ -51,6 +51,71 @@
       color-mix(in oklch, var(--color-neon-magenta), var(--color-white) 12%);
   }
 
+  .support-surface {
+    border: 1px solid
+      color-mix(in oklch, var(--color-white) 14%, transparent);
+    background: color-mix(in oklch, var(--color-black) 52%, transparent);
+    box-shadow: 0 1.5rem 5rem
+      color-mix(in oklch, var(--color-black) 36%, transparent);
+    backdrop-filter: blur(1.5rem) saturate(115%);
+  }
+
+  .support-field,
+  .support-subtle-panel {
+    border: 1px solid
+      color-mix(in oklch, var(--color-white) 13%, transparent);
+    background: color-mix(in oklch, var(--color-black) 14%, transparent);
+    color: var(--color-white);
+  }
+
+  .support-field:focus-within {
+    border-color: color-mix(
+      in oklch,
+      var(--color-neon-magenta),
+      var(--color-white) 18%
+    );
+  }
+
+  .support-primary-action {
+    border: 1px solid
+      color-mix(in oklch, var(--color-neon-magenta) 58%, transparent);
+    background: color-mix(
+      in oklch,
+      var(--color-neon-magenta) 10%,
+      transparent
+    );
+    color: var(--color-white);
+  }
+
+  .support-primary-action:hover:not(:disabled) {
+    background: color-mix(
+      in oklch,
+      var(--color-neon-magenta) 18%,
+      transparent
+    );
+  }
+
+  .support-secondary-action {
+    border: 1px solid
+      color-mix(in oklch, var(--color-neon-teal) 46%, transparent);
+    background: transparent;
+    color: var(--color-neon-teal-light);
+  }
+
+  .support-secondary-action:hover:not(:disabled) {
+    border-color: color-mix(
+      in oklch,
+      var(--color-neon-teal),
+      var(--color-white) 18%
+    );
+    background: color-mix(
+      in oklch,
+      var(--color-neon-teal) 10%,
+      transparent
+    );
+    color: var(--color-white);
+  }
+
 }
 
 html {

@@ -86,7 +86,10 @@ describe("layout widths", () => {
     );
     expect(supportSource).not.toContain("support-info");
     expect(readSource("src/components/SW.tsx")).toContain(
-      "💰 {formatContributionTotal(",
+      "<PerspectiveSupport perspective={perspective} />",
+    );
+    expect(readSource("src/components/SW.tsx")).not.toContain(
+      'aria-label="Story support totals"',
     );
     expect(listenerSource).not.toContain("pixel-ui-");
     expect(cssSource).not.toContain(".pixel-ui-");
