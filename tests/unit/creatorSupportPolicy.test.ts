@@ -68,7 +68,7 @@ describe("creator support policy", () => {
   it("runs additive migrations before replacing the production web service", () => {
     const workflow = readSource(".github/workflows/ci.yml");
     const migration = workflow.indexOf(
-      "run --rm --no-deps web bun run migrate",
+      "run --rm --no-deps -T web bun run migrate",
     );
     const restart = workflow.indexOf("--force-recreate web");
 
