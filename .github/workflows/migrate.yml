@@ -182,9 +182,9 @@ jobs:
 
           if [ -n "${WEB_IMAGE_OVERRIDE:-}" ]; then
             WEB_IMAGE="${WEB_IMAGE_OVERRIDE}" docker compose -f "${COMPOSE_FILE}" pull web
-            WEB_IMAGE="${WEB_IMAGE_OVERRIDE}" docker compose -f "${COMPOSE_FILE}" run --rm --no-deps -T web bun run migrate
+            WEB_IMAGE="${WEB_IMAGE_OVERRIDE}" docker compose -f "${COMPOSE_FILE}" run --rm --no-deps --interactive=false -T web bun run migrate
           else
-            docker compose -f "${COMPOSE_FILE}" run --rm --no-deps -T web bun run migrate
+            docker compose -f "${COMPOSE_FILE}" run --rm --no-deps --interactive=false -T web bun run migrate
           fi
 
           if [ "${RESTART_WEB}" = "true" ]; then

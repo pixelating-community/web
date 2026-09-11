@@ -376,7 +376,8 @@ jobs:
           echo "Deploying images: WEB_IMAGE=${WEB_IMAGE} FFMPEG_WORKER_IMAGE=${FFMPEG_WORKER_IMAGE}"
           WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" --profile worker pull web ffmpeg-worker
           WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" up -d postgres
-          WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" run --rm --no-deps -T web bun run migrate
+          # Keep Compose from consuming the remaining SSH heredoc on stdin.
+          WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" run --rm --no-deps --interactive=false -T web bun run migrate
           WEB_IMAGE="${WEB_IMAGE}" FFMPEG_WORKER_IMAGE="${FFMPEG_WORKER_IMAGE}" docker compose -f "${COMPOSE_FILE}" up -d --remove-orphans --no-deps --force-recreate web
           docker compose -f "${COMPOSE_FILE}" ps
           healthy=0

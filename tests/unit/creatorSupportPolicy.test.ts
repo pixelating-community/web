@@ -65,10 +65,10 @@ describe("creator support policy", () => {
     expect(cloudflare).toMatch(/api\/obj\/stripe-connect-webhook/);
   });
 
-  it("runs additive migrations before replacing the production web service", () => {
+  it("runs additive migrations non-interactively before replacing the production web service", () => {
     const workflow = readSource(".github/workflows/ci.yml");
     const migration = workflow.indexOf(
-      "run --rm --no-deps -T web bun run migrate",
+      "run --rm --no-deps --interactive=false -T web bun run migrate",
     );
     const restart = workflow.indexOf("--force-recreate web");
 
