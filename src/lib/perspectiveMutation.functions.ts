@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
 export const createPerspective = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (value: {
       actionToken?: string;
       audioSrc?: string;
@@ -33,7 +33,7 @@ export const createPerspective = createServerFn({ method: "POST" })
   });
 
 export const updatePerspective = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (value: {
       actionToken?: string;
       audioSrc?: string;
@@ -66,7 +66,7 @@ export const updatePerspective = createServerFn({ method: "POST" })
   });
 
 export const removePerspective = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (value: {
       actionToken?: string;
       perspectiveId?: string;

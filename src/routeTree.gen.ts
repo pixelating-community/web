@@ -9,56 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TimingEditorRouteImport } from './routes/timing-editor'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TSplatRouteImport } from './routes/t.$'
-import { Route as PIdRouteImport } from './routes/p.$id'
-import { Route as ApiPRouteImport } from './routes/api/p'
+import { Route as TimingEditorRouteImport } from './routes/timing-editor'
 import { Route as ApiObjRouteImport } from './routes/api/obj'
-import { Route as TTopicUlRouteImport } from './routes/t.$topic.ul'
-import { Route as TTopicToolsRouteImport } from './routes/t.$topic.tools'
-import { Route as PIdCommitRouteImport } from './routes/p.$id.commit'
-import { Route as ApiTTokenRouteImport } from './routes/api/t/token'
-import { Route as ApiTARouteImport } from './routes/api/t/a'
-import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
-import { Route as ApiPIdRouteImport } from './routes/api/p/$id'
-import { Route as ApiObjYtRouteImport } from './routes/api/obj/yt'
-import { Route as ApiObjUploadRouteImport } from './routes/api/obj/upload'
-import { Route as ApiObjTopicOwnerInvitesRouteImport } from './routes/api/obj/topic-owner-invites'
-import { Route as ApiObjStripeWebhookRouteImport } from './routes/api/obj/stripe-webhook'
-import { Route as ApiObjStripeConnectWebhookRouteImport } from './routes/api/obj/stripe-connect-webhook'
-import { Route as ApiObjPaypalWebhookRouteImport } from './routes/api/obj/paypal-webhook'
-import { Route as ApiObjMergeStatusRouteImport } from './routes/api/obj/merge-status'
+import { Route as ApiPRouteImport } from './routes/api/p'
+import { Route as PIdRouteImport } from './routes/p.$id'
+import { Route as TSplatRouteImport } from './routes/t.$'
 import { Route as ApiObjHealthRouteImport } from './routes/api/obj/health'
-import { Route as TTopicSupportClaimRouteImport } from './routes/t.$topic.support.claim'
-import { Route as ApiPIdPromptRouteImport } from './routes/api/p/$id/prompt'
-import { Route as ApiPIdAudioSnippetsRouteImport } from './routes/api/p/$id/audio-snippets'
-import { Route as ApiPIdAudioMixRouteImport } from './routes/api/p/$id/audio-mix'
+import { Route as ApiObjMergeStatusRouteImport } from './routes/api/obj/merge-status'
+import { Route as ApiObjPaypalWebhookRouteImport } from './routes/api/obj/paypal-webhook'
+import { Route as ApiObjStripeConnectWebhookRouteImport } from './routes/api/obj/stripe-connect-webhook'
+import { Route as ApiObjStripeWebhookRouteImport } from './routes/api/obj/stripe-webhook'
+import { Route as ApiObjTopicOwnerInvitesRouteImport } from './routes/api/obj/topic-owner-invites'
+import { Route as ApiObjUploadRouteImport } from './routes/api/obj/upload'
+import { Route as ApiObjYtRouteImport } from './routes/api/obj/yt'
+import { Route as ApiPIdRouteImport } from './routes/api/p/$id'
+import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
+import { Route as ApiTARouteImport } from './routes/api/t/a'
+import { Route as ApiTTokenRouteImport } from './routes/api/t/token'
+import { Route as PIdCommitRouteImport } from './routes/p.$id.commit'
+import { Route as TTopicToolsRouteImport } from './routes/t.$topic.tools'
+import { Route as TTopicUlRouteImport } from './routes/t.$topic.ul'
 import { Route as ApiPIdAlignRouteImport } from './routes/api/p/$id/align'
+import { Route as ApiPIdAudioMixRouteImport } from './routes/api/p/$id/audio-mix'
+import { Route as ApiPIdAudioSnippetsRouteImport } from './routes/api/p/$id/audio-snippets'
+import { Route as ApiPIdPromptRouteImport } from './routes/api/p/$id/prompt'
+import { Route as TTopicSupportClaimRouteImport } from './routes/t.$topic.support.claim'
 
-const TimingEditorRoute = TimingEditorRouteImport.update({
-  id: '/timing-editor',
-  path: '/timing-editor',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TSplatRoute = TSplatRouteImport.update({
-  id: '/t/$',
-  path: '/t/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PIdRoute = PIdRouteImport.update({
-  id: '/p/$id',
-  path: '/p/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPRoute = ApiPRouteImport.update({
-  id: '/api/p',
-  path: '/api/p',
+const TimingEditorRoute = TimingEditorRouteImport.update({
+  id: '/timing-editor',
+  path: '/timing-editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiObjRoute = ApiObjRouteImport.update({
@@ -66,59 +51,34 @@ const ApiObjRoute = ApiObjRouteImport.update({
   path: '/api/obj',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TTopicUlRoute = TTopicUlRouteImport.update({
-  id: '/t/$topic/ul',
-  path: '/t/$topic/ul',
+const ApiPRoute = ApiPRouteImport.update({
+  id: '/api/p',
+  path: '/api/p',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TTopicToolsRoute = TTopicToolsRouteImport.update({
-  id: '/t/$topic/tools',
-  path: '/t/$topic/tools',
+const PIdRoute = PIdRouteImport.update({
+  id: '/p/$id',
+  path: '/p/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PIdCommitRoute = PIdCommitRouteImport.update({
-  id: '/commit',
-  path: '/commit',
-  getParentRoute: () => PIdRoute,
-} as any)
-const ApiTTokenRoute = ApiTTokenRouteImport.update({
-  id: '/api/t/token',
-  path: '/api/t/token',
+const TSplatRoute = TSplatRouteImport.update({
+  id: '/t/$',
+  path: '/t/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTARoute = ApiTARouteImport.update({
-  id: '/api/t/a',
-  path: '/api/t/a',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTTopicRoute = ApiTTopicRouteImport.update({
-  id: '/api/t/$topic',
-  path: '/api/t/$topic',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPIdRoute = ApiPIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => ApiPRoute,
-} as any)
-const ApiObjYtRoute = ApiObjYtRouteImport.update({
-  id: '/yt',
-  path: '/yt',
+const ApiObjHealthRoute = ApiObjHealthRouteImport.update({
+  id: '/health',
+  path: '/health',
   getParentRoute: () => ApiObjRoute,
 } as any)
-const ApiObjUploadRoute = ApiObjUploadRouteImport.update({
-  id: '/upload',
-  path: '/upload',
+const ApiObjMergeStatusRoute = ApiObjMergeStatusRouteImport.update({
+  id: '/merge-status',
+  path: '/merge-status',
   getParentRoute: () => ApiObjRoute,
 } as any)
-const ApiObjTopicOwnerInvitesRoute = ApiObjTopicOwnerInvitesRouteImport.update({
-  id: '/topic-owner-invites',
-  path: '/topic-owner-invites',
-  getParentRoute: () => ApiObjRoute,
-} as any)
-const ApiObjStripeWebhookRoute = ApiObjStripeWebhookRouteImport.update({
-  id: '/stripe-webhook',
-  path: '/stripe-webhook',
+const ApiObjPaypalWebhookRoute = ApiObjPaypalWebhookRouteImport.update({
+  id: '/paypal-webhook',
+  path: '/paypal-webhook',
   getParentRoute: () => ApiObjRoute,
 } as any)
 const ApiObjStripeConnectWebhookRoute =
@@ -127,34 +87,64 @@ const ApiObjStripeConnectWebhookRoute =
     path: '/stripe-connect-webhook',
     getParentRoute: () => ApiObjRoute,
   } as any)
-const ApiObjPaypalWebhookRoute = ApiObjPaypalWebhookRouteImport.update({
-  id: '/paypal-webhook',
-  path: '/paypal-webhook',
+const ApiObjStripeWebhookRoute = ApiObjStripeWebhookRouteImport.update({
+  id: '/stripe-webhook',
+  path: '/stripe-webhook',
   getParentRoute: () => ApiObjRoute,
 } as any)
-const ApiObjMergeStatusRoute = ApiObjMergeStatusRouteImport.update({
-  id: '/merge-status',
-  path: '/merge-status',
+const ApiObjTopicOwnerInvitesRoute = ApiObjTopicOwnerInvitesRouteImport.update({
+  id: '/topic-owner-invites',
+  path: '/topic-owner-invites',
   getParentRoute: () => ApiObjRoute,
 } as any)
-const ApiObjHealthRoute = ApiObjHealthRouteImport.update({
-  id: '/health',
-  path: '/health',
+const ApiObjUploadRoute = ApiObjUploadRouteImport.update({
+  id: '/upload',
+  path: '/upload',
   getParentRoute: () => ApiObjRoute,
 } as any)
-const TTopicSupportClaimRoute = TTopicSupportClaimRouteImport.update({
-  id: '/t/$topic/support/claim',
-  path: '/t/$topic/support/claim',
+const ApiObjYtRoute = ApiObjYtRouteImport.update({
+  id: '/yt',
+  path: '/yt',
+  getParentRoute: () => ApiObjRoute,
+} as any)
+const ApiPIdRoute = ApiPIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiPRoute,
+} as any)
+const ApiTTopicRoute = ApiTTopicRouteImport.update({
+  id: '/api/t/$topic',
+  path: '/api/t/$topic',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPIdPromptRoute = ApiPIdPromptRouteImport.update({
-  id: '/prompt',
-  path: '/prompt',
-  getParentRoute: () => ApiPIdRoute,
+const ApiTARoute = ApiTARouteImport.update({
+  id: '/api/t/a',
+  path: '/api/t/a',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPIdAudioSnippetsRoute = ApiPIdAudioSnippetsRouteImport.update({
-  id: '/audio-snippets',
-  path: '/audio-snippets',
+const ApiTTokenRoute = ApiTTokenRouteImport.update({
+  id: '/api/t/token',
+  path: '/api/t/token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PIdCommitRoute = PIdCommitRouteImport.update({
+  id: '/commit',
+  path: '/commit',
+  getParentRoute: () => PIdRoute,
+} as any)
+const TTopicToolsRoute = TTopicToolsRouteImport.update({
+  id: '/t/$topic/tools',
+  path: '/t/$topic/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TTopicUlRoute = TTopicUlRouteImport.update({
+  id: '/t/$topic/ul',
+  path: '/t/$topic/ul',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPIdAlignRoute = ApiPIdAlignRouteImport.update({
+  id: '/align',
+  path: '/align',
   getParentRoute: () => ApiPIdRoute,
 } as any)
 const ApiPIdAudioMixRoute = ApiPIdAudioMixRouteImport.update({
@@ -162,10 +152,20 @@ const ApiPIdAudioMixRoute = ApiPIdAudioMixRouteImport.update({
   path: '/audio-mix',
   getParentRoute: () => ApiPIdRoute,
 } as any)
-const ApiPIdAlignRoute = ApiPIdAlignRouteImport.update({
-  id: '/align',
-  path: '/align',
+const ApiPIdAudioSnippetsRoute = ApiPIdAudioSnippetsRouteImport.update({
+  id: '/audio-snippets',
+  path: '/audio-snippets',
   getParentRoute: () => ApiPIdRoute,
+} as any)
+const ApiPIdPromptRoute = ApiPIdPromptRouteImport.update({
+  id: '/prompt',
+  path: '/prompt',
+  getParentRoute: () => ApiPIdRoute,
+} as any)
+const TTopicSupportClaimRoute = TTopicSupportClaimRouteImport.update({
+  id: '/t/$topic/support/claim',
+  path: '/t/$topic/support/claim',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -357,13 +357,6 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/timing-editor': {
-      id: '/timing-editor'
-      path: '/timing-editor'
-      fullPath: '/timing-editor'
-      preLoaderRoute: typeof TimingEditorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -371,25 +364,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/t/$': {
-      id: '/t/$'
-      path: '/t/$'
-      fullPath: '/t/$'
-      preLoaderRoute: typeof TSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/p/$id': {
-      id: '/p/$id'
-      path: '/p/$id'
-      fullPath: '/p/$id'
-      preLoaderRoute: typeof PIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/p': {
-      id: '/api/p'
-      path: '/api/p'
-      fullPath: '/api/p'
-      preLoaderRoute: typeof ApiPRouteImport
+    '/timing-editor': {
+      id: '/timing-editor'
+      path: '/timing-editor'
+      fullPath: '/timing-editor'
+      preLoaderRoute: typeof TimingEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/obj': {
@@ -399,95 +378,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiObjRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/t/$topic/ul': {
-      id: '/t/$topic/ul'
-      path: '/t/$topic/ul'
-      fullPath: '/t/$topic/ul'
-      preLoaderRoute: typeof TTopicUlRouteImport
+    '/api/p': {
+      id: '/api/p'
+      path: '/api/p'
+      fullPath: '/api/p'
+      preLoaderRoute: typeof ApiPRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/t/$topic/tools': {
-      id: '/t/$topic/tools'
-      path: '/t/$topic/tools'
-      fullPath: '/t/$topic/tools'
-      preLoaderRoute: typeof TTopicToolsRouteImport
+    '/p/$id': {
+      id: '/p/$id'
+      path: '/p/$id'
+      fullPath: '/p/$id'
+      preLoaderRoute: typeof PIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/p/$id/commit': {
-      id: '/p/$id/commit'
-      path: '/commit'
-      fullPath: '/p/$id/commit'
-      preLoaderRoute: typeof PIdCommitRouteImport
-      parentRoute: typeof PIdRoute
-    }
-    '/api/t/token': {
-      id: '/api/t/token'
-      path: '/api/t/token'
-      fullPath: '/api/t/token'
-      preLoaderRoute: typeof ApiTTokenRouteImport
+    '/t/$': {
+      id: '/t/$'
+      path: '/t/$'
+      fullPath: '/t/$'
+      preLoaderRoute: typeof TSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/t/a': {
-      id: '/api/t/a'
-      path: '/api/t/a'
-      fullPath: '/api/t/a'
-      preLoaderRoute: typeof ApiTARouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/t/$topic': {
-      id: '/api/t/$topic'
-      path: '/api/t/$topic'
-      fullPath: '/api/t/$topic'
-      preLoaderRoute: typeof ApiTTopicRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/p/$id': {
-      id: '/api/p/$id'
-      path: '/$id'
-      fullPath: '/api/p/$id'
-      preLoaderRoute: typeof ApiPIdRouteImport
-      parentRoute: typeof ApiPRoute
-    }
-    '/api/obj/yt': {
-      id: '/api/obj/yt'
-      path: '/yt'
-      fullPath: '/api/obj/yt'
-      preLoaderRoute: typeof ApiObjYtRouteImport
-      parentRoute: typeof ApiObjRoute
-    }
-    '/api/obj/upload': {
-      id: '/api/obj/upload'
-      path: '/upload'
-      fullPath: '/api/obj/upload'
-      preLoaderRoute: typeof ApiObjUploadRouteImport
-      parentRoute: typeof ApiObjRoute
-    }
-    '/api/obj/topic-owner-invites': {
-      id: '/api/obj/topic-owner-invites'
-      path: '/topic-owner-invites'
-      fullPath: '/api/obj/topic-owner-invites'
-      preLoaderRoute: typeof ApiObjTopicOwnerInvitesRouteImport
-      parentRoute: typeof ApiObjRoute
-    }
-    '/api/obj/stripe-webhook': {
-      id: '/api/obj/stripe-webhook'
-      path: '/stripe-webhook'
-      fullPath: '/api/obj/stripe-webhook'
-      preLoaderRoute: typeof ApiObjStripeWebhookRouteImport
-      parentRoute: typeof ApiObjRoute
-    }
-    '/api/obj/stripe-connect-webhook': {
-      id: '/api/obj/stripe-connect-webhook'
-      path: '/stripe-connect-webhook'
-      fullPath: '/api/obj/stripe-connect-webhook'
-      preLoaderRoute: typeof ApiObjStripeConnectWebhookRouteImport
-      parentRoute: typeof ApiObjRoute
-    }
-    '/api/obj/paypal-webhook': {
-      id: '/api/obj/paypal-webhook'
-      path: '/paypal-webhook'
-      fullPath: '/api/obj/paypal-webhook'
-      preLoaderRoute: typeof ApiObjPaypalWebhookRouteImport
+    '/api/obj/health': {
+      id: '/api/obj/health'
+      path: '/health'
+      fullPath: '/api/obj/health'
+      preLoaderRoute: typeof ApiObjHealthRouteImport
       parentRoute: typeof ApiObjRoute
     }
     '/api/obj/merge-status': {
@@ -497,32 +413,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiObjMergeStatusRouteImport
       parentRoute: typeof ApiObjRoute
     }
-    '/api/obj/health': {
-      id: '/api/obj/health'
-      path: '/health'
-      fullPath: '/api/obj/health'
-      preLoaderRoute: typeof ApiObjHealthRouteImport
+    '/api/obj/paypal-webhook': {
+      id: '/api/obj/paypal-webhook'
+      path: '/paypal-webhook'
+      fullPath: '/api/obj/paypal-webhook'
+      preLoaderRoute: typeof ApiObjPaypalWebhookRouteImport
       parentRoute: typeof ApiObjRoute
     }
-    '/t/$topic/support/claim': {
-      id: '/t/$topic/support/claim'
-      path: '/t/$topic/support/claim'
-      fullPath: '/t/$topic/support/claim'
-      preLoaderRoute: typeof TTopicSupportClaimRouteImport
+    '/api/obj/stripe-connect-webhook': {
+      id: '/api/obj/stripe-connect-webhook'
+      path: '/stripe-connect-webhook'
+      fullPath: '/api/obj/stripe-connect-webhook'
+      preLoaderRoute: typeof ApiObjStripeConnectWebhookRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/stripe-webhook': {
+      id: '/api/obj/stripe-webhook'
+      path: '/stripe-webhook'
+      fullPath: '/api/obj/stripe-webhook'
+      preLoaderRoute: typeof ApiObjStripeWebhookRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/topic-owner-invites': {
+      id: '/api/obj/topic-owner-invites'
+      path: '/topic-owner-invites'
+      fullPath: '/api/obj/topic-owner-invites'
+      preLoaderRoute: typeof ApiObjTopicOwnerInvitesRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/upload': {
+      id: '/api/obj/upload'
+      path: '/upload'
+      fullPath: '/api/obj/upload'
+      preLoaderRoute: typeof ApiObjUploadRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/obj/yt': {
+      id: '/api/obj/yt'
+      path: '/yt'
+      fullPath: '/api/obj/yt'
+      preLoaderRoute: typeof ApiObjYtRouteImport
+      parentRoute: typeof ApiObjRoute
+    }
+    '/api/p/$id': {
+      id: '/api/p/$id'
+      path: '/$id'
+      fullPath: '/api/p/$id'
+      preLoaderRoute: typeof ApiPIdRouteImport
+      parentRoute: typeof ApiPRoute
+    }
+    '/api/t/$topic': {
+      id: '/api/t/$topic'
+      path: '/api/t/$topic'
+      fullPath: '/api/t/$topic'
+      preLoaderRoute: typeof ApiTTopicRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/p/$id/prompt': {
-      id: '/api/p/$id/prompt'
-      path: '/prompt'
-      fullPath: '/api/p/$id/prompt'
-      preLoaderRoute: typeof ApiPIdPromptRouteImport
-      parentRoute: typeof ApiPIdRoute
+    '/api/t/a': {
+      id: '/api/t/a'
+      path: '/api/t/a'
+      fullPath: '/api/t/a'
+      preLoaderRoute: typeof ApiTARouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/api/p/$id/audio-snippets': {
-      id: '/api/p/$id/audio-snippets'
-      path: '/audio-snippets'
-      fullPath: '/api/p/$id/audio-snippets'
-      preLoaderRoute: typeof ApiPIdAudioSnippetsRouteImport
+    '/api/t/token': {
+      id: '/api/t/token'
+      path: '/api/t/token'
+      fullPath: '/api/t/token'
+      preLoaderRoute: typeof ApiTTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$id/commit': {
+      id: '/p/$id/commit'
+      path: '/commit'
+      fullPath: '/p/$id/commit'
+      preLoaderRoute: typeof PIdCommitRouteImport
+      parentRoute: typeof PIdRoute
+    }
+    '/t/$topic/tools': {
+      id: '/t/$topic/tools'
+      path: '/t/$topic/tools'
+      fullPath: '/t/$topic/tools'
+      preLoaderRoute: typeof TTopicToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/t/$topic/ul': {
+      id: '/t/$topic/ul'
+      path: '/t/$topic/ul'
+      fullPath: '/t/$topic/ul'
+      preLoaderRoute: typeof TTopicUlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/p/$id/align': {
+      id: '/api/p/$id/align'
+      path: '/align'
+      fullPath: '/api/p/$id/align'
+      preLoaderRoute: typeof ApiPIdAlignRouteImport
       parentRoute: typeof ApiPIdRoute
     }
     '/api/p/$id/audio-mix': {
@@ -532,12 +518,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPIdAudioMixRouteImport
       parentRoute: typeof ApiPIdRoute
     }
-    '/api/p/$id/align': {
-      id: '/api/p/$id/align'
-      path: '/align'
-      fullPath: '/api/p/$id/align'
-      preLoaderRoute: typeof ApiPIdAlignRouteImport
+    '/api/p/$id/audio-snippets': {
+      id: '/api/p/$id/audio-snippets'
+      path: '/audio-snippets'
+      fullPath: '/api/p/$id/audio-snippets'
+      preLoaderRoute: typeof ApiPIdAudioSnippetsRouteImport
       parentRoute: typeof ApiPIdRoute
+    }
+    '/api/p/$id/prompt': {
+      id: '/api/p/$id/prompt'
+      path: '/prompt'
+      fullPath: '/api/p/$id/prompt'
+      preLoaderRoute: typeof ApiPIdPromptRouteImport
+      parentRoute: typeof ApiPIdRoute
+    }
+    '/t/$topic/support/claim': {
+      id: '/t/$topic/support/claim'
+      path: '/t/$topic/support/claim'
+      fullPath: '/t/$topic/support/claim'
+      preLoaderRoute: typeof TTopicSupportClaimRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }

@@ -8,7 +8,7 @@ const childPerspectiveSchema = z.object({
 });
 
 export const loadChildPerspectives = createServerFn({ method: "GET" })
-  .inputValidator(
+  .validator(
     (value: {
       parentPerspectiveId?: string;
       isLocked?: boolean;

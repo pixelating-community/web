@@ -8,7 +8,7 @@ import {
 } from "@/lib/perspectiveShare.schema";
 
 export const loadPerspectiveShareStatus = createServerFn({ method: "GET" })
-  .inputValidator((value: {
+  .validator((value: {
     actionToken?: string;
     perspectiveId?: string;
     topicId?: string;
@@ -25,7 +25,7 @@ export const loadPerspectiveShareStatus = createServerFn({ method: "GET" })
   });
 
 export const generatePerspectiveShareCodeFn = createServerFn({ method: "POST" })
-  .inputValidator((value: {
+  .validator((value: {
     actionToken?: string;
     perspectiveId?: string;
     topicId?: string;
@@ -49,7 +49,7 @@ export const generatePerspectiveShareCodeFn = createServerFn({ method: "POST" })
   });
 
 export const redeemPerspectiveShareCode = createServerFn({ method: "POST" })
-  .inputValidator((value: { code?: string; perspectiveId?: string }) =>
+  .validator((value: { code?: string; perspectiveId?: string }) =>
     redeemPerspectiveShareCodeSchema.parse(value),
   )
   .handler(async ({ data, context }) => {

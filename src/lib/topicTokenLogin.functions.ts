@@ -8,7 +8,7 @@ const topicTokenLoginRedirectSchema = topicTokenLoginSchema.extend({
 });
 
 export const saveTopicTokenAndRedirect = createServerFn({ method: "POST" })
-  .inputValidator((value: z.input<typeof topicTokenLoginRedirectSchema>) =>
+  .validator((value: z.input<typeof topicTokenLoginRedirectSchema>) =>
     topicTokenLoginRedirectSchema.parse(value),
   )
   .handler(async ({ data, context }) => {

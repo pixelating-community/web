@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 
 export const saveKaraokePhrases = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (value: {
       actionToken?: string;
       perspectiveId?: string;

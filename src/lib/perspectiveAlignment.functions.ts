@@ -3,7 +3,7 @@ import { getRequest } from "@tanstack/react-start/server";
 import type { WordTimingEntry } from "@/types/perspectives";
 
 export const savePerspectiveAlignment = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     (value: {
       actionToken?: string;
       audioKey?: string;

@@ -9,7 +9,7 @@ const schema = z.object({
 });
 
 export const loadPerspectiveById = createServerFn({ method: "GET" })
-  .inputValidator(
+  .validator(
     (value: { perspectiveId?: string; topicName?: string }) =>
       schema.parse(value),
   )
