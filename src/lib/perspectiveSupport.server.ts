@@ -16,6 +16,7 @@ import {
 } from "@/lib/paypal.server";
 import {
   coerceSupportCount,
+  getSupportProduct,
   SUPPORT_CURRENCY,
   SUPPORT_MIN_AMOUNT_MINOR,
   type PerspectiveSupportStats,
@@ -415,12 +416,15 @@ const settleStripeSession = async (
   if (!contribution) return null;
 
   const expectedAmount = coerceSupportCount(contribution.amount_minor);
+  const expectedProduct = getSupportProduct(expectedAmount);
   const receivedCurrency = session.currency?.toUpperCase();
   if (
+    !expectedProduct ||
     contribution.recipient_provider_account_id !== connectedAccountId ||
     session.client_reference_id !== contribution.id ||
     session.metadata?.contributionId !== contribution.id ||
     session.metadata?.perspectiveId !== contribution.perspective_id ||
+    session.metadata?.productId !== expectedProduct.id ||
     session.amount_total !== expectedAmount ||
     receivedCurrency !== contribution.currency
   ) {

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/api/obj/stripe-webhook")({
           const { constructStripeWebhookEvent } = await import(
             "@/lib/stripe.server"
           );
-          event = constructStripeWebhookEvent({ payload, signature });
+          event = await constructStripeWebhookEvent({ payload, signature });
         } catch (error) {
           console.warn("Rejected Stripe webhook", {
             requestId,

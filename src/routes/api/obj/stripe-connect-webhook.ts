@@ -20,7 +20,10 @@ export const Route = createFileRoute("/api/obj/stripe-connect-webhook")({
           const { constructStripeConnectWebhookEvent } = await import(
             "@/lib/stripe.server"
           );
-          event = constructStripeConnectWebhookEvent({ payload, signature });
+          event = await constructStripeConnectWebhookEvent({
+            payload,
+            signature,
+          });
           if (typeof event.account !== "string") {
             throw new Error("Missing connected Stripe account.");
           }

@@ -4,6 +4,7 @@ import {
   CheckoutElementsProvider,
   ExpressCheckoutElement,
   PaymentElement,
+  ShippingAddressElement,
   useCheckoutElements,
 } from "@stripe/react-stripe-js/checkout";
 import {
@@ -39,6 +40,7 @@ type StripeContributionCheckoutProps = {
   onConfirmed: (sessionId: string) => Promise<void>;
   onError: (message: string) => void;
   publishableKey: string;
+  requiresShipping: boolean;
   returnUrl: string;
 };
 
@@ -47,6 +49,7 @@ const StripeCheckoutForm = ({
   currency,
   onConfirmed,
   onError,
+  requiresShipping,
   returnUrl,
 }: Omit<
   StripeContributionCheckoutProps,
@@ -136,6 +139,7 @@ const StripeCheckoutForm = ({
           void confirm();
         }}
       >
+        {requiresShipping ? <ShippingAddressElement /> : null}
         <PaymentElement options={{ layout: "accordion" }} />
         <button
           type="submit"

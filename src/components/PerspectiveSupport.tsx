@@ -12,9 +12,10 @@ import {
 } from "@/lib/perspectiveSupport.functions";
 import {
   formatContributionTotal,
-  parseContributionAmount,
+  getSupportProduct,
+  getSupportProductById,
   SUPPORT_CURRENCY,
-  SUPPORT_DEFAULT_AMOUNT_MINOR,
+  SUPPORT_PRODUCTS,
   type PerspectiveSupportStats,
 } from "@/lib/perspectiveSupport";
 import type { Perspective } from "@/types/perspectives";
@@ -62,8 +63,8 @@ export const PerspectiveSupport = ({
   const reconcileStripeFn = useServerFn(reconcileStripeContribution);
   const reconciledSessionRef = useRef<string | null>(null);
   const [support, setSupport] = useState<SupportData | null>(null);
-  const [amountInput, setAmountInput] = useState(
-    (SUPPORT_DEFAULT_AMOUNT_MINOR / 100).toFixed(2),
+  const [amountMinor, setAmountMinor] = useState<number>(
+    SUPPORT_PRODUCTS[0].amountMinor,
   );
   const [showContribution, setShowContribution] = useState(false);
   const [showAlternativePayments, setShowAlternativePayments] = useState(false);
@@ -164,15 +165,28 @@ export const PerspectiveSupport = ({
     });
   }, [verifyStripeContribution]);
 
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const product = getSupportProductById(url.searchParams.get("product"));
+    if (!product) return;
+
+    url.searchParams.delete("product");
+    window.history.replaceState({}, "", url);
+    const frame = window.requestAnimationFrame(() => {
+      setAmountMinor(product.amountMinor);
+      setShowContribution(true);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   const beginStripeCheckout = async () => {
     const stripe = support?.providers.stripe;
     if (!support || !stripe?.enabled || !stripe.publishableKey) {
       setError("Card checkout is not configured yet.");
       return;
     }
-    const amountMinor = parseContributionAmount(amountInput);
-    if (amountMinor === null) {
-      setError("Enter a support amount of at least $1.00.");
+    if (!getSupportProduct(amountMinor)) {
+      setError("Choose Digital Story or Handwritten Copy.");
       return;
     }
 
@@ -216,7 +230,8 @@ export const PerspectiveSupport = ({
     creatorSupport && stripe?.enabled && stripe.publishableKey,
   );
   const amountLocked = Boolean(stripeSession || isStartingCheckout);
-  const amountMinor = parseContributionAmount(amountInput);
+  const selectedProduct =
+    getSupportProduct(amountMinor) ?? SUPPORT_PRODUCTS[0];
 
   return (
     <section
@@ -313,7 +328,7 @@ export const PerspectiveSupport = ({
                 {stripeSession ? (
                   <div className="support-subtle-panel flex items-center justify-between px-3 py-2 text-sm">
                     <span>
-                      {formatContributionTotal(
+                      {selectedProduct.name} — {formatContributionTotal(
                         stripeSession.amountMinor,
                         currency,
                       )}
@@ -324,36 +339,39 @@ export const PerspectiveSupport = ({
                         setStripeSession(null);
                         setError("");
                       }}
-                      aria-label="Change support amount"
-                      title="Change support amount"
+                      aria-label="Change story product"
+                      title="Change story product"
                       className="text-base text-[color:var(--color-neon-magenta)]"
                     >
                       ↺
                     </button>
                   </div>
                 ) : (
-                  <label className="support-field flex min-h-16 items-center gap-2 px-4">
-                    <span aria-hidden="true" className="text-lg">
-                      $
-                    </span>
-                    <span className="sr-only">Support amount in dollars</span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      autoComplete="off"
-                      disabled={amountLocked}
-                      value={amountInput}
-                      onChange={(event) => {
-                        setAmountInput(event.target.value);
-                        setError("");
-                      }}
-                      aria-invalid={amountMinor === null}
-                      className="min-w-0 flex-1 border-0 bg-transparent p-0 text-2xl font-black text-[color:var(--color-white)] outline-none"
-                    />
-                    <span className="text-[10px] uppercase tracking-[0.15em] text-[color:color-mix(in_oklch,var(--color-white)_44%,transparent)]">
-                      USD
-                    </span>
-                  </label>
+                  <div className="grid grid-cols-2 gap-2" aria-label="Story product">
+                    {SUPPORT_PRODUCTS.map((product) => (
+                      <button
+                        key={product.id}
+                        type="button"
+                        disabled={amountLocked}
+                        onClick={() => {
+                          setAmountMinor(product.amountMinor);
+                          setError("");
+                        }}
+                        className={`flex min-h-24 flex-col items-start justify-between border px-3 py-3 text-left transition-colors ${
+                          amountMinor === product.amountMinor
+                            ? "border-[color:color-mix(in_oklch,var(--color-neon-magenta)_58%,transparent)] bg-[color:color-mix(in_oklch,var(--color-neon-magenta)_10%,transparent)] text-[color:var(--color-white)]"
+                            : "border-[color:color-mix(in_oklch,var(--color-white)_13%,transparent)] bg-transparent text-[color:color-mix(in_oklch,var(--color-white)_68%,transparent)] hover:bg-[color:color-mix(in_oklch,var(--color-black)_14%,transparent)]"
+                        }`}
+                      >
+                        <span className="text-xs font-bold uppercase leading-tight">
+                          {product.name}
+                        </span>
+                        <span className="text-lg font-black">
+                          {formatContributionTotal(product.amountMinor, currency)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 )}
 
                 {stripe?.enabled && stripe.publishableKey ? (
@@ -365,6 +383,10 @@ export const PerspectiveSupport = ({
                       connectedAccountId={stripeSession.connectedAccountId}
                       currency={stripe.currency}
                       publishableKey={stripe.publishableKey}
+                      requiresShipping={
+                        getSupportProduct(stripeSession.amountMinor)
+                          ?.requiresShipping ?? false
+                      }
                       returnUrl={stripeSession.returnUrl}
                       onConfirmed={verifyStripeContribution}
                       onError={setError}
@@ -372,7 +394,7 @@ export const PerspectiveSupport = ({
                   ) : (
                     <button
                       type="button"
-                      disabled={isStartingCheckout || amountMinor === null}
+                      disabled={isStartingCheckout}
                       onClick={() => void beginStripeCheckout()}
                       aria-label={
                         isStartingCheckout
@@ -402,7 +424,7 @@ export const PerspectiveSupport = ({
                     >
                       {showAlternativePayments ? "Hide" : "Use"} PayPal or Venmo
                     </button>
-                    {showAlternativePayments && amountMinor !== null ? (
+                    {showAlternativePayments ? (
                       <div className="mt-3">
                         <PayPalContributionCheckout
                           amountMinor={amountMinor}

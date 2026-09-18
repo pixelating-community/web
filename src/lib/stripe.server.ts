@@ -6,7 +6,10 @@ import {
   isPaymentEnvironmentAllowed,
   resolveStripeEnvironment,
 } from "@/lib/paymentEnvironment";
-import { SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
+import {
+  getSupportProduct,
+  SUPPORT_CURRENCY,
+} from "@/lib/perspectiveSupport";
 
 const globalCache = globalThis as typeof globalThis & {
   __pxl8Stripe?: Stripe;
@@ -17,6 +20,23 @@ const getStripeSecretKey = () => getServerEnv("STRIPE_SECRET_KEY");
 
 const isEnabled = (value: string | undefined) =>
   value ? ["1", "true", "yes"].includes(value.trim().toLowerCase()) : false;
+
+type StripeAllowedCountry =
+  Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry;
+
+const getShippingCountries = (): StripeAllowedCountry[] => {
+  const countries = (getServerEnv("SUPPORT_SHIPPING_COUNTRIES") ?? "US")
+    .split(",")
+    .map((country) => country.trim().toUpperCase())
+    .filter(Boolean);
+  if (
+    countries.length === 0 ||
+    countries.some((country) => !/^[A-Z]{2}$/.test(country))
+  ) {
+    throw new Error("SUPPORT_SHIPPING_COUNTRIES must contain ISO country codes.");
+  }
+  return [...new Set(countries)] as StripeAllowedCountry[];
+};
 
 export const getStripePublicConfig = () => {
   const publishableKey = getServerEnv(
@@ -110,6 +130,9 @@ export const createStripeCheckoutSession = async ({
   perspectiveId: string;
   returnUrl: string;
 }) => {
+  const product = getSupportProduct(amountMinor);
+  if (!product) throw new Error("Unknown story product.");
+
   const stripe = getStripeClient();
   const session = await stripe.checkout.sessions.create(
     {
@@ -119,8 +142,8 @@ export const createStripeCheckoutSession = async ({
           price_data: {
             currency: SUPPORT_CURRENCY.toLowerCase(),
             product_data: {
-              name: "Story support",
-              description: "Support this story on PXL8.",
+              name: product.name,
+              description: product.description,
             },
             unit_amount: amountMinor,
           },
@@ -130,16 +153,21 @@ export const createStripeCheckoutSession = async ({
       metadata: {
         contributionId,
         perspectiveId,
+        productId: product.id,
       },
       mode: "payment",
       payment_intent_data: {
-        description: "PXL8 — Story support",
+        description: `PXL8 — ${product.name}`,
         metadata: {
           contributionId,
           perspectiveId,
+          productId: product.id,
         },
       },
       return_url: returnUrl,
+      shipping_address_collection: product.requiresShipping
+        ? { allowed_countries: getShippingCountries() }
+        : undefined,
       ui_mode: "elements",
     },
     {
@@ -195,7 +223,7 @@ export const createStripeConnectedAccountLink = ({
     type: "account_onboarding",
   });
 
-export const constructStripeWebhookEvent = ({
+export const constructStripeWebhookEvent = async ({
   payload,
   signature,
 }: {
@@ -204,10 +232,14 @@ export const constructStripeWebhookEvent = ({
 }) => {
   const secret = getServerEnv("STRIPE_WEBHOOK_SECRET");
   if (!secret) throw new Error("STRIPE_WEBHOOK_SECRET is not configured.");
-  return getStripeClient().webhooks.constructEvent(payload, signature, secret);
+  return await getStripeClient().webhooks.constructEventAsync(
+    payload,
+    signature,
+    secret,
+  );
 };
 
-export const constructStripeConnectWebhookEvent = ({
+export const constructStripeConnectWebhookEvent = async ({
   payload,
   signature,
 }: {
@@ -218,5 +250,9 @@ export const constructStripeConnectWebhookEvent = ({
   if (!secret) {
     throw new Error("STRIPE_CONNECT_WEBHOOK_SECRET is not configured.");
   }
-  return getStripeClient().webhooks.constructEvent(payload, signature, secret);
+  return await getStripeClient().webhooks.constructEventAsync(
+    payload,
+    signature,
+    secret,
+  );
 };

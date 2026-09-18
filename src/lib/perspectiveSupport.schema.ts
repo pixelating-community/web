@@ -1,5 +1,5 @@
 import * as z from "zod/v4";
-import { isValidContributionAmount } from "@/lib/perspectiveSupport";
+import { getSupportProduct } from "@/lib/perspectiveSupport";
 
 const perspectiveIdSchema = z.uuid();
 
@@ -12,8 +12,8 @@ export const castPerspectiveVoteSchema = loadPerspectiveSupportSchema;
 const contributionAmountSchema = z
   .number()
   .int()
-  .refine(isValidContributionAmount, {
-    message: "Enter a contribution of at least $1.00.",
+  .refine((amountMinor) => getSupportProduct(amountMinor) !== null, {
+    message: "Choose an available story product.",
   });
 
 export const createPayPalContributionOrderSchema = z.object({

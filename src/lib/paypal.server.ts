@@ -5,7 +5,11 @@ import {
   isPaymentEnvironmentAllowed,
   resolvePayPalEnvironment,
 } from "@/lib/paymentEnvironment";
-import { formatPayPalAmount, SUPPORT_CURRENCY } from "@/lib/perspectiveSupport";
+import {
+  formatPayPalAmount,
+  getSupportProduct,
+  SUPPORT_CURRENCY,
+} from "@/lib/perspectiveSupport";
 
 type PayPalConfig = {
   apiBaseUrl: string;
@@ -161,6 +165,8 @@ export const createPayPalOrder = async ({
   amountMinor: number;
   contributionId: string;
 }) => {
+  const product = getSupportProduct(amountMinor);
+  if (!product) throw new Error("Unknown story product.");
   const formattedAmount = formatPayPalAmount(amountMinor);
   const order = await requestPayPal<PayPalOrder>({
     method: "POST",
@@ -168,18 +174,46 @@ export const createPayPalOrder = async ({
     requestId: contributionId,
     body: {
       application_context: {
-        shipping_preference: "NO_SHIPPING",
+        shipping_preference: product.requiresShipping
+          ? "GET_FROM_FILE"
+          : "NO_SHIPPING",
       },
       intent: "CAPTURE",
       purchase_units: [
         {
           reference_id: contributionId,
           custom_id: contributionId,
-          description: "Support this story on PXL8.",
+          description: product.description,
           amount: {
             currency_code: SUPPORT_CURRENCY,
             value: formattedAmount,
+            ...(product.requiresShipping
+              ? {
+                  breakdown: {
+                    item_total: {
+                      currency_code: SUPPORT_CURRENCY,
+                      value: formattedAmount,
+                    },
+                  },
+                }
+              : {}),
           },
+          ...(product.requiresShipping
+            ? {
+                items: [
+                  {
+                    name: product.name,
+                    description: product.description,
+                    quantity: "1",
+                    category: "PHYSICAL_GOODS",
+                    unit_amount: {
+                      currency_code: SUPPORT_CURRENCY,
+                      value: formattedAmount,
+                    },
+                  },
+                ],
+              }
+            : {}),
         },
       ],
     },

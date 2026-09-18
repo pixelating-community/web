@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { getKaraokeLines } from "@/lib/karaokeLines";
+import {
+  getKaraokeLines,
+  KARAOKE_MAX_WORDS_PER_LINE,
+} from "@/lib/karaokeLines";
 
 describe("karaokeLines", () => {
   it("uses rendered markdown text for karaoke words", () => {
@@ -32,5 +35,25 @@ describe("karaokeLines", () => {
         { index: 2, word: "day" },
       ],
     ]);
+  });
+
+  it("breaks long prose blocks into bounded lines without losing words", () => {
+    const words = Array.from(
+      { length: KARAOKE_MAX_WORDS_PER_LINE * 2 + 5 },
+      (_, index) => `word-${index}`,
+    );
+    const lines = getKaraokeLines({
+      perspective: words.join(" "),
+      rendered_html: `<p>${words.join(" ")}</p>`,
+    });
+
+    expect(lines.map((line) => line.length)).toEqual([
+      KARAOKE_MAX_WORDS_PER_LINE,
+      KARAOKE_MAX_WORDS_PER_LINE,
+      5,
+    ]);
+    expect(lines.flat()).toEqual(
+      words.map((word, index) => ({ index, word })),
+    );
   });
 });

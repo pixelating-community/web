@@ -5,6 +5,8 @@ export type KaraokeLineWord = {
   word: string;
 };
 
+export const KARAOKE_MAX_WORDS_PER_LINE = 12;
+
 const BLOCK_CLOSE_TAG_REGEX =
   /<\/(?:address|article|aside|blockquote|dd|div|dl|dt|figcaption|figure|footer|h[1-6]|header|hr|li|main|nav|ol|p|pre|section|table|ul)>/gi;
 
@@ -45,13 +47,20 @@ const linesToKaraokeWords = (lines: string[]) => {
   for (const line of lines) {
     const words = line.split(/\s+/).filter(Boolean);
     if (words.length === 0) continue;
-    karaokeLines.push(
-      words.map((word) => {
-        const item = { index: wordIndex, word };
-        wordIndex += 1;
-        return item;
-      }),
-    );
+    const indexedWords = words.map((word) => {
+      const item = { index: wordIndex, word };
+      wordIndex += 1;
+      return item;
+    });
+    for (
+      let start = 0;
+      start < indexedWords.length;
+      start += KARAOKE_MAX_WORDS_PER_LINE
+    ) {
+      karaokeLines.push(
+        indexedWords.slice(start, start + KARAOKE_MAX_WORDS_PER_LINE),
+      );
+    }
   }
 
   return karaokeLines;

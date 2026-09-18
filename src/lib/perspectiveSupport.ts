@@ -1,17 +1,40 @@
 export const SUPPORT_CURRENCY = "USD";
-export const SUPPORT_DEFAULT_AMOUNT_MINOR = 300;
-export const SUPPORT_MIN_AMOUNT_MINOR = 100;
 
-export const isValidContributionAmount = (amountMinor: number) =>
-  Number.isSafeInteger(amountMinor) && amountMinor >= SUPPORT_MIN_AMOUNT_MINOR;
+export const SUPPORT_PRODUCTS = [
+  {
+    amountMinor: 300,
+    description:
+      "A personal digital copy of this story, delivered by email within 2 business days.",
+    fulfillment:
+      "Delivered to the email used at checkout within 2 business days.",
+    id: "digital-story",
+    name: "Digital Story",
+    requiresShipping: false,
+  },
+  {
+    amountMinor: 2500,
+    description:
+      "One handwritten copy of this story, mailed to the shipping address entered at checkout.",
+    fulfillment:
+      "Ships to the address entered at checkout within 10 business days.",
+    id: "handwritten-copy",
+    name: "Handwritten Copy",
+    requiresShipping: true,
+  },
+] as const;
 
-export const parseContributionAmount = (value: string) => {
-  const normalized = value.trim();
-  if (!/^\d+(?:\.\d{1,2})?$/.test(normalized)) return null;
-  const [whole, fraction = ""] = normalized.split(".");
-  const amountMinor = Number(whole) * 100 + Number(fraction.padEnd(2, "0"));
-  return isValidContributionAmount(amountMinor) ? amountMinor : null;
-};
+export type SupportProduct = (typeof SUPPORT_PRODUCTS)[number];
+export type SupportProductId = SupportProduct["id"];
+
+export const SUPPORT_MIN_AMOUNT_MINOR = SUPPORT_PRODUCTS[0].amountMinor;
+export const SUPPORT_MAX_AMOUNT_MINOR = SUPPORT_PRODUCTS[1].amountMinor;
+
+export const getSupportProduct = (amountMinor: number) =>
+  SUPPORT_PRODUCTS.find((product) => product.amountMinor === amountMinor) ??
+  null;
+
+export const getSupportProductById = (id: string | null | undefined) =>
+  SUPPORT_PRODUCTS.find((product) => product.id === id) ?? null;
 
 export type PerspectiveSupportStats = {
   contributionCurrency: string;
