@@ -37,7 +37,7 @@ type AudioWaveformProps = {
 
 export function AudioWaveform({
   barClassName = "bg-[color-mix(in_oklch,var(--color-neon-teal),transparent_45%)]",
-  barWidthClassName = "w-full",
+  barWidthClassName = "min-w-0 flex-1",
   barsClassName = "px-2 py-2",
   className = "h-14 rounded-lg bg-black/30",
   fallbackWaveform,
