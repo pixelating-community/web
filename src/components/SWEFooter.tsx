@@ -70,7 +70,10 @@ type SWEFooterProps = {
   onRewindToPrevious: () => void;
   onMarkStart: () => void;
   onMarkEndAndForward: () => void;
+  onMarkCancel: () => void;
   onMarkCurrentEnd: () => void;
+  isMarking?: boolean;
+  markingDuration?: number;
   onSetWordStartToCurrent?: () => void;
   onClearCurrentMark: () => void;
   isClearCurrentMarkArmed?: boolean;
@@ -126,7 +129,10 @@ export const SWEFooter = ({
   onRewindToPrevious,
   onMarkStart,
   onMarkEndAndForward,
+  onMarkCancel,
   onMarkCurrentEnd,
+  isMarking = false,
+  markingDuration,
   onSetWordStartToCurrent,
   onClearCurrentMark,
   isClearCurrentMarkArmed = false,
@@ -332,7 +338,7 @@ export const SWEFooter = ({
               <button
                 type="button"
                 onClick={onRewindToPrevious}
-                className="px-3 py-1 text-sm border-0 h-11 rounded-xl bg-white/10 text-white/85 touch-manipulation"
+                className="order-2 h-11 border-0 rounded-xl bg-white/10 px-3 py-1 text-sm text-white/85 touch-manipulation sm:order-none"
                 disabled={isBusy || selectedWordCount === 0}
                 aria-label="Back to previous word mark"
                 title="Back to previous word mark"
@@ -343,6 +349,7 @@ export const SWEFooter = ({
                 type="button"
                 onPointerDown={(event) => {
                   if (event.button !== 0) return;
+                  event.preventDefault();
                   activeMarkPointerIdRef.current = event.pointerId;
                   event.currentTarget.setPointerCapture(event.pointerId);
                   onMarkStart();
@@ -357,6 +364,12 @@ export const SWEFooter = ({
                   }
                   onMarkEndAndForward();
                 }}
+                onLostPointerCapture={(event) => {
+                  if (activeMarkPointerIdRef.current !== event.pointerId) return;
+                  activeMarkPointerIdRef.current = null;
+                  onMarkCancel();
+                }}
+                onContextMenu={(event) => event.preventDefault()}
                 onPointerCancel={(event) => {
                   if (activeMarkPointerIdRef.current !== event.pointerId) {
                     return;
@@ -365,7 +378,7 @@ export const SWEFooter = ({
                   if (event.currentTarget.hasPointerCapture(event.pointerId)) {
                     event.currentTarget.releasePointerCapture(event.pointerId);
                   }
-                  onMarkEndAndForward();
+                  onMarkCancel();
                 }}
                 onKeyDown={(event) => {
                   if (event.key !== " " && event.key !== "Enter") return;
@@ -378,17 +391,27 @@ export const SWEFooter = ({
                   event.preventDefault();
                   onMarkEndAndForward();
                 }}
-                className="px-3 py-1 text-sm border-0 h-11 rounded-xl bg-emerald-500/40 text-emerald-100 touch-manipulation"
+                className={`order-1 col-span-2 h-12 touch-none select-none rounded-xl border-0 px-3 py-1 text-sm font-bold sm:order-none sm:col-span-1 sm:h-11 ${
+                  isMarking
+                    ? "bg-emerald-400/65 text-white"
+                    : "bg-emerald-500/40 text-emerald-100"
+                }`}
                 disabled={isBusy || selectedWordCount === 0}
-                aria-label="Mark word and move next"
-                title="Mark word and move next"
+                aria-label={
+                  isMarking
+                    ? "Release to finish word timing and move next"
+                    : "Hold to mark word timing"
+                }
+                title="Hold to mark word; release to move next"
               >
-                → 🖍️
+                {isMarking
+                  ? `Release · ${(markingDuration ?? 0).toFixed(2)}s`
+                  : "Hold → 🖍️"}
               </button>
               <button
                 type="button"
                 onClick={onMarkCurrentEnd}
-                className="px-3 py-1 text-sm border-0 h-11 rounded-xl bg-white/10 text-white/85 touch-manipulation"
+                className="hidden h-11 rounded-xl border-0 bg-white/10 px-3 py-1 text-sm text-white/85 touch-manipulation sm:block"
                 disabled={isBusy || selectedWordCount === 0}
                 aria-label="Set end time for current word"
                 title="Set end time for current word"
@@ -398,7 +421,7 @@ export const SWEFooter = ({
               <button
                 type="button"
                 onClick={onClearCurrentMark}
-                className={`px-3 py-1 border-0 h-11 rounded-xl bg-white/10 text-white/85 touch-manipulation ${
+                className={`order-3 h-11 rounded-xl border-0 bg-white/10 px-3 py-1 text-white/85 touch-manipulation sm:order-none ${
                   isClearCurrentMarkArmed ? "text-xs" : "text-sm"
                 }`}
                 disabled={isBusy || selectedWordCount === 0}

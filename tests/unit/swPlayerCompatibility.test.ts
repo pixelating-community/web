@@ -75,10 +75,17 @@ describe("sw player compatibility", () => {
     expect(footerSource).toMatch(/onMarkStart\(\);/);
     expect(footerSource).toMatch(/onPointerUp=\{\(event\) => \{/);
     expect(footerSource).toMatch(/onMarkEndAndForward\(\);/);
+    expect(footerSource).toMatch(/onPointerCancel=\{\(event\) => \{/);
+    expect(footerSource).toMatch(/onMarkCancel\(\);/);
+    expect(footerSource).toMatch(/Hold to mark word timing/);
+    expect(footerSource).toMatch(/Release ·/);
+    expect(footerSource).toMatch(/hidden h-11[^"]*sm:block/);
     expect(timingSource).toMatch(/event\.key === "ArrowRight"/);
     expect(timingSource).toMatch(/markStart\(\);/);
     expect(timingSource).toMatch(/const handleKeyUp = \(event: KeyboardEvent\) => \{/);
     expect(timingSource).toMatch(/markEndAndForward\(\);/);
+    expect(timingSource).toMatch(/window\.addEventListener\("blur", cancelHeldArrow\)/);
+    expect(timingSource).toMatch(/cancelMarking\(\);/);
   });
 
   it("keeps selected word start and duration controls wired to editor timing state", () => {

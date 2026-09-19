@@ -32,6 +32,13 @@ type PatchRuntime = (
   patch: Partial<PerspectiveRuntimeState>,
 ) => void;
 
+type ActiveMarkingSession = {
+  index: number;
+  perspectiveId: string;
+  previousTimings: WordTimingEntry[];
+  startedAt: number;
+};
+
 type UseSwTimingEditorArgs = {
   audioRef: RefObject<HTMLAudioElement | null>;
   commitCurrentTime: (time: number, options?: { forceRender?: boolean }) => number;
@@ -66,6 +73,14 @@ export const useSwTimingEditor = ({
   const selectedWordIndexRef = useRef(selectedWordIndex);
   selectedWordIndexRef.current = selectedWordIndex;
   const arrowRightMarkingRef = useRef(false);
+  const markingSessionRef = useRef<ActiveMarkingSession | null>(null);
+  const [markingSession, setMarkingSession] =
+    useState<ActiveMarkingSession | null>(null);
+
+  const clearMarkingSession = useCallback(() => {
+    markingSessionRef.current = null;
+    setMarkingSession(null);
+  }, []);
 
   const updateTimingEntry = useCallback(
     (index: number, next: WordTimingEntry | null) => {
@@ -217,13 +232,22 @@ export const useSwTimingEditor = ({
       if (!selectedPerspective) return;
       const words = getPerspectiveWords(selectedPerspective);
       if (targetIndex < 0 || targetIndex >= words.length) return;
+      if (markingSessionRef.current) return;
       const nextTimings = buildTimingEntries({
         existingTimings: latestTimingsRef.current,
         wordsLength: words.length,
       });
+      const session: ActiveMarkingSession = {
+        index: targetIndex,
+        perspectiveId: selectedPerspective.id,
+        previousTimings: [...nextTimings],
+        startedAt: getCurrentTime(),
+      };
+      markingSessionRef.current = session;
+      setMarkingSession(session);
       nextTimings[targetIndex] = buildTimingStartEntry({
         existing: nextTimings[targetIndex],
-        start: getCurrentTime(),
+        start: session.startedAt,
       });
       latestTimingsRef.current = nextTimings;
       const runtimeState = runtimeById[selectedPerspective.id];
@@ -259,10 +283,14 @@ export const useSwTimingEditor = ({
   const markEndAndForward = useCallback(() => {
     if (!selectedPerspective) return;
     const words = getPerspectiveWords(selectedPerspective);
-    const currentIndex = getTimingEditorIndex({
-      selectedWordIndex: selectedWordIndexRef.current,
-      wordsLength: words.length,
-    });
+    const activeSession = markingSessionRef.current;
+    const currentIndex =
+      activeSession?.perspectiveId === selectedPerspective.id
+        ? activeSession.index
+        : getTimingEditorIndex({
+            selectedWordIndex: selectedWordIndexRef.current,
+            wordsLength: words.length,
+          });
     if (currentIndex < 0) return;
     const nextTimings = buildTimingEntries({
       existingTimings: latestTimingsRef.current,
@@ -275,6 +303,7 @@ export const useSwTimingEditor = ({
     const nextSelectedWordIndex = Math.min(words.length - 1, currentIndex + 1);
     latestTimingsRef.current = nextTimings;
     selectedWordIndexRef.current = nextSelectedWordIndex;
+    clearMarkingSession();
     const runtimeState = runtimeById[selectedPerspective.id];
     const nextRevision = (runtimeState?.timingsRevision ?? 0) + 1;
     setSelectedId(selectedPerspective.id);
@@ -290,7 +319,23 @@ export const useSwTimingEditor = ({
     runtimeById,
     selectedPerspective,
     setSelectedId,
+    clearMarkingSession,
   ]);
+
+  const cancelMarking = useCallback(() => {
+    const session = markingSessionRef.current;
+    if (!session) return;
+    const runtimeState = runtimeById[session.perspectiveId];
+    latestTimingsRef.current = session.previousTimings;
+    selectedWordIndexRef.current = session.index;
+    patchRuntime(session.perspectiveId, {
+      dirtyTimings: true,
+      selectedWordIndex: session.index,
+      timings: session.previousTimings,
+      timingsRevision: (runtimeState?.timingsRevision ?? 0) + 1,
+    });
+    clearMarkingSession();
+  }, [clearMarkingSession, patchRuntime, runtimeById]);
 
   const markAndForward = useCallback(() => {
     if (!selectedPerspective) return;
@@ -436,6 +481,12 @@ export const useSwTimingEditor = ({
         end: getCurrentTime(),
       });
       latestTimingsRef.current = nextTimings;
+      if (
+        markingSessionRef.current?.perspectiveId === perspectiveId &&
+        markingSessionRef.current.index === targetIndex
+      ) {
+        clearMarkingSession();
+      }
       const runtimeState = runtimeById[perspectiveId];
       const nextRevision = (runtimeState?.timingsRevision ?? 0) + 1;
       patchRuntime(perspectiveId, {
@@ -444,7 +495,13 @@ export const useSwTimingEditor = ({
         dirtyTimings: true,
       });
     },
-    [getCurrentTime, patchRuntime, runtimeById, selectedPerspective],
+    [
+      clearMarkingSession,
+      getCurrentTime,
+      patchRuntime,
+      runtimeById,
+      selectedPerspective,
+    ],
   );
 
   const clearCurrentMark = useCallback(() => {
@@ -478,6 +535,12 @@ export const useSwTimingEditor = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isTextInputTarget(event.target)) return;
+      if (event.key === "Escape" && arrowRightMarkingRef.current) {
+        event.preventDefault();
+        arrowRightMarkingRef.current = false;
+        cancelMarking();
+        return;
+      }
       if (
         event.key !== "ArrowRight" &&
         event.key !== "ArrowLeft" &&
@@ -515,14 +578,29 @@ export const useSwTimingEditor = ({
       markEndAndForward();
     };
 
+    const cancelHeldArrow = () => {
+      if (!arrowRightMarkingRef.current) return;
+      arrowRightMarkingRef.current = false;
+      cancelMarking();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") cancelHeldArrow();
+    };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", cancelHeldArrow);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", cancelHeldArrow);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [
     enabled,
+    cancelMarking,
     clearCurrentMark,
     markEndAndForward,
     markStart,
@@ -586,6 +664,7 @@ export const useSwTimingEditor = ({
 
   return {
     cancelMidiLearn,
+    cancelMarking,
     clearAllMarks,
     clearCurrentMark,
     markAndForward,
@@ -593,6 +672,7 @@ export const useSwTimingEditor = ({
     markCurrentEnd,
     markStart,
     markStartAtIndex,
+    markingSession,
     midiLearnTarget,
     midiUndoNote,
     rewindToPrevious,

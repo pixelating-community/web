@@ -428,11 +428,13 @@ export const SW = ({
   );
 
   const {
+    cancelMarking,
     clearAllMarks,
     clearCurrentMark,
     markEndAndForward,
     markCurrentEnd,
     markStart,
+    markingSession,
     rewindToPrevious,
     setWordStartToCurrent,
     shiftWordStartBackward,
@@ -450,6 +452,9 @@ export const SW = ({
     selectedWordIndex,
     setSelectedId,
   });
+  const markingDuration = markingSession
+    ? Math.max(0, currentTime - markingSession.startedAt)
+    : undefined;
 
   const {
     handleRecorderStart,
@@ -905,7 +910,10 @@ export const SW = ({
           onRewindToPrevious={rewindToPrevious}
           onMarkStart={markStart}
           onMarkEndAndForward={markEndAndForward}
+          onMarkCancel={cancelMarking}
           onMarkCurrentEnd={markCurrentEnd}
+          isMarking={Boolean(markingSession)}
+          markingDuration={markingDuration}
           onSetWordStartToCurrent={setWordStartToCurrent}
           onClearCurrentMark={handleClearCurrentMark}
           isClearCurrentMarkArmed={isClearCurrentMarkArmed}
