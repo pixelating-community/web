@@ -47,7 +47,9 @@ describe("sw player compatibility", () => {
     expect(listenerSource).not.toMatch(/hasAutoStartedRef/);
     expect(swSource).toMatch(/playIntentUntilRef/);
     expect(swSource).toMatch(/audio\.currentTime = 0/);
-    expect(editorSource).toMatch(/if \(!readOnly \|\| !shouldEnableWordMode\) return;/);
+    expect(editorSource).toMatch(
+      /if \(!readOnly \|\| !shouldEnableWordMode\) return;/,
+    );
     expect(editorSource).toMatch(
       /if \(!readOnly \|\| !shouldEnableWordMode \|\| !allowWordSeek\) return;/,
     );
@@ -78,15 +80,32 @@ describe("sw player compatibility", () => {
     expect(footerSource).toMatch(/onPointerCancel=\{handleMarkPointerCancel\}/);
     expect(footerSource).toMatch(/onMarkCancel\(\);/);
     expect(footerSource).toMatch(/isMinimized \? \(/);
-    expect(footerSource).toMatch(/h-11 min-w-28[^`]*markButtonStateClass/);
+    expect(footerSource).toMatch(
+      /grid-cols-\[minmax\(0,1fr\)_auto_minmax\(0,1fr\)\]/,
+    );
+    expect(footerSource).toMatch(/<span>Expand<\/span>/);
+    expect(footerSource).toMatch(
+      /h-11 min-w-28[^`]*-webkit-touch-callout:none/,
+    );
+    expect(footerSource).toMatch(
+      /onCopy=\{\(event\) => event\.preventDefault\(\)\}/,
+    );
+    expect(footerSource).toMatch(
+      /onDragStart=\{\(event\) => event\.preventDefault\(\)\}/,
+    );
+    expect(footerSource).toMatch(/draggable=\{false\}/);
     expect(footerSource).toMatch(/Hold to mark word timing/);
     expect(footerSource).toMatch(/Release ·/);
     expect(footerSource).toMatch(/hidden h-11[^"]*sm:block/);
     expect(timingSource).toMatch(/event\.key === "ArrowRight"/);
     expect(timingSource).toMatch(/markStart\(\);/);
-    expect(timingSource).toMatch(/const handleKeyUp = \(event: KeyboardEvent\) => \{/);
+    expect(timingSource).toMatch(
+      /const handleKeyUp = \(event: KeyboardEvent\) => \{/,
+    );
     expect(timingSource).toMatch(/markEndAndForward\(\);/);
-    expect(timingSource).toMatch(/window\.addEventListener\("blur", cancelHeldArrow\)/);
+    expect(timingSource).toMatch(
+      /window\.addEventListener\("blur", cancelHeldArrow\)/,
+    );
     expect(timingSource).toMatch(/cancelMarking\(\);/);
   });
 
@@ -94,15 +113,23 @@ describe("sw player compatibility", () => {
     const swSource = readSource("src/components/SW.tsx");
     const footerSource = readSource("src/components/SWEFooter.tsx");
 
-    expect(swSource).toMatch(/coerceTimingEntry\(selectedTimings, selectedWordIndex\)/);
-    expect(swSource).toMatch(/getTimingDuration\(selectedTimings, selectedWordIndex\)/);
+    expect(swSource).toMatch(
+      /coerceTimingEntry\(selectedTimings, selectedWordIndex\)/,
+    );
+    expect(swSource).toMatch(
+      /getTimingDuration\(selectedTimings, selectedWordIndex\)/,
+    );
     expect(swSource).toMatch(/selectedWordStart=\{selectedWordStart\}/);
     expect(swSource).toMatch(/selectedWordDuration=\{selectedWordDuration\}/);
-    expect(swSource).toMatch(/onSetWordStartToCurrent=\{setWordStartToCurrent\}/);
+    expect(swSource).toMatch(
+      /onSetWordStartToCurrent=\{setWordStartToCurrent\}/,
+    );
 
     expect(footerSource).toMatch(/selectedWordStart/);
     expect(footerSource).toMatch(/selectedWordDuration/);
     expect(footerSource).toMatch(/onSetWordStartToCurrent/);
-    expect(footerSource).toMatch(/Set selected word duration from playback position/);
+    expect(footerSource).toMatch(
+      /Set selected word duration from playback position/,
+    );
   });
 });

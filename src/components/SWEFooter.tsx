@@ -14,7 +14,13 @@ import { useConfirmAction } from "@/components/sw/useConfirmAction";
 import type { AudioAnalysis } from "@/lib/audioProcessing";
 import type { Perspective } from "@/types/perspectives";
 
-type RecordingStatus = "idle" | "recording" | "uploading" | "saving" | "merging" | "error";
+type RecordingStatus =
+  | "idle"
+  | "recording"
+  | "uploading"
+  | "saving"
+  | "merging"
+  | "error";
 export type SampleBoundSaveStatus = "idle" | "saving" | "saved" | "error";
 
 const getSampleBoundButtonLabel = ({
@@ -41,9 +47,7 @@ const getSampleBoundButtonClass = (status: SampleBoundSaveStatus) => {
 };
 
 const formatWordTimingValue = (value: number | undefined) =>
-  typeof value === "number" && Number.isFinite(value)
-    ? value.toFixed(2)
-    : "--";
+  typeof value === "number" && Number.isFinite(value) ? value.toFixed(2) : "--";
 
 type SWEFooterProps = {
   isViewer: boolean;
@@ -184,13 +188,16 @@ export const SWEFooter = ({
     if (event.button !== 0) return;
     event.preventDefault();
     activeMarkPointerIdRef.current = event.pointerId;
-    event.currentTarget.setPointerCapture(event.pointerId);
     onMarkStart();
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Some mobile browsers reject capture while beginning a touch gesture.
+      // The button still receives pointerup when the finger remains over it.
+    }
   };
 
-  const handleMarkPointerUp = (
-    event: ReactPointerEvent<HTMLButtonElement>,
-  ) => {
+  const handleMarkPointerUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (activeMarkPointerIdRef.current !== event.pointerId) return;
     activeMarkPointerIdRef.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -264,134 +271,148 @@ export const SWEFooter = ({
           className={`flex w-full flex-col ${isMinimized ? "gap-1" : "gap-2"}`}
         >
           {!isViewer && (
-            <div className="flex flex-wrap items-center gap-2">
-              <AudioRecorder
-                disabled={isBusy}
-                onStart={onRecorderStart}
-                onCapture={onRecorderCapture}
-                onError={onRecorderError}
+            <div
+              className={
+                isMinimized
+                  ? "grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3"
+                  : "flex flex-wrap items-center gap-2"
+              }
+            >
+              <div
+                className={
+                  isMinimized
+                    ? "flex min-w-0 items-center justify-self-start"
+                    : "contents"
+                }
               >
-                {({ isRecording, toggle, supported, warmUp }) => {
-                  const isError = recordingStatus === "error" && !isRecording;
-                  const label = isRecording
-                    ? "Stop recording"
-                    : isError
-                      ? "Recording failed, tap to retry"
-                      : "Record";
-                  const icon = isRecording ? "⏹" : isError ? "✗" : "⏺";
-                  const buttonClass = isRecording
-                    ? "bg-red-500/70 text-white"
-                    : isError
-                      ? "bg-red-500/45 text-red-50 ring-1 ring-red-300/50"
-                      : "bg-white/10 text-white/70";
-                  return (
-                    <div className="flex h-6 w-8 items-center justify-center">
-                      <button
-                        type="button"
-                        onPointerEnter={() => warmUp()}
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          if (isRecording) {
-                            onRecorderStopIntent?.();
-                            toggle();
-                          } else {
-                            toggle();
-                          }
-                        }}
-                        className={`px-3 py-1 text-xs border-0 rounded-full touch-manipulation ${buttonClass}`}
-                        disabled={isBusy || !supported}
-                        aria-label={label}
-                        title={label}
-                      >
-                        {icon}
-                      </button>
-                    </div>
-                  );
-                }}
-              </AudioRecorder>
-              {isMinimized ? (
-                recordingStatus === "recording" ? (
-                  <span className="text-[11px] text-white/60">Recording</span>
-                ) : null
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={handleDeleteAudioClick}
-                    className={`px-3 py-1 border-0 rounded-full bg-red-500/25 text-red-100 touch-manipulation ${
-                      confirmDeleteAudio.armed ? "text-xs" : "text-sm"
-                    }`}
-                    disabled={isBusy || !hasRecordedAudio}
-                    aria-label={
-                      confirmDeleteAudio.armed
-                        ? "Tap again to remove recorded audio"
-                        : "Tap to arm remove recorded audio"
-                    }
-                    title={
-                      confirmDeleteAudio.armed
-                        ? "Tap again to remove recorded audio"
-                        : "Tap to arm remove recorded audio"
-                    }
-                  >
-                    {confirmDeleteAudio.armed ? "🚮×1" : "🚮×2"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onSaveTimings}
-                    className={`px-3 py-1 text-xs border-0 rounded-full transition-colors ${
-                      isRecentlySaved
-                        ? "bg-emerald-500/45 text-emerald-100"
-                        : "bg-white/10 text-white/80"
-                    }`}
-                    disabled={isBusy || !hasTimings}
-                    aria-label="Save timings"
-                    title="Save timings"
-                  >
-                    {isRecentlySaved ? "✓" : "💾"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={onCycleStudioPlaybackRate}
-                    className="px-3 py-1 text-xs border-0 rounded-full bg-white/10 text-white/80 touch-manipulation"
-                    aria-label={`Playback speed ${studioPlaybackRate}x`}
-                    title="Toggle playback speed"
-                  >
-                    {studioPlaybackRate}x
-                  </button>
-                  {recordingStatus === "error" ? (
-                    <output
-                      className="inline-flex max-w-full items-center gap-1 rounded-full bg-red-500/25 px-2 py-1 text-[11px] text-red-100"
-                      aria-live="polite"
-                      title={recordingError ?? "Upload failed"}
+                <AudioRecorder
+                  disabled={isBusy}
+                  onStart={onRecorderStart}
+                  onCapture={onRecorderCapture}
+                  onError={onRecorderError}
+                >
+                  {({ isRecording, toggle, supported, warmUp }) => {
+                    const isError = recordingStatus === "error" && !isRecording;
+                    const label = isRecording
+                      ? "Stop recording"
+                      : isError
+                        ? "Recording failed, tap to retry"
+                        : "Record";
+                    const icon = isRecording ? "⏹" : isError ? "✗" : "⏺";
+                    const buttonClass = isRecording
+                      ? "bg-red-500/70 text-white"
+                      : isError
+                        ? "bg-red-500/45 text-red-50 ring-1 ring-red-300/50"
+                        : "bg-white/10 text-white/70";
+                    return (
+                      <div className="flex h-6 w-8 items-center justify-center">
+                        <button
+                          type="button"
+                          onPointerEnter={() => warmUp()}
+                          onPointerDown={(e) => {
+                            e.preventDefault();
+                            if (isRecording) {
+                              onRecorderStopIntent?.();
+                              toggle();
+                            } else {
+                              toggle();
+                            }
+                          }}
+                          className={`px-3 py-1 text-xs border-0 rounded-full touch-manipulation ${buttonClass}`}
+                          disabled={isBusy || !supported}
+                          aria-label={label}
+                          title={label}
+                        >
+                          {icon}
+                        </button>
+                      </div>
+                    );
+                  }}
+                </AudioRecorder>
+                {!isMinimized ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleDeleteAudioClick}
+                      className={`px-3 py-1 border-0 rounded-full bg-red-500/25 text-red-100 touch-manipulation ${
+                        confirmDeleteAudio.armed ? "text-xs" : "text-sm"
+                      }`}
+                      disabled={isBusy || !hasRecordedAudio}
+                      aria-label={
+                        confirmDeleteAudio.armed
+                          ? "Tap again to remove recorded audio"
+                          : "Tap to arm remove recorded audio"
+                      }
+                      title={
+                        confirmDeleteAudio.armed
+                          ? "Tap again to remove recorded audio"
+                          : "Tap to arm remove recorded audio"
+                      }
                     >
-                      <span aria-hidden="true">✗</span>
-                      <span className="max-w-56 truncate">
-                        {recordingError ?? "Upload failed"}
-                      </span>
-                    </output>
-                  ) : (
-                    <div className="w-48 text-[11px] text-white/50">
-                      {recordingStatus === "uploading"
-                        ? "Uploading audio"
-                        : recordingStatus === "saving"
-                          ? "Saving timings"
-                          : recordingStatus === "merging"
-                            ? "Mixing tracks"
-                            : recordingStatus === "recording"
-                            ? "Recording"
-                            : isRecentlySaved
-                              ? "Saved"
-                              : hasTimings
-                                ? `${selectedTimingCount}/${selectedWordCount || selectedTimingCount} timings`
-                                : "No timings"}
-                    </div>
-                  )}
-                </>
-              )}
+                      {confirmDeleteAudio.armed ? "🚮×1" : "🚮×2"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onSaveTimings}
+                      className={`px-3 py-1 text-xs border-0 rounded-full transition-colors ${
+                        isRecentlySaved
+                          ? "bg-emerald-500/45 text-emerald-100"
+                          : "bg-white/10 text-white/80"
+                      }`}
+                      disabled={isBusy || !hasTimings}
+                      aria-label="Save timings"
+                      title="Save timings"
+                    >
+                      {isRecentlySaved ? "✓" : "💾"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onCycleStudioPlaybackRate}
+                      className="px-3 py-1 text-xs border-0 rounded-full bg-white/10 text-white/80 touch-manipulation"
+                      aria-label={`Playback speed ${studioPlaybackRate}x`}
+                      title="Toggle playback speed"
+                    >
+                      {studioPlaybackRate}x
+                    </button>
+                    {recordingStatus === "error" ? (
+                      <output
+                        className="inline-flex max-w-full items-center gap-1 rounded-full bg-red-500/25 px-2 py-1 text-[11px] text-red-100"
+                        aria-live="polite"
+                        title={recordingError ?? "Upload failed"}
+                      >
+                        <span aria-hidden="true">✗</span>
+                        <span className="max-w-56 truncate">
+                          {recordingError ?? "Upload failed"}
+                        </span>
+                      </output>
+                    ) : (
+                      <div className="w-48 text-[11px] text-white/50">
+                        {recordingStatus === "uploading"
+                          ? "Uploading audio"
+                          : recordingStatus === "saving"
+                            ? "Saving timings"
+                            : recordingStatus === "merging"
+                              ? "Mixing tracks"
+                              : recordingStatus === "recording"
+                                ? "Recording"
+                                : isRecentlySaved
+                                  ? "Saved"
+                                  : hasTimings
+                                    ? `${selectedTimingCount}/${selectedWordCount || selectedTimingCount} timings`
+                                    : "No timings"}
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </div>
               <button
                 type="button"
                 onClick={onToggleMinimized}
-                className="ml-auto px-2 py-1 text-[10px] border-0 rounded-full bg-white/10 text-white/75 touch-manipulation"
+                className={
+                  isMinimized
+                    ? "inline-flex h-11 min-w-20 items-center justify-center gap-1 justify-self-center rounded-xl border-0 bg-white/15 px-3 text-xs font-semibold text-white/85 touch-manipulation"
+                    : "ml-auto rounded-full border-0 bg-white/10 px-2 py-1 text-[10px] text-white/75 touch-manipulation"
+                }
                 aria-label={
                   isMinimized ? "Expand controls" : "Minimize controls"
                 }
@@ -399,6 +420,7 @@ export const SWEFooter = ({
                 title={isMinimized ? "Expand controls" : "Minimize controls"}
               >
                 <span aria-hidden="true">⇕</span>
+                {isMinimized ? <span>Expand</span> : null}
               </button>
               {isMinimized ? (
                 <button
@@ -407,10 +429,13 @@ export const SWEFooter = ({
                   onPointerUp={handleMarkPointerUp}
                   onLostPointerCapture={handleMarkLostPointerCapture}
                   onContextMenu={(event) => event.preventDefault()}
+                  onCopy={(event) => event.preventDefault()}
+                  onDragStart={(event) => event.preventDefault()}
                   onPointerCancel={handleMarkPointerCancel}
                   onKeyDown={handleMarkKeyDown}
                   onKeyUp={handleMarkKeyUp}
-                  className={`h-11 min-w-28 touch-none select-none rounded-xl border-0 px-3 py-1 text-sm font-bold ${markButtonStateClass}`}
+                  className={`h-11 min-w-28 touch-none select-none [-webkit-touch-callout:none] rounded-xl border-0 px-3 py-1 text-sm font-bold ${markButtonStateClass}`}
+                  draggable={false}
                   disabled={isBusy || selectedWordCount === 0}
                   aria-label={markButtonLabel}
                   title="Hold to mark word; release to move next"
@@ -438,10 +463,13 @@ export const SWEFooter = ({
                 onPointerUp={handleMarkPointerUp}
                 onLostPointerCapture={handleMarkLostPointerCapture}
                 onContextMenu={(event) => event.preventDefault()}
+                onCopy={(event) => event.preventDefault()}
+                onDragStart={(event) => event.preventDefault()}
                 onPointerCancel={handleMarkPointerCancel}
                 onKeyDown={handleMarkKeyDown}
                 onKeyUp={handleMarkKeyUp}
-                className={`order-1 col-span-2 h-12 touch-none select-none rounded-xl border-0 px-3 py-1 text-sm font-bold sm:order-none sm:col-span-1 sm:h-11 ${markButtonStateClass}`}
+                className={`order-1 col-span-2 h-12 touch-none select-none [-webkit-touch-callout:none] rounded-xl border-0 px-3 py-1 text-sm font-bold sm:order-none sm:col-span-1 sm:h-11 ${markButtonStateClass}`}
+                draggable={false}
                 disabled={isBusy || selectedWordCount === 0}
                 aria-label={markButtonLabel}
                 title="Hold to mark word; release to move next"
