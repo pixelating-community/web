@@ -232,6 +232,9 @@ export const useSwRecording = ({
             : "Failed to save timings",
         );
       }
+      await queryClient.invalidateQueries({
+        queryKey: ["topic-payload"],
+      });
       return result.data as {
         timings?: WordTimingEntry[];
         audio_src?: string;
@@ -241,7 +244,15 @@ export const useSwRecording = ({
         merging?: boolean;
       };
     },
-    [actionToken, currentPath, router, savePerspectiveAlignmentFn, topicId, topicName],
+    [
+      actionToken,
+      currentPath,
+      queryClient,
+      router,
+      savePerspectiveAlignmentFn,
+      topicId,
+      topicName,
+    ],
   );
 
   const handleRecorderStart = useCallback(
@@ -408,10 +419,6 @@ export const useSwRecording = ({
         if (!result.merging) {
           triggerSaveSuccess(perspectiveId);
         }
-        void queryClient.invalidateQueries({
-          queryKey: ["topic-payload"],
-        });
-
         if (result.merging) {
           const es = new EventSource(
             `/api/obj/merge-status?perspectiveId=${encodeURIComponent(perspectiveId)}`,
