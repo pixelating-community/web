@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, type ReactNode, type RefObject } from "react";
+import {
+  useRef,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Audio } from "@/components/Audio";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { AudioWaveform } from "@/components/AudioWaveform";
@@ -172,6 +178,69 @@ export const SWEFooter = ({
     confirmClearAllMarks.trigger();
   };
 
+  const handleMarkPointerDown = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    activeMarkPointerIdRef.current = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    onMarkStart();
+  };
+
+  const handleMarkPointerUp = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    if (activeMarkPointerIdRef.current !== event.pointerId) return;
+    activeMarkPointerIdRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    onMarkEndAndForward();
+  };
+
+  const handleMarkPointerCancel = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    if (activeMarkPointerIdRef.current !== event.pointerId) return;
+    activeMarkPointerIdRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    onMarkCancel();
+  };
+
+  const handleMarkLostPointerCapture = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    if (activeMarkPointerIdRef.current !== event.pointerId) return;
+    activeMarkPointerIdRef.current = null;
+    onMarkCancel();
+  };
+
+  const handleMarkKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== " " && event.key !== "Enter") return;
+    event.preventDefault();
+    if (event.repeat) return;
+    onMarkStart();
+  };
+
+  const handleMarkKeyUp = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+    if (event.key !== " " && event.key !== "Enter") return;
+    event.preventDefault();
+    onMarkEndAndForward();
+  };
+
+  const markButtonLabel = isMarking
+    ? "Release to finish word timing and move next"
+    : "Hold to mark word timing";
+  const markButtonText = isMarking
+    ? `Release · ${(markingDuration ?? 0).toFixed(2)}s`
+    : "Hold → 🖍️";
+  const markButtonStateClass = isMarking
+    ? "bg-emerald-400/65 text-white"
+    : "bg-emerald-500/40 text-emerald-100";
+
   return (
     <div
       className={
@@ -331,6 +400,24 @@ export const SWEFooter = ({
               >
                 <span aria-hidden="true">⇕</span>
               </button>
+              {isMinimized ? (
+                <button
+                  type="button"
+                  onPointerDown={handleMarkPointerDown}
+                  onPointerUp={handleMarkPointerUp}
+                  onLostPointerCapture={handleMarkLostPointerCapture}
+                  onContextMenu={(event) => event.preventDefault()}
+                  onPointerCancel={handleMarkPointerCancel}
+                  onKeyDown={handleMarkKeyDown}
+                  onKeyUp={handleMarkKeyUp}
+                  className={`h-11 min-w-28 touch-none select-none rounded-xl border-0 px-3 py-1 text-sm font-bold ${markButtonStateClass}`}
+                  disabled={isBusy || selectedWordCount === 0}
+                  aria-label={markButtonLabel}
+                  title="Hold to mark word; release to move next"
+                >
+                  {markButtonText}
+                </button>
+              ) : null}
             </div>
           )}
           {!isViewer && !isMinimized && (
@@ -347,66 +434,19 @@ export const SWEFooter = ({
               </button>
               <button
                 type="button"
-                onPointerDown={(event) => {
-                  if (event.button !== 0) return;
-                  event.preventDefault();
-                  activeMarkPointerIdRef.current = event.pointerId;
-                  event.currentTarget.setPointerCapture(event.pointerId);
-                  onMarkStart();
-                }}
-                onPointerUp={(event) => {
-                  if (activeMarkPointerIdRef.current !== event.pointerId) {
-                    return;
-                  }
-                  activeMarkPointerIdRef.current = null;
-                  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-                    event.currentTarget.releasePointerCapture(event.pointerId);
-                  }
-                  onMarkEndAndForward();
-                }}
-                onLostPointerCapture={(event) => {
-                  if (activeMarkPointerIdRef.current !== event.pointerId) return;
-                  activeMarkPointerIdRef.current = null;
-                  onMarkCancel();
-                }}
+                onPointerDown={handleMarkPointerDown}
+                onPointerUp={handleMarkPointerUp}
+                onLostPointerCapture={handleMarkLostPointerCapture}
                 onContextMenu={(event) => event.preventDefault()}
-                onPointerCancel={(event) => {
-                  if (activeMarkPointerIdRef.current !== event.pointerId) {
-                    return;
-                  }
-                  activeMarkPointerIdRef.current = null;
-                  if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-                    event.currentTarget.releasePointerCapture(event.pointerId);
-                  }
-                  onMarkCancel();
-                }}
-                onKeyDown={(event) => {
-                  if (event.key !== " " && event.key !== "Enter") return;
-                  event.preventDefault();
-                  if (event.repeat) return;
-                  onMarkStart();
-                }}
-                onKeyUp={(event) => {
-                  if (event.key !== " " && event.key !== "Enter") return;
-                  event.preventDefault();
-                  onMarkEndAndForward();
-                }}
-                className={`order-1 col-span-2 h-12 touch-none select-none rounded-xl border-0 px-3 py-1 text-sm font-bold sm:order-none sm:col-span-1 sm:h-11 ${
-                  isMarking
-                    ? "bg-emerald-400/65 text-white"
-                    : "bg-emerald-500/40 text-emerald-100"
-                }`}
+                onPointerCancel={handleMarkPointerCancel}
+                onKeyDown={handleMarkKeyDown}
+                onKeyUp={handleMarkKeyUp}
+                className={`order-1 col-span-2 h-12 touch-none select-none rounded-xl border-0 px-3 py-1 text-sm font-bold sm:order-none sm:col-span-1 sm:h-11 ${markButtonStateClass}`}
                 disabled={isBusy || selectedWordCount === 0}
-                aria-label={
-                  isMarking
-                    ? "Release to finish word timing and move next"
-                    : "Hold to mark word timing"
-                }
+                aria-label={markButtonLabel}
                 title="Hold to mark word; release to move next"
               >
-                {isMarking
-                  ? `Release · ${(markingDuration ?? 0).toFixed(2)}s`
-                  : "Hold → 🖍️"}
+                {markButtonText}
               </button>
               <button
                 type="button"

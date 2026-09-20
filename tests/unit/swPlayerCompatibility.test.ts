@@ -71,12 +71,14 @@ describe("sw player compatibility", () => {
     const footerSource = readSource("src/components/SWEFooter.tsx");
     const timingSource = readSource("src/components/sw/useSwTimingEditor.ts");
 
-    expect(footerSource).toMatch(/onPointerDown=\{\(event\) => \{/);
+    expect(footerSource).toMatch(/onPointerDown=\{handleMarkPointerDown\}/);
     expect(footerSource).toMatch(/onMarkStart\(\);/);
-    expect(footerSource).toMatch(/onPointerUp=\{\(event\) => \{/);
+    expect(footerSource).toMatch(/onPointerUp=\{handleMarkPointerUp\}/);
     expect(footerSource).toMatch(/onMarkEndAndForward\(\);/);
-    expect(footerSource).toMatch(/onPointerCancel=\{\(event\) => \{/);
+    expect(footerSource).toMatch(/onPointerCancel=\{handleMarkPointerCancel\}/);
     expect(footerSource).toMatch(/onMarkCancel\(\);/);
+    expect(footerSource).toMatch(/isMinimized \? \(/);
+    expect(footerSource).toMatch(/h-11 min-w-28[^`]*markButtonStateClass/);
     expect(footerSource).toMatch(/Hold to mark word timing/);
     expect(footerSource).toMatch(/Release ·/);
     expect(footerSource).toMatch(/hidden h-11[^"]*sm:block/);
