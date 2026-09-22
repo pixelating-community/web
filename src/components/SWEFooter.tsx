@@ -1,8 +1,8 @@
 "use client";
 
 import {
+  useEffect,
   useRef,
-  type KeyboardEvent as ReactKeyboardEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
   type RefObject,
@@ -185,7 +185,13 @@ export const SWEFooter = ({
   const handleMarkPointerDown = (
     event: ReactPointerEvent<HTMLButtonElement>,
   ) => {
-    if (event.button !== 0) return;
+    if (
+      event.button !== 0 ||
+      isMarking ||
+      activeMarkPointerIdRef.current !== null
+    ) {
+      return;
+    }
     event.preventDefault();
     activeMarkPointerIdRef.current = event.pointerId;
     onMarkStart();
@@ -197,45 +203,56 @@ export const SWEFooter = ({
     }
   };
 
+  const finishMarkPointer = (pointerId: number) => {
+    if (activeMarkPointerIdRef.current !== pointerId) return;
+    activeMarkPointerIdRef.current = null;
+    onMarkEndAndForward();
+  };
+
+  const cancelMarkPointer = (pointerId: number) => {
+    if (activeMarkPointerIdRef.current !== pointerId) return;
+    activeMarkPointerIdRef.current = null;
+    onMarkCancel();
+  };
+
+  useEffect(() => {
+    const handleWindowPointerUp = (event: PointerEvent) => {
+      finishMarkPointer(event.pointerId);
+    };
+    const handleWindowPointerCancel = (event: PointerEvent) => {
+      cancelMarkPointer(event.pointerId);
+    };
+    window.addEventListener("pointerup", handleWindowPointerUp);
+    window.addEventListener("pointercancel", handleWindowPointerCancel);
+    return () => {
+      window.removeEventListener("pointerup", handleWindowPointerUp);
+      window.removeEventListener("pointercancel", handleWindowPointerCancel);
+    };
+  });
+
   const handleMarkPointerUp = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (activeMarkPointerIdRef.current !== event.pointerId) return;
-    activeMarkPointerIdRef.current = null;
+    finishMarkPointer(event.pointerId);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    onMarkEndAndForward();
   };
 
   const handleMarkPointerCancel = (
     event: ReactPointerEvent<HTMLButtonElement>,
   ) => {
     if (activeMarkPointerIdRef.current !== event.pointerId) return;
-    activeMarkPointerIdRef.current = null;
+    cancelMarkPointer(event.pointerId);
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
-    onMarkCancel();
   };
 
   const handleMarkLostPointerCapture = (
     event: ReactPointerEvent<HTMLButtonElement>,
   ) => {
     if (activeMarkPointerIdRef.current !== event.pointerId) return;
-    activeMarkPointerIdRef.current = null;
-    onMarkCancel();
-  };
-
-  const handleMarkKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (event.key !== " " && event.key !== "Enter") return;
-    event.preventDefault();
-    if (event.repeat) return;
-    onMarkStart();
-  };
-
-  const handleMarkKeyUp = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (event.key !== " " && event.key !== "Enter") return;
-    event.preventDefault();
-    onMarkEndAndForward();
+    finishMarkPointer(event.pointerId);
   };
 
   const markButtonLabel = isMarking
@@ -432,8 +449,6 @@ export const SWEFooter = ({
                   onCopy={(event) => event.preventDefault()}
                   onDragStart={(event) => event.preventDefault()}
                   onPointerCancel={handleMarkPointerCancel}
-                  onKeyDown={handleMarkKeyDown}
-                  onKeyUp={handleMarkKeyUp}
                   className={`h-11 min-w-28 touch-none select-none [-webkit-touch-callout:none] rounded-xl border-0 px-3 py-1 text-sm font-bold ${markButtonStateClass}`}
                   draggable={false}
                   disabled={isBusy || selectedWordCount === 0}
@@ -466,8 +481,6 @@ export const SWEFooter = ({
                 onCopy={(event) => event.preventDefault()}
                 onDragStart={(event) => event.preventDefault()}
                 onPointerCancel={handleMarkPointerCancel}
-                onKeyDown={handleMarkKeyDown}
-                onKeyUp={handleMarkKeyUp}
                 className={`order-1 col-span-2 h-12 touch-none select-none [-webkit-touch-callout:none] rounded-xl border-0 px-3 py-1 text-sm font-bold sm:order-none sm:col-span-1 sm:h-11 ${markButtonStateClass}`}
                 draggable={false}
                 disabled={isBusy || selectedWordCount === 0}

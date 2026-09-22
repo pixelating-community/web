@@ -9,6 +9,7 @@ import {
   PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS,
   PerspectiveBackground,
 } from "@/components/PerspectiveBackground";
+import { PlaybackTimeline } from "@/components/PlaybackTimeline";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
 import { PerspectiveSupport } from "@/components/PerspectiveSupport";
 import { ReflectionPerspectiveCard } from "@/components/ReflectionPerspectiveCard";
@@ -120,7 +121,9 @@ export const PerspectiveListener = ({
 }: PerspectiveListenerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const pendingSeekTimeRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [mediaDuration, setMediaDuration] = useState<number | undefined>();
   const currentTimeRef = useRef(startTime ?? 0);
   const [currentTime, setCurrentTime] = useState(startTime ?? 0);
   const [playbackError, setPlaybackError] = useState<string>("");
@@ -296,7 +299,19 @@ export const PerspectiveListener = ({
       }
       setPlaybackError(audio.error?.message ?? "Playback failed");
     };
-    const handleLoadedMetadata = () => logAudioState("loadedmetadata", audio);
+    const handleLoadedMetadata = () => {
+      logAudioState("loadedmetadata", audio);
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setMediaDuration(audio.duration);
+      }
+      const pendingSeekTime = pendingSeekTimeRef.current;
+      if (pendingSeekTime !== null) {
+        pendingSeekTimeRef.current = null;
+        audio.currentTime = pendingSeekTime;
+        commitCurrentTime(pendingSeekTime, true);
+        syncVideoToAudio(audio, !audio.paused);
+      }
+    };
     const handleLoadedData = () => logAudioState("loadeddata", audio);
     const handleCanPlay = () => logAudioState("canplay", audio);
     const handleCanPlayThrough = () => logAudioState("canplaythrough", audio);
@@ -462,6 +477,23 @@ export const PerspectiveListener = ({
       });
   };
 
+  const handleSeek = useCallback(
+    (time: number) => {
+      const audio = audioRef.current;
+      if (!audio || !Number.isFinite(time)) return;
+      const nextTime = Math.max(0, time);
+      commitCurrentTime(nextTime, true);
+      if (audio.readyState < HTMLMediaElement.HAVE_METADATA) {
+        pendingSeekTimeRef.current = nextTime;
+        audio.load();
+        return;
+      }
+      audio.currentTime = nextTime;
+      syncVideoToAudio(audio, isPlaying);
+    },
+    [commitCurrentTime, isPlaying, syncVideoToAudio],
+  );
+
   const showPlaybackError = playbackError.trim().length > 0;
   const playControlLabel = showPlaybackError
     ? "Audio unavailable"
@@ -507,29 +539,25 @@ export const PerspectiveListener = ({
           topicName={topicName}
           parentPerspectiveId={parentPerspectiveId ?? undefined}
         />
+        <PlaybackTimeline
+          className="mt-12"
+          timings={timings}
+          currentTime={currentTime}
+          duration={mediaDuration}
+          startTime={startTime}
+          endTime={endTime}
+          hasError={showPlaybackError}
+          isPlaying={isPlaying}
+          disabled={!resolvedAudioSrc}
+          onTogglePlayback={handleTogglePlayback}
+          onSeek={handleSeek}
+          playLabel={playControlLabel}
+        />
         <div className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden [scrollbar-gutter:stable]">
           <div className="h-full w-screen overflow-y-auto scrollbar-transparent">
             <div className="flex min-h-full items-center justify-center px-4 pt-16 pb-4">
               <div className="flex w-full items-center">
                 <div className="-ml-4 flex w-15 shrink-0 flex-col items-center gap-0.5">
-                  <button
-                    type="button"
-                    onClick={handleTogglePlayback}
-                    disabled={!resolvedAudioSrc}
-                    aria-label={playControlLabel}
-                    title={playControlLabel}
-                    className={`inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-[10px] border border-transparent bg-transparent p-0 leading-none transition-[color,transform,width,height] duration-150 ${
-                      !resolvedAudioSrc
-                        ? "cursor-not-allowed text-white/35"
-                        : showPlaybackError
-                          ? "text-red-100"
-                          : isPlaying
-                            ? "text-teal-100 text-[1rem]"
-                            : "text-(--color-neon-teal-light) text-[1.2rem]"
-                    }`}
-                  >
-                    {showPlaybackError ? "!" : isPlaying ? "■" : "▶"}
-                  </button>
                   <PerspectiveSupport perspective={perspective} />
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col items-center">
@@ -561,7 +589,7 @@ export const PerspectiveListener = ({
             ref={audioRef}
             className="opacity-0 w-px h-px absolute"
             src={resolvedAudioSrc || undefined}
-            preload="none"
+            preload="metadata"
           />
         </div>
         {showPlaybackError ? (

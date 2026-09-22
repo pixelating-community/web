@@ -40,7 +40,8 @@ describe("layout widths", () => {
     expect(source).toMatch(
       /className="-ml-4 flex w-15 shrink-0 flex-col items-center gap-0\.5"[\s\S]*?<PerspectiveSupport perspective=\{perspective\} \/>[\s\S]*?<SWEditor/,
     );
-    expect(source.match(/"▶"/g) ?? []).toHaveLength(1);
+    expect(source).toMatch(/<PlaybackTimeline/);
+    expect(source).toMatch(/onTogglePlayback=\{handleTogglePlayback\}/);
     expect(source).toMatch(/<PerspectiveReflections/);
     expect(source).toMatch(
       /aria-label="Add reflection"[\s\S]*?<span aria-hidden="true">💭<\/span>/,

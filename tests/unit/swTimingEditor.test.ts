@@ -6,9 +6,24 @@ import {
   buildTimingStartEntry,
   buildUndoLastMarkState,
   getTimingEditorIndex,
+  isTimingHoldKey,
 } from "@/components/sw/timingEditor";
 
 describe("sw timing editor helpers", () => {
+  it("accepts space, enter, and every arrow as hold-to-mark keys", () => {
+    for (const key of [
+      " ",
+      "Enter",
+      "ArrowLeft",
+      "ArrowRight",
+      "ArrowUp",
+      "ArrowDown",
+    ]) {
+      expect(isTimingHoldKey(key)).toBe(true);
+    }
+    expect(isTimingHoldKey("Escape")).toBe(false);
+  });
+
   it("keeps timing marks moving forward from the selected word", () => {
     expect(
       buildMarkAndForwardState({

@@ -11,9 +11,6 @@ type KaraokePresenterProps = {
   perspective: Perspective;
   timings: WordTimingEntry[];
   audioRef: RefObject<HTMLMediaElement | null>;
-  currentTime: number;
-  isPlaying: boolean;
-  onTogglePlayback: () => void;
   activePhraseRange?: {
     endIndex: number;
     startIndex: number;
@@ -33,8 +30,6 @@ export const KaraokePresenter = ({
   perspective,
   timings,
   audioRef,
-  isPlaying,
-  onTogglePlayback,
   activePhraseRange,
   selectedWordIndex,
   wordStyles,
@@ -216,18 +211,6 @@ export const KaraokePresenter = ({
 
   return (
     <div className="karaoke-view flex h-full w-full flex-col">
-      <div className="shrink-0 p-4">
-        <button
-          type="button"
-          onClick={onTogglePlayback}
-          aria-label={isPlaying ? "Pause" : "Play"}
-          className={`inline-flex h-11 w-11 touch-manipulation items-center justify-center rounded-[10px] border border-transparent bg-transparent p-0 text-lg leading-none transition ${
-            isPlaying ? "text-teal-100 text-[1rem]" : "text-(--color-neon-teal-light) text-[1.2rem]"
-          }`}
-        >
-          {isPlaying ? "■" : "▶"}
-        </button>
-      </div>
       <div className="karaoke-lines sw-perspective-text relative flex-1 overflow-x-auto overflow-y-visible scrollbar-transparent flex items-center px-[50vw] py-[0.25em]">
         {lines.map((lineWords, lineIndex) => {
           const state =

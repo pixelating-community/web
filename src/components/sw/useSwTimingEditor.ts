@@ -25,6 +25,7 @@ import {
   buildTimingStartEntry,
   buildUndoLastMarkState,
   getTimingEditorIndex,
+  isTimingHoldKey,
 } from "@/components/sw/timingEditor";
 
 type PatchRuntime = (
@@ -72,7 +73,7 @@ export const useSwTimingEditor = ({
   latestTimingsRef.current = selectedTimings;
   const selectedWordIndexRef = useRef(selectedWordIndex);
   selectedWordIndexRef.current = selectedWordIndex;
-  const arrowRightMarkingRef = useRef(false);
+  const heldMarkKeyRef = useRef<string | null>(null);
   const markingSessionRef = useRef<ActiveMarkingSession | null>(null);
   const [markingSession, setMarkingSession] =
     useState<ActiveMarkingSession | null>(null);
@@ -535,77 +536,57 @@ export const useSwTimingEditor = ({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (isTextInputTarget(event.target)) return;
-      if (event.key === "Escape" && arrowRightMarkingRef.current) {
+      if (event.key === "Escape" && heldMarkKeyRef.current) {
         event.preventDefault();
-        arrowRightMarkingRef.current = false;
+        heldMarkKeyRef.current = null;
         cancelMarking();
         return;
       }
+      if (!isTimingHoldKey(event.key)) return;
+      event.preventDefault();
       if (
-        event.key !== "ArrowRight" &&
-        event.key !== "ArrowLeft" &&
-        event.key !== "ArrowUp" &&
-        event.key !== "ArrowDown"
+        event.repeat ||
+        heldMarkKeyRef.current ||
+        markingSessionRef.current
       ) {
         return;
       }
-      event.preventDefault();
-
-      if (event.key === "ArrowRight") {
-        if (!event.repeat && !arrowRightMarkingRef.current) {
-          arrowRightMarkingRef.current = true;
-          markStart();
-        }
-        return;
-      }
-
-      if (event.key === "ArrowUp") {
-        clearCurrentMark();
-        return;
-      }
-
-      if (event.key === "ArrowDown") {
-        markCurrentEnd();
-        return;
-      }
-      rewindToPrevious();
+      heldMarkKeyRef.current = event.key;
+      markStart();
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (event.key !== "ArrowRight" || !arrowRightMarkingRef.current) return;
+      if (event.key !== heldMarkKeyRef.current) return;
       event.preventDefault();
-      arrowRightMarkingRef.current = false;
+      heldMarkKeyRef.current = null;
       markEndAndForward();
     };
 
-    const cancelHeldArrow = () => {
-      if (!arrowRightMarkingRef.current) return;
-      arrowRightMarkingRef.current = false;
+    const cancelHeldMark = () => {
+      if (!heldMarkKeyRef.current) return;
+      heldMarkKeyRef.current = null;
       cancelMarking();
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") cancelHeldArrow();
+      if (document.visibilityState === "hidden") cancelHeldMark();
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-    window.addEventListener("blur", cancelHeldArrow);
+    window.addEventListener("blur", cancelHeldMark);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("blur", cancelHeldArrow);
+      window.removeEventListener("blur", cancelHeldMark);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [
     enabled,
     cancelMarking,
-    clearCurrentMark,
     markEndAndForward,
     markStart,
-    markCurrentEnd,
-    rewindToPrevious,
     selectedPerspective,
   ]);
 

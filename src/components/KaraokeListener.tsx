@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { KaraokePresenter } from "@/components/KaraokePresenter";
+import { PlaybackTimeline } from "@/components/PlaybackTimeline";
 import { PerspectiveBackground } from "@/components/PerspectiveBackground";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
 import {
@@ -95,7 +96,9 @@ export const KaraokeListener = ({
   const setBoundsFn = useServerFn(setPerspectiveBounds);
   const savePhrasesFn = useServerFn(saveKaraokePhrases);
   const mediaRef = useRef<HTMLMediaElement | null>(null);
+  const pendingSeekTimeRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [mediaDuration, setMediaDuration] = useState<number | undefined>();
   const [boundButtonStatus, setBoundButtonStatus] = useState<Record<BoundField, BoundSaveStatus>>({
     endTime: "idle",
     startTime: "idle",
@@ -279,6 +282,22 @@ export const KaraokeListener = ({
     }
     void media.play().catch(() => {});
   }, [commitCurrentTime, startTime]);
+
+  const handleSeek = useCallback(
+    (time: number) => {
+      const media = mediaRef.current;
+      if (!media || !Number.isFinite(time)) return;
+      const nextTime = Math.max(0, time);
+      commitCurrentTime(nextTime, true);
+      if (media.readyState < HTMLMediaElement.HAVE_METADATA) {
+        pendingSeekTimeRef.current = nextTime;
+        media.load();
+        return;
+      }
+      media.currentTime = nextTime;
+    },
+    [commitCurrentTime],
+  );
 
   const saveBound = useCallback(
     async (field: BoundField) => {
@@ -547,14 +566,27 @@ export const KaraokeListener = ({
       commitCurrentTime(media.currentTime, true);
       setIsPlaying(false);
     };
+    const handleLoadedMetadata = () => {
+      if (Number.isFinite(media.duration) && media.duration > 0) {
+        setMediaDuration(media.duration);
+      }
+      const pendingSeekTime = pendingSeekTimeRef.current;
+      if (pendingSeekTime !== null) {
+        pendingSeekTimeRef.current = null;
+        media.currentTime = pendingSeekTime;
+        commitCurrentTime(pendingSeekTime, true);
+      }
+    };
 
     media.addEventListener("playing", handlePlaying);
     media.addEventListener("pause", handlePause);
     media.addEventListener("ended", handleEnded);
+    media.addEventListener("loadedmetadata", handleLoadedMetadata);
     return () => {
       media.removeEventListener("playing", handlePlaying);
       media.removeEventListener("pause", handlePause);
       media.removeEventListener("ended", handleEnded);
+      media.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
   }, [commitCurrentTime]);
 
@@ -631,15 +663,24 @@ export const KaraokeListener = ({
       {!resolvedVideoSrc ? (
         <PerspectiveBackground imageSrc={backgroundImageSrc} />
       ) : null}
+      <PlaybackTimeline
+        className="mt-12"
+        timings={timings}
+        currentTime={currentTime}
+        duration={mediaDuration}
+        startTime={startTime}
+        endTime={endTime}
+        isPlaying={isPlaying}
+        disabled={!resolvedVideoSrc && !resolvedAudioSrc}
+        onTogglePlayback={handleTogglePlayback}
+        onSeek={handleSeek}
+      />
       <div className="flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden relative z-10">
         <div className="flex h-full w-full items-center justify-center">
           <KaraokePresenter
             perspective={perspective}
             timings={timings}
             audioRef={mediaRef}
-            currentTime={currentTime}
-            isPlaying={isPlaying}
-            onTogglePlayback={handleTogglePlayback}
             activePhraseRange={activePhrase}
             selectedWordIndex={selectionStart ?? activePhrase?.startIndex}
             wordStyles={phraseStyles}
@@ -782,7 +823,7 @@ export const KaraokeListener = ({
               ref={mediaRef as RefObject<HTMLAudioElement | null>}
               className="opacity-0 w-px h-px absolute"
               src={resolvedAudioSrc}
-              preload={editable || (startTime && startTime > 0) ? "metadata" : "none"}
+              preload="metadata"
             />
           ) : null}
         </div>

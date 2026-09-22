@@ -4,6 +4,17 @@ import type { WordTimingEntry } from "@/types/perspectives";
 
 const MIN_WORD_DURATION = 0.04;
 
+const TIMING_HOLD_KEYS = new Set([
+  " ",
+  "Enter",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowUp",
+  "ArrowDown",
+]);
+
+export const isTimingHoldKey = (key: string) => TIMING_HOLD_KEYS.has(key);
+
 export const getTimingEditorIndex = ({
   selectedWordIndex,
   wordsLength,

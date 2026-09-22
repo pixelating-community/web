@@ -34,7 +34,7 @@ describe("sw player compatibility", () => {
     expect(listenerSource).not.toMatch(/\bautoPlay=\{/);
     expect(listenerSource).toMatch(/isBenignPlaybackRejection/);
     expect(listenerSource).toMatch(/MEDIA_ERR_ABORTED/);
-    expect(listenerSource).toMatch(/onClick=\{handleTogglePlayback\}/);
+    expect(listenerSource).toMatch(/onTogglePlayback=\{handleTogglePlayback\}/);
     expect(listenerSource).toMatch(/audio\.ended/);
     expect(listenerSource).toMatch(/audio\.load\(\)/);
     expect(listenerSource).toMatch(/NETWORK_EMPTY/);
@@ -42,7 +42,7 @@ describe("sw player compatibility", () => {
       /<video[\s\S]*className=\{`h-full w-full object-cover \$\{PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS\}`\}[\s\S]*preload="none"/,
     );
     expect(listenerSource).not.toMatch(/\bobject-contain\b/);
-    expect(listenerSource).toMatch(/<audio[\s\S]*preload="none"/);
+    expect(listenerSource).toMatch(/<audio[\s\S]*preload="metadata"/);
     expect(listenerSource).not.toMatch(/\bautoPlay(?:=|\b)/);
     expect(listenerSource).not.toMatch(/hasAutoStartedRef/);
     expect(swSource).toMatch(/playIntentUntilRef/);
@@ -97,16 +97,21 @@ describe("sw player compatibility", () => {
     expect(footerSource).toMatch(/Hold to mark word timing/);
     expect(footerSource).toMatch(/Release ·/);
     expect(footerSource).toMatch(/hidden h-11[^"]*sm:block/);
-    expect(timingSource).toMatch(/event\.key === "ArrowRight"/);
+    expect(timingSource).toMatch(/isTimingHoldKey\(event\.key\)/);
+    expect(timingSource).toMatch(/heldMarkKeyRef\.current = event\.key/);
     expect(timingSource).toMatch(/markStart\(\);/);
     expect(timingSource).toMatch(
       /const handleKeyUp = \(event: KeyboardEvent\) => \{/,
     );
     expect(timingSource).toMatch(/markEndAndForward\(\);/);
     expect(timingSource).toMatch(
-      /window\.addEventListener\("blur", cancelHeldArrow\)/,
+      /window\.addEventListener\("blur", cancelHeldMark\)/,
     );
     expect(timingSource).toMatch(/cancelMarking\(\);/);
+    expect(footerSource).toMatch(
+      /window\.addEventListener\("pointerup", handleWindowPointerUp\)/,
+    );
+    expect(footerSource).toMatch(/finishMarkPointer\(event\.pointerId\)/);
   });
 
   it("keeps selected word start and duration controls wired to editor timing state", () => {
