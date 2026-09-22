@@ -659,7 +659,6 @@ export const SWEFooter = ({
                     className="h-10 w-full rounded-lg bg-white/5"
                     barsClassName="px-1 py-1"
                     barClassName="bg-white/45"
-                    barWidthClassName="w-0.5"
                     playheadPercent={playheadPercent}
                     playheadClassName="bg-purple-300/80 transition-transform duration-100 linear will-change-transform"
                   />
