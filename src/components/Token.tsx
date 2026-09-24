@@ -39,7 +39,12 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
           topicName: name,
         },
       });
-      if (result && typeof result === "object" && "ok" in result && !result.ok) {
+      if (
+        result &&
+        typeof result === "object" &&
+        "ok" in result &&
+        !result.ok
+      ) {
         setError(result.error || "Failed to save token");
         return;
       }
@@ -59,7 +64,7 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
     <div className="flex flex-col mt-1 mx-1 gap-1">
       <div className="flex flex-row">
         <label className="sr-only" htmlFor="token">
-          token
+          Topic key
         </label>
         <div className="relative w-full">
           <input
@@ -81,7 +86,7 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
             type={showToken ? "text" : "password"}
             id="token"
             name="token"
-            placeholder="🔑"
+            placeholder="Topic key 🔑"
             autoComplete="current-password"
             autoCapitalize="none"
             autoCorrect="off"
@@ -129,6 +134,9 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
           {error}
         </p>
       ) : null}
+      <p className="text-center text-[11px] text-white/45">
+        Collaboration codes are entered from their perspective invite link.
+      </p>
     </div>
   );
 };

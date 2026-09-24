@@ -2,13 +2,20 @@ import "@tanstack/react-start/server-only";
 import * as z from "zod/v4";
 import { verifyActionToken } from "@/lib/actionToken.server";
 import { sql } from "@/lib/db.server";
+import { hasPerspectiveCollaborationGrant } from "@/lib/perspectiveCollaborationGrant.server";
 import { getRequestId } from "@/lib/requestId";
 import { verifyTopicToken } from "@/lib/topicToken";
-import { resolveStoredTopicToken, topicRequiresWriteToken } from "@/lib/topicWriteAccess";
-import { isTopicLockedMessage, resolveTopicWriteToken, TOPIC_LOCKED_RESPONSE } from "@/lib/topicWriteToken";
+import {
+  resolveStoredTopicToken,
+  topicRequiresWriteToken,
+} from "@/lib/topicWriteAccess";
+import {
+  isTopicLockedMessage,
+  resolveTopicWriteToken,
+  TOPIC_LOCKED_RESPONSE,
+} from "@/lib/topicWriteToken";
 import { addPerspective } from "@/lib/addPerspective.server";
 import { editPerspective } from "@/lib/editPerspective.server";
-
 
 type PerspectiveMutationResult =
   | { ok: true }
@@ -115,13 +122,50 @@ export const createPerspectiveServer = async ({
   data: z.infer<typeof addPerspectiveSchema>;
 }): Promise<PerspectiveMutationResult> => {
   const requestId = getRequestId(request);
-  const actionTokenError = verifyTopicScopedActionToken({
-    actionToken: data.actionToken,
-    requestId,
+  const verifiedAction = verifyActionToken({
+    token: data.actionToken,
     requiredScope: "perspective:add",
     topicId: data.topicId,
   });
-  if (actionTokenError) return actionTokenError;
+  if (!verifiedAction) {
+    return createFailure({
+      requestId,
+      error: "Unauthorized",
+      code: "INVALID_ACTION_TOKEN",
+    });
+  }
+
+  let collaborationAuthorized = false;
+  if (verifiedAction.perspectiveId) {
+    const parentPerspectiveId = data.parentPerspectiveId;
+    if (
+      !parentPerspectiveId ||
+      parentPerspectiveId !== verifiedAction.perspectiveId
+    ) {
+      return createFailure({
+        requestId,
+        error: "Unauthorized",
+        code: "INVALID_COLLABORATION_SCOPE",
+      });
+    }
+    const parent = await resolvePerspectiveTopic(parentPerspectiveId);
+    if (
+      !parent ||
+      parent.topic_id !== data.topicId ||
+      parent.topic_locked ||
+      !hasPerspectiveCollaborationGrant({
+        request,
+        perspectiveId: parentPerspectiveId,
+      })
+    ) {
+      return createFailure({
+        requestId,
+        error: "Collaboration access is no longer available.",
+        code: "INVALID_COLLABORATION_GRANT",
+      });
+    }
+    collaborationAuthorized = true;
+  }
 
   const formData = new FormData();
   formData.set("perspective", data.perspective);
@@ -146,6 +190,7 @@ export const createPerspectiveServer = async ({
     formData,
     requestId,
     parentPerspectiveId: data.parentPerspectiveId,
+    collaborationAuthorized,
   });
   if (result?.message) {
     if (isTopicLockedMessage(result.message)) {

@@ -7,6 +7,7 @@ import {
   loadPerspectiveShareStatus,
   redeemPerspectiveShareCode,
 } from "@/lib/perspectiveShare.functions";
+import { buildPerspectiveJoinPath } from "@/lib/topicRoutes";
 import type { Perspective } from "@/types/perspectives";
 
 type PerspectiveShareProps = {
@@ -49,10 +50,11 @@ export const PerspectiveShare = ({
   const shareCodeRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState<"generate" | "redeem" | null>(null);
   const busyRef = useRef(false);
-  const [copyLabel, setCopyLabel] = useState("Copy");
+  const [copyLabel, setCopyLabel] = useState("Copy invite");
   const isManageMode = mode === "manage";
   const perspectiveId = perspective.id;
   const actionTokenRef = useRef(actionToken);
+  const invitePath = buildPerspectiveJoinPath(perspectiveId);
 
   useEffect(() => {
     loadStatusRef.current = loadStatus;
@@ -62,7 +64,8 @@ export const PerspectiveShare = ({
   }, [actionToken, generateCode, loadStatus, redeemCode]);
 
   useEffect(() => {
-    if (!isManageMode || !actionTokenRef.current || !topicId || !perspectiveId) return;
+    if (!isManageMode || !actionTokenRef.current || !topicId || !perspectiveId)
+      return;
     let cancelled = false;
     void (async () => {
       const result = await loadStatusRef.current({
@@ -88,7 +91,7 @@ export const PerspectiveShare = ({
     busyRef.current = true;
     setLoading("generate");
     setError("");
-    setCopyLabel("Copy");
+    setCopyLabel("Copy invite");
     try {
       const result = await generateCodeRef.current({
         data: {
@@ -118,7 +121,10 @@ export const PerspectiveShare = ({
   const handleCopy = async () => {
     if (!generatedCode) return;
     try {
-      await navigator.clipboard.writeText(generatedCode);
+      const inviteUrl = new URL(invitePath, window.location.origin).toString();
+      await navigator.clipboard.writeText(
+        `${inviteUrl}\nCode: ${generatedCode}`,
+      );
       setCopyLabel("Copied");
     } catch {
       setCopyLabel("Copy failed");
@@ -172,6 +178,11 @@ export const PerspectiveShare = ({
               }
             }}
             placeholder="🔓"
+            aria-label="Collaboration code"
+            autoCapitalize="characters"
+            autoComplete="one-time-code"
+            autoCorrect="off"
+            spellCheck={false}
             className="min-w-0 flex-1 border-b border-purple-500/50 bg-transparent p-2 text-sm tracking-[0.18em] outline-none"
           />
           <button
@@ -198,9 +209,7 @@ export const PerspectiveShare = ({
         <div className="flex min-w-0 flex-col gap-1">
           <div className="flex items-center gap-2">
             <span aria-hidden="true">🫂</span>
-            <span>
-              {status.hasActiveCode ? "🔓" : "No 🔓"}
-            </span>
+            <span>{status.hasActiveCode ? "🔓" : "No 🔓"}</span>
             {status.hasActiveCode ? (
               <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/55">
                 {status.remainingUses}/2 left
@@ -208,22 +217,36 @@ export const PerspectiveShare = ({
             ) : null}
           </div>
           {generatedCode ? (
-            <div className="flex items-center gap-2">
-              <code className="rounded bg-white/10 px-2 py-1 text-[11px] tracking-[0.28em] text-white/90">
-                {generatedCode}
-              </code>
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="rounded-lg bg-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-white/70"
+            <div className="flex flex-col items-start gap-2">
+              <a
+                href={invitePath}
+                className="max-w-full truncate text-[11px] text-white/70 underline decoration-white/25 underline-offset-2"
               >
-                {copyLabel}
-              </button>
+                {invitePath}
+              </a>
+              <div className="flex items-center gap-2">
+                <code className="rounded bg-white/10 px-2 py-1 text-[11px] tracking-[0.28em] text-white/90">
+                  {generatedCode}
+                </code>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="rounded-lg bg-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.12em] text-white/70"
+                >
+                  {copyLabel}
+                </button>
+              </div>
             </div>
           ) : status.hasActiveCode ? (
-            <span className="text-[11px] text-white/45">
-              🔓 is viewed once.
-            </span>
+            <div className="flex flex-col items-start gap-1 text-[11px] text-white/45">
+              <a
+                href={invitePath}
+                className="max-w-full truncate text-white/70 underline decoration-white/25 underline-offset-2"
+              >
+                {invitePath}
+              </a>
+              <span>🔓 is shown only when generated.</span>
+            </div>
           ) : (
             <span className="text-[11px] text-white/45">
               Use twice. Each use unlocks reading and writing.
@@ -234,7 +257,9 @@ export const PerspectiveShare = ({
           type="button"
           onClick={handleGenerate}
           disabled={loading === "generate"}
-          aria-label={status.hasActiveCode ? "Generate new code" : "Generate code"}
+          aria-label={
+            status.hasActiveCode ? "Generate new code" : "Generate code"
+          }
           className="rounded-xl bg-white/10 px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-white/85 disabled:opacity-50"
         >
           {loading === "generate"

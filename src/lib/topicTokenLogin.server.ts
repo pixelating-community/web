@@ -76,7 +76,7 @@ export const saveTopicTokenServer = async ({
       topicName: canonicalTopicName,
       ip,
     });
-    return { ok: false, error: "Incorrect token", requestId, status: 401 };
+    return { ok: false, error: "Incorrect topic key", requestId, status: 401 };
   }
 
   const secure = new URL(request.url).protocol === "https:";

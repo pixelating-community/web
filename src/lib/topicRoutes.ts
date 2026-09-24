@@ -4,6 +4,9 @@ const normalizePathSegment = (value: string) =>
 export const NEW_PERSPECTIVE_QUERY_VALUE = "n";
 export const NEW_PERSPECTIVE_HASH = "n";
 
+export const buildPerspectiveJoinPath = (perspectiveId: string) =>
+  `/p/${normalizePathSegment(perspectiveId.trim())}/join`;
+
 export const buildTopicPath = (topicName: string, action = "") => {
   const normalizedTopicName = topicName.trim();
   const normalizedAction = action.trim();
@@ -48,7 +51,6 @@ export const buildNewReflectionPerspectivePath = ({
   parentPerspectiveId: string;
 }) =>
   `${buildTopicNewPerspectivePath(topicName)}?parent=${encodeURIComponent(parentPerspectiveId)}`;
-
 
 export const buildTopicViewerPerspectivePath = ({
   topicName,

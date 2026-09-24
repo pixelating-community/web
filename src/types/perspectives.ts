@@ -50,6 +50,7 @@ export type AudioMixSnippet = {
 
 export type WritePerspectiveProps = {
   actionToken?: string;
+  createOnly?: boolean;
   id: UUID;
   name: string;
   topicEmoji?: string;
@@ -60,4 +61,5 @@ export type WritePerspectiveProps = {
   parentPerspectiveId?: string;
   queryKey?: readonly unknown[];
   onRefresh?: () => Promise<void> | void;
+  onCreateSuccess?: () => Promise<void> | void;
 };

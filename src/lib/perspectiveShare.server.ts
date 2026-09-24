@@ -15,10 +15,8 @@ import {
   generatePerspectiveShareCode,
   getReflectionWriteCookieName,
   hashPerspectiveShareCode,
-  verifyReflectionAccessToken,
-  verifyReflectionWriteToken,
 } from "@/lib/reflectionAccess";
-import { getRequestCookie } from "@/server/lib/requestCookies";
+import { hasPerspectiveCollaborationGrant } from "@/lib/perspectiveCollaborationGrant.server";
 
 const MAX_SHARE_USES = 2;
 
@@ -65,24 +63,6 @@ const buildCollaborationCookies = (perspectiveId: string) => {
   ];
 };
 
-const hasPerspectiveGrant = ({
-  request,
-  perspectiveId,
-}: {
-  request: Request;
-  perspectiveId: string;
-}) => {
-  const accessToken = getRequestCookie(request, `p_${perspectiveId}`);
-  const writeToken = getRequestCookie(
-    request,
-    getReflectionWriteCookieName(perspectiveId),
-  );
-  return (
-    verifyReflectionAccessToken(accessToken, perspectiveId) &&
-    verifyReflectionWriteToken(writeToken, perspectiveId)
-  );
-};
-
 const createFailure = ({
   requestId,
   error,
@@ -126,10 +106,11 @@ const verifyPerspectiveShareAction = async ({
     });
   }
 
-  const rows = await sql<{ topic_id: string }>`
-    SELECT topic_id
-    FROM perspectives
-    WHERE id = ${perspectiveId}
+  const rows = await sql<{ locked: boolean | null; topic_id: string }>`
+    SELECT p.topic_id, t.locked
+    FROM perspectives AS p
+    JOIN topics AS t ON t.id = p.topic_id
+    WHERE p.id = ${perspectiveId}
     LIMIT 1;
   `;
   if (rows.length === 0) {
@@ -145,6 +126,14 @@ const verifyPerspectiveShareAction = async ({
       error: "Unauthorized",
       code: "INVALID_ACTION_TOKEN",
       status: 401,
+    });
+  }
+  if (rows[0]?.locked) {
+    return createFailure({
+      requestId,
+      error: "Collaboration invites are unavailable for private topics.",
+      code: "PRIVATE_TOPIC_UNSUPPORTED",
+      status: 409,
     });
   }
 
@@ -181,7 +170,10 @@ export const loadPerspectiveShareStatusServer = async ({
 
   const row = rows[0];
   const remainingUses = row
-    ? Math.max(0, Number(row.max_uses ?? MAX_SHARE_USES) - Number(row.used_count ?? 0))
+    ? Math.max(
+        0,
+        Number(row.max_uses ?? MAX_SHARE_USES) - Number(row.used_count ?? 0),
+      )
     : 0;
 
   return {
@@ -271,10 +263,11 @@ export const redeemPerspectiveShareCodeServer = async ({
 }) => {
   const requestId = getRequestId(request);
 
-  const perspectiveRows = await sql<{ id: string }>`
-    SELECT id
-    FROM perspectives
-    WHERE id = ${data.perspectiveId}
+  const perspectiveRows = await sql<{ id: string; locked: boolean | null }>`
+    SELECT p.id, t.locked
+    FROM perspectives AS p
+    JOIN topics AS t ON t.id = p.topic_id
+    WHERE p.id = ${data.perspectiveId}
     LIMIT 1;
   `;
   if (perspectiveRows.length === 0) {
@@ -284,8 +277,21 @@ export const redeemPerspectiveShareCodeServer = async ({
       status: 404,
     });
   }
+  if (perspectiveRows[0]?.locked) {
+    return createFailure({
+      requestId,
+      error: "Collaboration invites are unavailable for private topics.",
+      code: "PRIVATE_TOPIC_UNSUPPORTED",
+      status: 409,
+    });
+  }
 
-  if (hasPerspectiveGrant({ request, perspectiveId: data.perspectiveId })) {
+  if (
+    hasPerspectiveCollaborationGrant({
+      request,
+      perspectiveId: data.perspectiveId,
+    })
+  ) {
     return {
       ok: true as const,
       data: {
@@ -299,7 +305,7 @@ export const redeemPerspectiveShareCodeServer = async ({
   if (!codeHash) {
     return createFailure({
       requestId,
-      error: "🚫",
+      error: "That code is invalid or no longer available.",
       status: 401,
     });
   }
@@ -350,7 +356,7 @@ export const redeemPerspectiveShareCodeServer = async ({
   if (!redeemed) {
     return createFailure({
       requestId,
-      error: "🚫",
+      error: "That code is invalid or no longer available.",
       status: 401,
     });
   }

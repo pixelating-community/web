@@ -24,6 +24,7 @@ import {
 import {
   NEW_PERSPECTIVE_HASH,
   buildTopicPath,
+  buildTopicViewerPerspectivePath,
   buildTopicWritePerspectivePath,
   buildTopicUnlockHref,
 } from "@/lib/topicRoutes";
@@ -78,6 +79,7 @@ const applyPerspectiveUpdate = (
 
 export function WritePerspective({
   actionToken,
+  createOnly = false,
   id,
   name,
   topicEmoji,
@@ -88,6 +90,7 @@ export function WritePerspective({
   parentPerspectiveId,
   queryKey,
   onRefresh,
+  onCreateSuccess,
 }: WritePerspectiveProps) {
   const MAX_LENGTH = 555;
   const btnText = "🖋️";
@@ -99,7 +102,9 @@ export function WritePerspective({
   const [focus, setFocus] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [perspectiveId, setPerspectiveId] = useState<string | null>(null);
-  const [visibleBackgroundId, setVisibleBackgroundId] = useState<string | null>(null);
+  const [visibleBackgroundId, setVisibleBackgroundId] = useState<string | null>(
+    null,
+  );
   const [characters, setCharacters] = useState(0);
   const [perspectiveText, setPerspectiveText] = useState("");
   const [imageSrc, setImageSrc] = useState("");
@@ -202,8 +207,12 @@ export function WritePerspective({
     if (!queryKey) return undefined;
     const previousPayload =
       queryClient.getQueryData<TopicPayloadQueryResult>(queryKey);
-    queryClient.setQueryData<TopicPayloadQueryResult>(queryKey, (current: TopicPayloadQueryResult | undefined): TopicPayloadQueryResult | undefined =>
-      patchTopicPayloadQueryResult({ current, updater }),
+    queryClient.setQueryData<TopicPayloadQueryResult>(
+      queryKey,
+      (
+        current: TopicPayloadQueryResult | undefined,
+      ): TopicPayloadQueryResult | undefined =>
+        patchTopicPayloadQueryResult({ current, updater }),
     );
     return previousPayload;
   };
@@ -222,7 +231,10 @@ export function WritePerspective({
     EditPerspectiveVariables,
     TopicQueryMutationContext
   >({
-    mutationFn: async ({ perspectiveId, formData }: EditPerspectiveVariables) => {
+    mutationFn: async ({
+      perspectiveId,
+      formData,
+    }: EditPerspectiveVariables) => {
       const perspective = String(formData.get("perspective") ?? "");
       const rawAudioSrc = formData.get("audio_src");
       const rawImageSrc = formData.get("image_src");
@@ -250,7 +262,11 @@ export function WritePerspective({
       );
       return { previousPayload };
     },
-    onError: (_error: Error, _variables: EditPerspectiveVariables, context: TopicQueryMutationContext | undefined) => {
+    onError: (
+      _error: Error,
+      _variables: EditPerspectiveVariables,
+      context: TopicQueryMutationContext | undefined,
+    ) => {
       replaceTopicPayload(context?.previousPayload);
     },
     onSettled: async () => {
@@ -283,7 +299,11 @@ export function WritePerspective({
       );
       return { previousPayload };
     },
-    onError: (_error: Error, _variables: DeletePerspectiveVariables, context: TopicQueryMutationContext | undefined) => {
+    onError: (
+      _error: Error,
+      _variables: DeletePerspectiveVariables,
+      context: TopicQueryMutationContext | undefined,
+    ) => {
       replaceTopicPayload(context?.previousPayload);
     },
     onSettled: async () => {
@@ -327,7 +347,11 @@ export function WritePerspective({
       );
       return { previousPayload };
     },
-    onError: (_error: Error, _variables: AddPerspectiveVariables, context: TopicQueryMutationContext | undefined) => {
+    onError: (
+      _error: Error,
+      _variables: AddPerspectiveVariables,
+      context: TopicQueryMutationContext | undefined,
+    ) => {
       replaceTopicPayload(context?.previousPayload);
     },
     onSettled: async () => {
@@ -369,6 +393,12 @@ export function WritePerspective({
         formData,
         optimisticPerspective,
       });
+      if (createOnly) {
+        setSubmitError("");
+        resetForm();
+        await onCreateSuccess?.();
+        return;
+      }
       scrollPerspectivesIntoView();
     }
 
@@ -403,6 +433,8 @@ export function WritePerspective({
       });
       if (perspectiveId) {
         uploadHeaders.set(UPLOAD_PERSPECTIVE_ID_HEADER, perspectiveId);
+      } else if (parentPerspectiveId) {
+        uploadHeaders.set(UPLOAD_PERSPECTIVE_ID_HEADER, parentPerspectiveId);
       }
       const response = await fetch("/api/obj/upload", {
         method: "POST",
@@ -487,18 +519,22 @@ export function WritePerspective({
     editPerspectiveMutation.isPending ||
     deletePerspectiveMutation.isPending;
   const selectedPerspective = perspectiveId
-    ? perspectives.find((perspective) => perspective.id === perspectiveId) ??
-      null
+    ? (perspectives.find((perspective) => perspective.id === perspectiveId) ??
+      null)
     : null;
   const activeEditorImageSrc =
     imageSrc || extractMarkdownBackgroundImageSrc(perspectiveText);
   const visibleBackgroundPerspective =
     visibleBackgroundId && visibleBackgroundId !== NEW_PERSPECTIVE_HASH
-      ? perspectives.find((perspective) => perspective.id === visibleBackgroundId) ?? null
+      ? (perspectives.find(
+          (perspective) => perspective.id === visibleBackgroundId,
+        ) ?? null)
       : null;
   const visibleBackgroundImageSrc =
     visibleBackgroundId === NEW_PERSPECTIVE_HASH
-      ? (!isEditingPerspective ? activeEditorImageSrc : "")
+      ? !isEditingPerspective
+        ? activeEditorImageSrc
+        : ""
       : visibleBackgroundPerspective
         ? visibleBackgroundPerspective.id === perspectiveId
           ? activeEditorImageSrc
@@ -580,7 +616,10 @@ export function WritePerspective({
           const element = entry.target as HTMLElement;
           const id = element.dataset.backgroundId;
           if (!id) continue;
-          visibleRatios.set(id, entry.isIntersecting ? entry.intersectionRatio : 0);
+          visibleRatios.set(
+            id,
+            entry.isIntersecting ? entry.intersectionRatio : 0,
+          );
         }
         if (rafId !== null) {
           cancelAnimationFrame(rafId);
@@ -593,7 +632,9 @@ export function WritePerspective({
       },
     );
 
-    for (const child of Array.from(root.querySelectorAll<HTMLElement>("[data-background-id]"))) {
+    for (const child of Array.from(
+      root.querySelectorAll<HTMLElement>("[data-background-id]"),
+    )) {
       observer.observe(child);
     }
 
@@ -654,7 +695,6 @@ export function WritePerspective({
     });
   }, [perspectives]);
 
-
   const trimmedTopicEmoji = topicEmoji?.trim() ?? "";
   const trimmedTopicShortTitle = topicShortTitle?.trim() ?? "";
   const trimmedTopicName = name.trim();
@@ -665,7 +705,8 @@ export function WritePerspective({
     Boolean(trimmedTopicEmoji) &&
     Array.from(trimmedTopicEmoji).length <= 2;
   const isImageUploading = imageUploadStatus === "uploading";
-  const isSubmitDisabled = !hasPerspectiveText || isMutationBusy || isImageUploading;
+  const isSubmitDisabled =
+    !hasPerspectiveText || isMutationBusy || isImageUploading;
   const showNewPerspectivePlaceholder =
     !isEditingPerspective && !focus && !hasPerspectiveText;
   const submitDisabledReason = !hasPerspectiveText
@@ -674,7 +715,7 @@ export function WritePerspective({
       ? "Saving..."
       : isImageUploading
         ? "Uploading image..."
-      : undefined;
+        : undefined;
   const confirmDeletePerspective = useConfirmAction({
     enabled: Boolean(perspectiveId) && !isMutationBusy,
     onConfirm: () => {
@@ -701,7 +742,9 @@ export function WritePerspective({
         aria-label="Back to topic"
         title="Back to topic"
       >
-        <span className={topicNavIsSingleEmoji ? "" : "truncate"}>{topicNavLabel}</span>
+        <span className={topicNavIsSingleEmoji ? "" : "truncate"}>
+          {topicNavLabel}
+        </span>
       </Link>
       {selectedPerspective ? (
         <>
@@ -753,6 +796,12 @@ export function WritePerspective({
             topicName: name,
             perspectiveId: p.id,
           });
+          const perspectivePreviewHref = createOnly
+            ? buildTopicViewerPerspectivePath({
+                topicName: name,
+                perspectiveId: p.id,
+              })
+            : perspectiveWriteHref;
           const isSelectedPerspective = perspectiveId === p.id;
 
           return (
@@ -769,7 +818,10 @@ export function WritePerspective({
               className="relative flex h-full min-w-[80vw] snap-center overflow-hidden p-4"
             >
               <div className="relative z-10 flex h-full w-full">
-                <div data-id={p.id} className="flex h-full w-full items-stretch">
+                <div
+                  data-id={p.id}
+                  className="flex h-full w-full items-stretch"
+                >
                   <div className="flex w-10 shrink-0 items-center justify-center self-stretch">
                     {perspectivePlaybackHref ? (
                       <Link
@@ -853,27 +905,39 @@ export function WritePerspective({
                             />
                           </div>
                           <Link
-                            to={perspectiveWriteHref}
+                            to={perspectivePreviewHref}
                             preload="intent"
                             viewTransition
-                            aria-label="Open write view for this perspective"
-                            title="Open write view for this perspective"
+                            aria-label={
+                              createOnly
+                                ? "Open shared perspective"
+                                : "Open write view for this perspective"
+                            }
+                            title={
+                              createOnly
+                                ? "Open shared perspective"
+                                : "Open write view for this perspective"
+                            }
                             className="absolute inset-0 z-10 cursor-pointer rounded-[10px] no-underline"
                           >
                             <span className="sr-only">
-                              Open write view for this perspective
+                              {createOnly
+                                ? "Open shared perspective"
+                                : "Open write view for this perspective"}
                             </span>
                           </Link>
-                          <Link
-                            to={perspectiveWriteHref}
-                            preload="intent"
-                            viewTransition
-                            aria-label="Open write view for this perspective"
-                            title="Open write view for this perspective"
-                            className="unstyled-link absolute right-2 top-2 z-20 inline-flex h-6 w-6 items-center justify-center border-0 bg-transparent text-xs text-white/0 opacity-0 transition duration-150 hover:text-white/85 hover:opacity-100 focus:text-white/85 focus:opacity-100 group-hover:text-white/85 group-hover:opacity-100 group-focus-within:text-white/85 group-focus-within:opacity-100"
-                          >
-                            🖋️
-                          </Link>
+                          {!createOnly ? (
+                            <Link
+                              to={perspectiveWriteHref}
+                              preload="intent"
+                              viewTransition
+                              aria-label="Open write view for this perspective"
+                              title="Open write view for this perspective"
+                              className="unstyled-link absolute right-2 top-2 z-20 inline-flex h-6 w-6 items-center justify-center border-0 bg-transparent text-xs text-white/0 opacity-0 transition duration-150 hover:text-white/85 hover:opacity-100 focus:text-white/85 focus:opacity-100 group-hover:text-white/85 group-hover:opacity-100 group-focus-within:text-white/85 group-focus-within:opacity-100"
+                            >
+                              🖋️
+                            </Link>
+                          ) : null}
                         </div>
                       )}
                     </div>
@@ -962,7 +1026,9 @@ export function WritePerspective({
                   type="button"
                   onClick={confirmDeletePerspective.trigger}
                   disabled={isMutationBusy}
-                  className={confirmDeletePerspective.armed ? "text-xs" : "text-sm"}
+                  className={
+                    confirmDeletePerspective.armed ? "text-xs" : "text-sm"
+                  }
                   aria-label={
                     confirmDeletePerspective.armed
                       ? "Tap again to delete perspective"
@@ -1003,8 +1069,12 @@ export function WritePerspective({
               type="button"
               onClick={() => imageInputRef.current?.click()}
               disabled={isMutationBusy || isImageUploading}
-              aria-label={imageSrc ? "Replace background image" : "Add background image"}
-              title={imageSrc ? "Replace background image" : "Add background image"}
+              aria-label={
+                imageSrc ? "Replace background image" : "Add background image"
+              }
+              title={
+                imageSrc ? "Replace background image" : "Add background image"
+              }
               className="inline-flex h-9 w-9 items-center justify-center border-0 bg-transparent p-0 text-lg text-white/75 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
             >
               {isImageUploading ? "…" : "▧"}

@@ -10,6 +10,7 @@ import {
   putObject,
 } from "@/lib/objectStorage.server";
 import { verifyActionToken } from "@/lib/actionToken.server";
+import { hasPerspectiveCollaborationGrant } from "@/lib/perspectiveCollaborationGrant.server";
 import { getClientIp, rateLimit, rateLimitHeaders } from "@/lib/rateLimit";
 import {
   MAX_MULTIPART_UPLOAD_BYTES,
@@ -61,6 +62,17 @@ export const Route = createFileRoute("/api/obj/upload")({
         if (!verified) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
+        if (
+          verified.perspectiveId &&
+          (!metadata.perspectiveId ||
+            metadata.perspectiveId !== verified.perspectiveId ||
+            !hasPerspectiveCollaborationGrant({
+              request,
+              perspectiveId: verified.perspectiveId,
+            }))
+        ) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
 
         const ip = getClientIp(request.headers);
         const rate = rateLimit(
@@ -109,18 +121,18 @@ export const Route = createFileRoute("/api/obj/upload")({
             typeof rawPitchSemitones === "string"
               ? Number.parseFloat(rawPitchSemitones)
               : 0;
-          const pitchSemitones =
-            Number.isFinite(parsedPitch)
-              ? Math.max(-12, Math.min(12, parsedPitch))
-              : 0;
-          const resolvedContentType = contentTypeHint.startsWith("audio/") ||
+          const pitchSemitones = Number.isFinite(parsedPitch)
+            ? Math.max(-12, Math.min(12, parsedPitch))
+            : 0;
+          const resolvedContentType =
+            contentTypeHint.startsWith("audio/") ||
             contentTypeHint.startsWith("image/")
-            ? contentTypeHint
-            : file.type?.startsWith("audio/")
-              ? file.type
-              : file.type?.startsWith("image/")
+              ? contentTypeHint
+              : file.type?.startsWith("audio/")
                 ? file.type
-                : guessContentType(filename);
+                : file.type?.startsWith("image/")
+                  ? file.type
+                  : guessContentType(filename);
           const sizeLimit = getUploadSizeLimit(resolvedContentType);
           if (!sizeLimit) {
             return Response.json(
@@ -132,7 +144,10 @@ export const Route = createFileRoute("/api/obj/upload")({
             return Response.json({ error: "File is empty" }, { status: 400 });
           }
           if (file.size > sizeLimit) {
-            return Response.json({ error: "File is too large" }, { status: 413 });
+            return Response.json(
+              { error: "File is too large" },
+              { status: 413 },
+            );
           }
           let uploadBody: Buffer;
           let uploadContentType = resolvedContentType;

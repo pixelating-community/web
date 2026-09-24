@@ -85,6 +85,34 @@ describe("action token helpers", () => {
     ).toBeNull();
   });
 
+  it("binds collaboration action tokens to one parent perspective", () => {
+    process.env.ACTION_TOKEN_SECRET = "test-secret";
+    const perspectiveId = "33333333-3333-4333-8333-333333333333";
+    const token = issueActionToken({
+      scopes: ["perspective:add"],
+      topicId: TOPIC_ID,
+      perspectiveId,
+      requestId: "req-collaboration",
+    });
+
+    expect(
+      verifyActionToken({
+        token: token ?? "",
+        requiredScope: "perspective:add",
+        topicId: TOPIC_ID,
+        perspectiveId,
+      }),
+    ).toMatchObject({ perspectiveId });
+    expect(
+      verifyActionToken({
+        token: token ?? "",
+        requiredScope: "perspective:add",
+        topicId: TOPIC_ID,
+        perspectiveId: OTHER_TOPIC_ID,
+      }),
+    ).toBeNull();
+  });
+
   it("rejects expired tokens and tokens issued too far in the future", () => {
     process.env.ACTION_TOKEN_SECRET = "test-secret";
     process.env.REFLECTION_ACCESS_SECRET = "";

@@ -9,19 +9,20 @@ import {
   topicRequiresWriteToken,
 } from "@/lib/topicWriteAccess";
 
-
 export const addPerspective = async ({
   topicId,
   name,
   formData,
   requestId,
   parentPerspectiveId,
+  collaborationAuthorized = false,
 }: {
   topicId: string;
   name: string;
   formData: FormData;
   requestId?: string;
   parentPerspectiveId?: string;
+  collaborationAuthorized?: boolean;
 }) => {
   try {
     const rawAudioSrc = formData.get("audio_src");
@@ -70,7 +71,12 @@ export const addPerspective = async ({
       locked: isLock,
       storedToken: storedTopicToken,
     });
-    if (requiresWriteToken) {
+    if (collaborationAuthorized && isLock) {
+      return {
+        message: "Collaboration invites are unavailable for private topics.",
+      };
+    }
+    if (requiresWriteToken && !collaborationAuthorized) {
       if (!token) {
         console.warn("[topic-auth] Missing token on addPerspective", {
           requestId,
@@ -80,10 +86,7 @@ export const addPerspective = async ({
         return { message: "Invalid token" };
       }
 
-      const isValid = await verifyTopicToken(
-        token,
-        storedTopicToken,
-      );
+      const isValid = await verifyTopicToken(token, storedTopicToken);
       if (!isValid) {
         console.warn("[topic-auth] Invalid token on addPerspective", {
           requestId,
@@ -93,6 +96,18 @@ export const addPerspective = async ({
         return { message: "Invalid token" };
       }
       verifiedToken = token;
+    }
+
+    if (parentPerspectiveId) {
+      const parentRows = await sql<{ topic_id: string }>`
+        SELECT topic_id
+        FROM perspectives
+        WHERE id = ${parentPerspectiveId}
+        LIMIT 1;
+      `;
+      if (parentRows[0]?.topic_id !== data.topicId) {
+        return { message: "Parent perspective not found" };
+      }
     }
 
     if (isLock && verifiedToken) {
@@ -110,7 +125,6 @@ export const addPerspective = async ({
       INSERT INTO perspectives (perspective, topic_id, audio_src, image_src, rendered_html, words_json, parent_perspective_id)
       VALUES (${data.perspective}, ${data.topicId}, ${data.audio_src}, ${data.image_src}, ${renderedHtml}, ${wordsJson}, ${parentPerspectiveId ?? null});
     `;
-
 
     return { ok: true };
   } catch (e) {

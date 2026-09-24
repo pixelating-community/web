@@ -28,6 +28,7 @@ import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
 import { Route as ApiTARouteImport } from './routes/api/t/a'
 import { Route as ApiTTokenRouteImport } from './routes/api/t/token'
 import { Route as PIdCommitRouteImport } from './routes/p.$id.commit'
+import { Route as PIdJoinRouteImport } from './routes/p.$id.join'
 import { Route as TTopicStoreRouteImport } from './routes/t.$topic.store'
 import { Route as TTopicToolsRouteImport } from './routes/t.$topic.tools'
 import { Route as TTopicUlRouteImport } from './routes/t.$topic.ul'
@@ -133,6 +134,11 @@ const PIdCommitRoute = PIdCommitRouteImport.update({
   path: '/commit',
   getParentRoute: () => PIdRoute,
 } as any)
+const PIdJoinRoute = PIdJoinRouteImport.update({
+  id: '/join',
+  path: '/join',
+  getParentRoute: () => PIdRoute,
+} as any)
 const TTopicStoreRoute = TTopicStoreRouteImport.update({
   id: '/t/$topic/store',
   path: '/t/$topic/store',
@@ -194,6 +200,7 @@ export interface FileRoutesByFullPath {
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
   '/p/$id/commit': typeof PIdCommitRoute
+  '/p/$id/join': typeof PIdJoinRoute
   '/t/$topic/store': typeof TTopicStoreRoute
   '/t/$topic/tools': typeof TTopicToolsRoute
   '/t/$topic/ul': typeof TTopicUlRoute
@@ -223,6 +230,7 @@ export interface FileRoutesByTo {
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
   '/p/$id/commit': typeof PIdCommitRoute
+  '/p/$id/join': typeof PIdJoinRoute
   '/t/$topic/store': typeof TTopicStoreRoute
   '/t/$topic/tools': typeof TTopicToolsRoute
   '/t/$topic/ul': typeof TTopicUlRoute
@@ -253,6 +261,7 @@ export interface FileRoutesById {
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
   '/p/$id/commit': typeof PIdCommitRoute
+  '/p/$id/join': typeof PIdJoinRoute
   '/t/$topic/store': typeof TTopicStoreRoute
   '/t/$topic/tools': typeof TTopicToolsRoute
   '/t/$topic/ul': typeof TTopicUlRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/api/t/a'
     | '/api/t/token'
     | '/p/$id/commit'
+    | '/p/$id/join'
     | '/t/$topic/store'
     | '/t/$topic/tools'
     | '/t/$topic/ul'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/api/t/a'
     | '/api/t/token'
     | '/p/$id/commit'
+    | '/p/$id/join'
     | '/t/$topic/store'
     | '/t/$topic/tools'
     | '/t/$topic/ul'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/api/t/a'
     | '/api/t/token'
     | '/p/$id/commit'
+    | '/p/$id/join'
     | '/t/$topic/store'
     | '/t/$topic/tools'
     | '/t/$topic/ul'
@@ -503,6 +515,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PIdCommitRouteImport
       parentRoute: typeof PIdRoute
     }
+    '/p/$id/join': {
+      id: '/p/$id/join'
+      path: '/join'
+      fullPath: '/p/$id/join'
+      preLoaderRoute: typeof PIdJoinRouteImport
+      parentRoute: typeof PIdRoute
+    }
     '/t/$topic/store': {
       id: '/t/$topic/store'
       path: '/t/$topic/store'
@@ -616,10 +635,12 @@ const ApiPRouteWithChildren = ApiPRoute._addFileChildren(ApiPRouteChildren)
 
 interface PIdRouteChildren {
   PIdCommitRoute: typeof PIdCommitRoute
+  PIdJoinRoute: typeof PIdJoinRoute
 }
 
 const PIdRouteChildren: PIdRouteChildren = {
   PIdCommitRoute: PIdCommitRoute,
+  PIdJoinRoute: PIdJoinRoute,
 }
 
 const PIdRouteWithChildren = PIdRoute._addFileChildren(PIdRouteChildren)

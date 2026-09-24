@@ -17,7 +17,10 @@ import { SWEditor } from "@/components/SWEditor";
 import { loadChildPerspectives } from "@/lib/childPerspectiveRoute.functions";
 import { resolvePerspectiveBackgroundImageSrc } from "@/lib/perspectiveImage";
 import { resolvePublicAudioSrc } from "@/lib/publicAudioBase";
-import { buildNewReflectionPerspectivePath } from "@/lib/topicRoutes";
+import {
+  buildNewReflectionPerspectivePath,
+  buildPerspectiveJoinPath,
+} from "@/lib/topicRoutes";
 import type { Perspective } from "@/types/perspectives";
 
 type PerspectiveListenerProps = {
@@ -75,9 +78,12 @@ const PerspectiveReflections = memo(function PerspectiveReflections({
   const childPerspectives = (childPerspectivesQuery.data?.perspectives ??
     []) as Perspective[];
 
-  if (childPerspectives.length === 0 && !canWrite) {
-    return null;
-  }
+  const addReflectionHref = canWrite
+    ? buildNewReflectionPerspectivePath({
+        topicName,
+        parentPerspectiveId: perspective.id,
+      })
+    : buildPerspectiveJoinPath(perspective.id);
 
   return (
     <section id="reflections" className="border-t border-white/10 bg-black/20">
@@ -89,19 +95,14 @@ const PerspectiveReflections = memo(function PerspectiveReflections({
             topicName={topicName}
           />
         ))}
-        {canWrite && (
-          <Link
-            to={buildNewReflectionPerspectivePath({
-              topicName,
-              parentPerspectiveId: perspective.id,
-            })}
-            aria-label="Add reflection"
-            title="Add reflection"
-            className="unstyled-link inline-flex h-11 w-11 items-center justify-center text-lg text-white/60 transition hover:text-white/90"
-          >
-            <span aria-hidden="true">💭</span>
-          </Link>
-        )}
+        <Link
+          to={addReflectionHref}
+          aria-label="Add reflection"
+          title="Add reflection"
+          className="unstyled-link inline-flex h-11 w-11 items-center justify-center text-lg text-white/60 transition hover:text-white/90"
+        >
+          <span aria-hidden="true">💭</span>
+        </Link>
       </div>
     </section>
   );
@@ -128,8 +129,7 @@ export const PerspectiveListener = ({
   const [currentTime, setCurrentTime] = useState(startTime ?? 0);
   const [playbackError, setPlaybackError] = useState<string>("");
   const [needsPlayGesture, setNeedsPlayGesture] = useState(false);
-  const hasTimestampRange =
-    startTime !== undefined && endTime !== undefined;
+  const hasTimestampRange = startTime !== undefined && endTime !== undefined;
   const hasUrlTimestamp = startTime !== undefined || endTime !== undefined;
   const timings = perspective.wordTimings ?? [];
   const resolvedAudioSrc = useMemo(
@@ -150,18 +150,15 @@ export const PerspectiveListener = ({
     () => buildPerspectiveBackgroundStyle(),
     [],
   );
-  const commitCurrentTime = useCallback(
-    (time: number, forceRender = false) => {
-      if (!Number.isFinite(time)) return;
-      const next = Math.max(0, time);
-      currentTimeRef.current = next;
-      setCurrentTime((prev) => {
-        if (forceRender) return next;
-        return Math.abs(prev - next) >= SYNC_MIN_DELTA ? next : prev;
-      });
-    },
-    [],
-  );
+  const commitCurrentTime = useCallback((time: number, forceRender = false) => {
+    if (!Number.isFinite(time)) return;
+    const next = Math.max(0, time);
+    currentTimeRef.current = next;
+    setCurrentTime((prev) => {
+      if (forceRender) return next;
+      return Math.abs(prev - next) >= SYNC_MIN_DELTA ? next : prev;
+    });
+  }, []);
 
   const syncVideoToAudio = useCallback(
     (audio: HTMLAudioElement, shouldPlay = false) => {
@@ -361,10 +358,7 @@ export const PerspectiveListener = ({
     let lastSampleMs = 0;
 
     const tick = (timestamp: number) => {
-      if (
-        lastSampleMs === 0 ||
-        timestamp - lastSampleMs >= SYNC_INTERVAL_MS
-      ) {
+      if (lastSampleMs === 0 || timestamp - lastSampleMs >= SYNC_INTERVAL_MS) {
         lastSampleMs = timestamp;
         const audio = audioRef.current;
         if (audio && Number.isFinite(audio.currentTime)) {
@@ -466,7 +460,10 @@ export const PerspectiveListener = ({
         setIsPlaying(false);
         if (isBenignPlaybackRejection(reason)) {
           if (import.meta.env.DEV) {
-            console.warn("[PerspectiveListener] play() rejected (benign)", reason);
+            console.warn(
+              "[PerspectiveListener] play() rejected (benign)",
+              reason,
+            );
           }
           return;
         }

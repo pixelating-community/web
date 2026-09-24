@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildPerspectiveJoinPath,
   buildTopicNewPerspectivePath,
   buildTopicKaraokeEditorPath,
   buildTopicKaraokePath,
@@ -14,6 +15,10 @@ import {
 } from "@/lib/topicRoutes";
 
 describe("topicRoutes", () => {
+  it("builds perspective collaboration invite paths", () => {
+    expect(buildPerspectiveJoinPath(" 1234-abcd ")).toBe("/p/1234-abcd/join");
+  });
+
   it("builds canonical topic and action paths", () => {
     expect(buildTopicPath("art")).toBe("/t/art");
     expect(buildTopicPath("art", "w")).toBe("/t/art/w");
