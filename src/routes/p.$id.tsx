@@ -9,12 +9,33 @@ import { PerspectiveListener } from "@/components/PerspectiveListener";
 import { loadPerspectivePayload } from "@/lib/perspectiveRoute.functions";
 import type { PerspectiveRouteLoaderData } from "@/lib/perspectiveRoute.server";
 import { buildTopicPath } from "@/lib/topicRoutes";
+import {
+  buildContentLinkPreview,
+  buildLinkPreviewHead,
+  getLinkPreviewOrigin,
+} from "@/lib/linkPreview";
 
 export const Route = createFileRoute("/p/$id")({
   loader: ({ params }): Promise<PerspectiveRouteLoaderData> =>
     loadPerspectivePayload({
       data: { id: params.id },
     }),
+  head: ({ loaderData, matches, params }) => {
+    const data = loaderData?.data;
+    return data
+      ? buildLinkPreviewHead(
+          buildContentLinkPreview({
+            topicName: data.topicName,
+            shortTitle: data.topicShortTitle,
+            emoji: data.topicEmoji,
+            selectedPerspective: data.perspectives[0],
+            locked: data.topicLocked,
+            path: `/p/${encodeURIComponent(params.id)}`,
+          }),
+          getLinkPreviewOrigin(matches),
+        )
+      : {};
+  },
   pendingMs: 1500,
   preloadStaleTime: 30_000,
   pendingComponent: PerspectivePending,

@@ -22,6 +22,7 @@ export type PromptResponse = {
   topicId: string;
   topicName: string;
   canWrite: boolean;
+  topicLocked?: boolean;
   topicShortTitle?: string;
   topicEmoji?: string;
   actionToken?: string;
@@ -178,6 +179,7 @@ export const loadPerspectivePayloadServer = async ({
         topicId: perspective.topic_id,
         topicName: row.topic_name,
         canWrite,
+        topicLocked: isLocked,
         topicShortTitle: row.topic_short_title ?? undefined,
         topicEmoji: row.topic_emoji ?? undefined,
         actionToken: actionToken ?? undefined,

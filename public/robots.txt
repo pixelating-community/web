@@ -1,2 +1,14 @@
 User-agent: *
 Disallow: /
+
+# Let link preview services fetch shared pages and their images.
+# Search indexing remains disabled by the page and response noindex directives.
+User-agent: Twitterbot
+User-agent: facebookexternalhit
+User-agent: Facebot
+User-agent: LinkedInBot
+User-agent: Slackbot
+User-agent: Discordbot
+User-agent: TelegramBot
+User-agent: WhatsApp
+Allow: /

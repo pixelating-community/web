@@ -1,4 +1,8 @@
-import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
@@ -23,11 +27,19 @@ import {
 } from "@/lib/topicRoutes";
 import { shouldRequireTopicUnlock } from "@/lib/topicWriteAccess";
 import type { TopicPayload, TopicPayloadQueryResult } from "@/types/topic";
+import { z } from "zod/v4";
+import {
+  buildContentLinkPreview,
+  buildLinkPreviewHead,
+  getLinkPreviewOrigin,
+  type LinkPreview,
+} from "@/lib/linkPreview";
 
 type TopicRouteLoaderData = {
   topicName: string;
   mode: string;
   modeParam: string;
+  linkPreview?: LinkPreview;
 };
 
 type LoadTopicPayloadFn = (input: {
@@ -101,7 +113,11 @@ const getTopicPayloadQueryOptions = ({
 
 export const Route = createFileRoute("/t/$")({
   validateSearch: parseTopicRouteSearch,
-  loader: async ({ context, location, params }): Promise<TopicRouteLoaderData> => {
+  loader: async ({
+    context,
+    location,
+    params,
+  }): Promise<TopicRouteLoaderData> => {
     const parsed = parseTopicSegments(
       getWildcardParam(params as Record<string, unknown>),
     );
@@ -117,21 +133,31 @@ export const Route = createFileRoute("/t/$")({
     if (!mode) {
       if (validatedSearch.w) {
         throw redirect({
-          href: validatedSearch.w === NEW_PERSPECTIVE_QUERY_VALUE
-            ? buildTopicNewPerspectivePath(topicName)
-            : buildTopicWritePerspectivePath({ topicName, perspectiveId: validatedSearch.w }),
+          href:
+            validatedSearch.w === NEW_PERSPECTIVE_QUERY_VALUE
+              ? buildTopicNewPerspectivePath(topicName)
+              : buildTopicWritePerspectivePath({
+                  topicName,
+                  perspectiveId: validatedSearch.w,
+                }),
           replace: true,
         });
       }
       if (validatedSearch.r) {
         throw redirect({
-          href: buildTopicPerspectivePath({ topicName, perspectiveId: validatedSearch.r }),
+          href: buildTopicPerspectivePath({
+            topicName,
+            perspectiveId: validatedSearch.r,
+          }),
           replace: true,
         });
       }
       if (validatedSearch.p) {
         throw redirect({
-          href: buildTopicViewerPerspectivePath({ topicName, perspectiveId: validatedSearch.p }),
+          href: buildTopicViewerPerspectivePath({
+            topicName,
+            perspectiveId: validatedSearch.p,
+          }),
           replace: true,
         });
       }
@@ -144,9 +170,10 @@ export const Route = createFileRoute("/t/$")({
       }),
     );
     const resolvedTopicName = result.data?.topic.name ?? topicName;
-    const requestedPath = mode && modeParam
-      ? `${buildTopicPath(resolvedTopicName)}/${mode}/${encodeURIComponent(modeParam)}`
-      : buildTopicPath(resolvedTopicName);
+    const requestedPath =
+      mode && modeParam
+        ? `${buildTopicPath(resolvedTopicName)}/${mode}/${encodeURIComponent(modeParam)}`
+        : buildTopicPath(resolvedTopicName);
 
     if (
       result.data?.topic.id &&
@@ -166,12 +193,56 @@ export const Route = createFileRoute("/t/$")({
       });
     }
 
+    const topic = result.data?.topic;
+    let selectedPerspective =
+      mode && modeParam
+        ? result.data?.perspectives.find((p) => p.id === modeParam)
+        : undefined;
+    if (
+      topic &&
+      !topic.locked &&
+      mode &&
+      z.uuid().safeParse(modeParam).success &&
+      !selectedPerspective
+    ) {
+      const child = await context.queryClient.ensureQueryData({
+        queryKey: ["perspective-by-id", modeParam],
+        queryFn: () =>
+          loadPerspectiveById({
+            data: { perspectiveId: modeParam, topicName },
+          }),
+        staleTime: 30_000,
+      });
+      if (child.perspective?.topic_id === topic.id) {
+        selectedPerspective =
+          child.perspective as TopicPayload["perspectives"][number];
+      }
+    }
+
     return {
       topicName,
       mode,
       modeParam,
+      linkPreview: topic
+        ? buildContentLinkPreview({
+            topicName: topic.name,
+            shortTitle: topic.shortTitle,
+            emoji: topic.emoji,
+            perspectives: mode ? [] : result.data?.perspectives,
+            selectedPerspective,
+            locked: topic.locked,
+            path: requestedPath,
+          })
+        : undefined,
     };
   },
+  head: ({ loaderData, matches }) =>
+    loaderData?.linkPreview
+      ? buildLinkPreviewHead(
+          loaderData.linkPreview,
+          getLinkPreviewOrigin(matches),
+        )
+      : {},
   pendingMs: 1500,
   preloadStaleTime: 30_000,
   pendingComponent: TopicPending,

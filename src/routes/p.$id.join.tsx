@@ -10,10 +10,30 @@ import {
   buildTopicViewerPerspectivePath,
 } from "@/lib/topicRoutes";
 import type { Perspective } from "@/types/perspectives";
+import {
+  buildContentLinkPreview,
+  buildLinkPreviewHead,
+  getLinkPreviewOrigin,
+} from "@/lib/linkPreview";
 
 export const Route = createFileRoute("/p/$id/join")({
   loader: ({ params }) =>
     loadPerspectiveJoin({ data: { perspectiveId: params.id } }),
+  head: ({ loaderData, matches, params }) => {
+    const data = loaderData?.data;
+    return data
+      ? buildLinkPreviewHead(
+          buildContentLinkPreview({
+            topicName: data.topicName,
+            shortTitle: data.topicShortTitle,
+            emoji: data.topicEmoji,
+            selectedPerspective: data.perspective,
+            path: buildPerspectiveJoinPath(params.id),
+          }),
+          getLinkPreviewOrigin(matches),
+        )
+      : {};
+  },
   pendingMs: 750,
   pendingComponent: () => (
     <main className="flex h-dvh items-center justify-center text-sm text-white/70">

@@ -11,9 +11,13 @@ import {
 import type { ReactNode } from "react";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { RootErrorPage } from "@/components/RootErrorPage";
+import {
+  buildLinkPreviewHead,
+  SITE_TITLE,
+  SITE_DESCRIPTION,
+} from "@/lib/linkPreview";
+import { loadLinkPreviewOrigin } from "@/lib/linkPreview.functions";
 
-const SITE_TITLE = "pxl8";
-const SITE_DESCRIPTION = "Stories shaped by voices, votes, and support.";
 const SITE_VIEWPORT =
   "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no";
 const SITE_ICON =
@@ -22,16 +26,19 @@ const SITE_ICON =
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
-  head: () => ({
+  loader: async () => ({ linkPreviewOrigin: await loadLinkPreviewOrigin() }),
+  head: ({ loaderData }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: SITE_VIEWPORT },
       { name: "theme-color", content: "#a855f7" },
-      { title: SITE_TITLE },
-      { name: "description", content: SITE_DESCRIPTION },
+      ...buildLinkPreviewHead(
+        { title: SITE_TITLE, description: SITE_DESCRIPTION, path: "/" },
+        loaderData?.linkPreviewOrigin,
+      ).meta,
       {
         name: "robots",
-        content: "noindex, nofollow, noarchive, nosnippet, noimageindex",
+        content: "noindex, nofollow, noarchive",
       },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: SITE_TITLE },
@@ -43,6 +50,7 @@ export const Route = createRootRouteWithContext<{
     links: [
       { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", href: SITE_ICON },
+      { rel: "apple-touch-icon", href: "/192x192.png" },
     ],
   }),
   component: RootComponent,
