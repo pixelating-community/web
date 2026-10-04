@@ -2,6 +2,9 @@ name: ci
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -22,8 +25,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
-  packages: write
 
 env:
   REGISTRY: ghcr.io
@@ -59,6 +60,10 @@ jobs:
 
   build:
     needs: validate
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -121,6 +126,10 @@ jobs:
 
   deploy:
     needs: build
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'push' ||
+       github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     permissions:
       contents: read
