@@ -46,10 +46,11 @@ export const PlaybackTimeline = ({
     queryKey: ["playback-waveform", audioSrc, startTime, endTime],
     enabled: Boolean(audioSrc),
     staleTime: Infinity,
-    retry: false,
-    refetchOnWindowFocus: false,
+    retry: 2,
     queryFn: async ({ signal }) => {
-      const response = await fetch(audioSrc!, { signal });
+      // The media element can cache a response without CORS headers. Analysis
+      // needs its own complete, CORS-enabled response to read the audio bytes.
+      const response = await fetch(audioSrc!, { signal, cache: "no-store" });
       if (!response.ok) throw new Error("Could not load audio waveform.");
       const buffer = await decodeAudioBlob(await response.blob());
       signal.throwIfAborted();
@@ -120,6 +121,22 @@ export const PlaybackTimeline = ({
           aria-label="Seek playback"
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
         />
+        {audioSrc && analysisQuery.isPending && (
+          <output
+            className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs text-white/70"
+          >
+            Loading waveform…
+          </output>
+        )}
+        {analysisQuery.isError && (
+          <button
+            type="button"
+            onClick={() => void analysisQuery.refetch()}
+            className="absolute inset-y-0 left-1/2 -translate-x-1/2 rounded-md px-3 text-xs text-white underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-white"
+          >
+            Retry waveform
+          </button>
+        )}
       </div>
     </div>
   );

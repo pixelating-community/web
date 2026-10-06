@@ -4,9 +4,11 @@ node_modules/
 # Build and generated artifacts (TanStack Start / Vite / Vinxi)
 dist/
 .output/
+output/
 .vinxi/
 .tanstack/
 .vite/
+.playwright*
 coverage/
 *.tsbuildinfo
 app.config.timestamp_*.js

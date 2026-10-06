@@ -10,7 +10,7 @@ import {
 } from "@/lib/playbackTimeline";
 
 describe("playback timeline", () => {
-  it("renders an accessible seek control over the timing bars", () => {
+  it("renders an accessible seek control over the waveform", () => {
     const markup = renderToStaticMarkup(
       createElement(
         QueryClientProvider,
@@ -151,6 +151,56 @@ describe("playback timeline", () => {
       ),
     );
     expect(markup).not.toContain("<span");
+    expect(markup).toContain('aria-label="Seek playback"');
+  });
+
+  it("shows loading progress while the audio waveform is pending", () => {
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client: new QueryClient() },
+        createElement(PlaybackTimeline, {
+          audioSrc: "/audio.wav",
+          currentTime: 0,
+          duration: 4,
+          isPlaying: false,
+          onSeek: () => {},
+          onTogglePlayback: () => {},
+          timings: [],
+        }),
+      ),
+    );
+    expect(markup).toContain("<output");
+    expect(markup).toContain("Loading waveform…");
+    expect(markup).not.toContain("Retry waveform");
+  });
+
+  it("offers recovery after waveform loading fails while keeping playback available", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retryOnMount: false } },
+    });
+    await client.fetchQuery({
+      queryKey: ["playback-waveform", "/audio.wav", undefined, undefined],
+      queryFn: () => Promise.reject(new Error("Network error")),
+      retry: false,
+    }).catch(() => {});
+    const markup = renderToStaticMarkup(
+      createElement(
+        QueryClientProvider,
+        { client },
+        createElement(PlaybackTimeline, {
+          audioSrc: "/audio.wav",
+          currentTime: 0,
+          duration: 4,
+          isPlaying: false,
+          onSeek: () => {},
+          onTogglePlayback: () => {},
+          timings: [],
+        }),
+      ),
+    );
+    expect(markup).toContain("Retry waveform");
+    expect(markup).toContain('aria-label="Play audio"');
     expect(markup).toContain('aria-label="Seek playback"');
   });
 });
