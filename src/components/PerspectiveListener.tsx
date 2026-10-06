@@ -11,7 +11,7 @@ import {
 } from "@/components/PerspectiveBackground";
 import { PlaybackTimeline } from "@/components/PlaybackTimeline";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
-import { PerspectiveSupport } from "@/components/PerspectiveSupport";
+import { PerspectiveActions } from "@/components/PerspectiveActions";
 import { ReflectionPerspectiveCard } from "@/components/ReflectionPerspectiveCard";
 import { SWEditor } from "@/components/SWEditor";
 import { loadChildPerspectives } from "@/lib/childPerspectiveRoute.functions";
@@ -122,6 +122,8 @@ export const PerspectiveListener = ({
 }: PerspectiveListenerProps) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const listenerRef = useRef<HTMLDivElement | null>(null);
+  const actionsRef = useRef<HTMLDivElement | null>(null);
   const pendingSeekTimeRef = useRef<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [mediaDuration, setMediaDuration] = useState<number | undefined>();
@@ -502,8 +504,27 @@ export const PerspectiveListener = ({
 
   const parentPerspectiveId = perspective.parent_perspective_id;
 
+  useEffect(() => {
+    const listener = listenerRef.current;
+    const actions = actionsRef.current;
+    if (!listener || !actions) return;
+    const updateHeight = () => {
+      listener.style.setProperty(
+        "--perspective-actions-height",
+        `${actions.getBoundingClientRect().height}px`,
+      );
+    };
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(actions);
+    updateHeight();
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <div className="relative flex h-dvh w-full flex-col overflow-y-auto">
+    <div
+      ref={listenerRef}
+      className="relative flex h-dvh w-full flex-col overflow-y-auto pb-[var(--perspective-actions-height,8rem)]"
+    >
       {resolvedVideoSrc ? (
         <div
           aria-hidden="true"
@@ -528,56 +549,22 @@ export const PerspectiveListener = ({
           positionClassName="fixed"
         />
       )}
-      <div className="relative z-10 flex h-dvh w-full shrink-0 flex-col overflow-hidden">
-        <PerspectiveModeNav
-          canWrite={canWrite}
-          currentMode="listen"
-          perspectiveId={perspective.id}
-          topicName={topicName}
-          parentPerspectiveId={parentPerspectiveId ?? undefined}
-        />
-        <PlaybackTimeline
-          className="mt-12"
-          timings={timings}
-          currentTime={currentTime}
-          duration={mediaDuration}
-          startTime={startTime}
-          endTime={endTime}
-          hasError={showPlaybackError}
-          isPlaying={isPlaying}
-          disabled={!resolvedAudioSrc}
-          onTogglePlayback={handleTogglePlayback}
-          onSeek={handleSeek}
-          playLabel={playControlLabel}
-        />
+      <div className="relative z-10 flex h-[calc(100dvh-var(--perspective-actions-height,8rem))] w-full shrink-0 flex-col overflow-hidden">
         <div className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden [scrollbar-gutter:stable]">
           <div className="h-full w-screen overflow-y-auto scrollbar-transparent">
-            <div className="flex min-h-full items-center justify-center px-4 pt-16 pb-4">
-              <div className="flex w-full items-center">
-                <div className="-ml-4 flex w-15 shrink-0 flex-col items-center gap-0.5">
-                  <PerspectiveSupport perspective={perspective} />
-                </div>
-                <div className="flex min-w-0 flex-1 flex-col items-center">
-                  <SWEditor
-                    perspective={perspective}
-                    timings={timings}
-                    audioRef={audioRef}
-                    currentTime={currentTime}
-                    isPlaying={isPlaying}
-                    enablePlaybackSync
-                    isActive
-                    readOnly
-                    showTimingLabels={false}
-                  />
-                  {(perspective.reflection_count ?? 0) > 0 && (
-                    <a
-                      href="#reflections"
-                      className="unstyled-link mt-2 text-xs text-white/40 hover:text-white/70"
-                    >
-                      💭 x {perspective.reflection_count}
-                    </a>
-                  )}
-                </div>
+            <div className="flex min-h-full items-center justify-center px-4 py-4">
+              <div className="flex w-full flex-col items-center">
+                <SWEditor
+                  perspective={perspective}
+                  timings={timings}
+                  audioRef={audioRef}
+                  currentTime={currentTime}
+                  isPlaying={isPlaying}
+                  enablePlaybackSync
+                  isActive
+                  readOnly
+                  showTimingLabels={false}
+                />
               </div>
             </div>
           </div>
@@ -594,6 +581,34 @@ export const PerspectiveListener = ({
             audio unavailable for this perspective ({playbackError})
           </output>
         ) : null}
+      </div>
+      <div
+        ref={actionsRef}
+        className="fixed inset-x-0 bottom-0 z-30 bg-black/35 px-3 pt-1 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur-md"
+      >
+        <PlaybackTimeline
+          timings={timings}
+          currentTime={currentTime}
+          duration={mediaDuration}
+          startTime={startTime}
+          endTime={endTime}
+          hasError={showPlaybackError}
+          isPlaying={isPlaying}
+          disabled={!resolvedAudioSrc}
+          onTogglePlayback={handleTogglePlayback}
+          onSeek={handleSeek}
+          playLabel={playControlLabel}
+        />
+        <PerspectiveActions perspective={perspective} topicName={topicName}>
+          <PerspectiveModeNav
+            placement="inline"
+            canWrite={canWrite}
+            currentMode="listen"
+            perspectiveId={perspective.id}
+            topicName={topicName}
+            parentPerspectiveId={parentPerspectiveId ?? undefined}
+          />
+        </PerspectiveActions>
       </div>
       <PerspectiveReflections
         perspective={perspective}

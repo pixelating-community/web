@@ -27,12 +27,12 @@ describe("sw inline play control", () => {
   });
 
   it("keeps edit actions visible for text-only viewer perspectives", () => {
-    const source = readSource("src/components/SW.tsx");
+    const source = readSource("src/components/PerspectiveActions.tsx");
 
-    expect(source).toMatch(/const showViewerEditActions =/);
-    expect(source).toMatch(/hasAudio \|\| showViewerEditActions/);
-    expect(source).toMatch(
-      /previewHref=\{isStudioSurface \|\| !hasAudio \? "" : previewHref\}/,
-    );
+    expect(source).toMatch(/canWrite && topicName/);
+    expect(source).toMatch(/aria-label="Open write editor"/);
+    expect(source).toMatch(/aria-label="Open recording editor"/);
+    expect(source).toMatch(/to=\{previewHref\}/);
+    expect(source).not.toMatch(/hasAudio &&/);
   });
 });

@@ -23,10 +23,10 @@ describe("layout widths", () => {
     const source = readSource("src/components/PerspectiveListener.tsx");
 
     expect(source).toMatch(
-      /className="relative flex h-dvh w-full flex-col overflow-y-auto"/,
+      /className="relative flex h-dvh w-full flex-col overflow-y-auto pb-/,
     );
     expect(source).toMatch(
-      /className="relative z-10 flex h-dvh w-full shrink-0 flex-col overflow-hidden"/,
+      /className="relative z-10 flex h-\[calc\(100dvh-var\(--perspective-actions-height,8rem\)\)\] w-full shrink-0 flex-col overflow-hidden"/,
     );
     expect(source).toMatch(
       /className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden/,
@@ -35,11 +35,10 @@ describe("layout widths", () => {
       /className="h-full w-screen overflow-y-auto scrollbar-transparent"/,
     );
     expect(source).toMatch(
-      /className="flex min-h-full items-center justify-center px-4 pt-16 pb-4"/,
+      /className="flex min-h-full items-center justify-center px-4 py-4"/,
     );
-    expect(source).toMatch(
-      /className="-ml-4 flex w-15 shrink-0 flex-col items-center gap-0\.5"[\s\S]*?<PerspectiveSupport perspective=\{perspective\} \/>[\s\S]*?<SWEditor/,
-    );
+    expect(source).toMatch(/<PerspectiveActions perspective=\{perspective\}/);
+    expect(source).toContain('placement="inline"');
     expect(source).toMatch(/<PlaybackTimeline/);
     expect(source).toMatch(/onTogglePlayback=\{handleTogglePlayback\}/);
     expect(source).toMatch(/<PerspectiveReflections/);
@@ -82,12 +81,10 @@ describe("layout widths", () => {
     expect(supportSource).not.toContain("💸");
     expect(supportSource).not.toContain("ℹ️");
     expect(supportSource).not.toContain("pixel-ui-");
-    expect(supportSource).toContain(
-      'className="relative z-20 flex w-11 shrink-0 flex-col items-center"',
-    );
+    expect(supportSource).toContain('layout = "vertical"');
     expect(supportSource).not.toContain("support-info");
     expect(readSource("src/components/SW.tsx")).toContain(
-      "<PerspectiveSupport perspective={perspective} />",
+      "<PerspectiveActions",
     );
     expect(readSource("src/components/SW.tsx")).not.toContain(
       'aria-label="Story support totals"',

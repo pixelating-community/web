@@ -2,6 +2,7 @@
 
 import { useServerFn } from "@tanstack/react-start";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { PayPalContributionCheckout } from "@/components/PayPalContributionCheckout";
 import { StripeContributionCheckout } from "@/components/StripeContributionCheckout";
 import {
@@ -54,9 +55,12 @@ type StripeSession = {
 
 export const PerspectiveSupport = ({
   perspective,
+  layout = "vertical",
 }: {
   perspective: Perspective;
+  layout?: "vertical" | "horizontal";
 }) => {
+  const horizontal = layout === "horizontal";
   const loadSupportFn = useServerFn(loadPerspectiveSupport);
   const castVoteFn = useServerFn(castPerspectiveVote);
   const createStripeSessionFn = useServerFn(createStripeContributionSession);
@@ -230,17 +234,20 @@ export const PerspectiveSupport = ({
     creatorSupport && stripe?.enabled && stripe.publishableKey,
   );
   const amountLocked = Boolean(stripeSession || isStartingCheckout);
-  const selectedProduct =
-    getSupportProduct(amountMinor) ?? SUPPORT_PRODUCTS[0];
+  const selectedProduct = getSupportProduct(amountMinor) ?? SUPPORT_PRODUCTS[0];
 
   return (
     <section
       aria-label="Support this story"
-      className="relative z-20 flex w-11 shrink-0 flex-col items-center"
+      className={`relative z-20 flex shrink-0 items-center ${horizontal ? "" : "w-11 flex-col"}`}
     >
-      <div className="flex w-11 flex-col items-center gap-0.5">
+      <div
+        className={`flex items-center gap-0.5 ${horizontal ? "" : "w-11 flex-col"}`}
+      >
         <div className="flex max-w-full flex-col items-center gap-0.5">
-          <div className="flex w-fit max-w-full flex-col items-center gap-0.5 text-center">
+          <div
+            className={`flex w-fit max-w-full items-center gap-0.5 text-center ${horizontal ? "" : "flex-col"}`}
+          >
             <button
               type="button"
               onClick={() => void handleVote()}
@@ -250,7 +257,7 @@ export const PerspectiveSupport = ({
                   ? `${virtualVoteCount} virtual votes. Your vote is counted.`
                   : `Add a virtual vote. ${virtualVoteCount} votes so far.`
               }
-              className={`inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
+              className={`inline-flex ${horizontal ? "min-h-11 min-w-11 justify-center px-2 text-xs" : "min-h-7 px-1 text-[10px]"} items-center gap-1 whitespace-nowrap border-0 bg-transparent leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 ${
                 support?.hasVoted
                   ? "text-pink-100"
                   : "text-white/45 enabled:hover:text-pink-100"
@@ -262,7 +269,7 @@ export const PerspectiveSupport = ({
             <button
               type="button"
               onClick={() => setShowContribution((value) => !value)}
-              className="inline-flex min-h-7 items-center gap-1 whitespace-nowrap border-0 bg-transparent px-1 text-[10px] leading-none text-white/45 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-[color:var(--color-neon-teal-light)]"
+              className={`inline-flex ${horizontal ? "min-h-11 min-w-11 justify-center px-2 text-xs" : "min-h-7 px-1 text-[10px]"} items-center gap-1 whitespace-nowrap border-0 bg-transparent leading-none text-white/45 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/80 hover:text-[color:var(--color-neon-teal-light)]`}
               aria-expanded={showContribution}
               aria-label={`Support this story. ${formatContributionTotal(contributionTotalMinor, currency)} backed.`}
             >
@@ -274,179 +281,198 @@ export const PerspectiveSupport = ({
           </div>
         </div>
 
-        {showContribution ? (
-          <div className="support-surface scrollbar-transparent fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto flex max-h-[calc(100dvh-2rem)] w-auto max-w-sm flex-col gap-3 overflow-y-auto p-4">
-            <button
-              type="button"
-              onClick={() => setShowContribution(false)}
-              aria-label="Close support options"
-              title="Close"
-              className="ml-auto inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-[color:color-mix(in_oklch,var(--color-white)_65%,transparent)] hover:text-[color:var(--color-white)]"
-            >
-              ×
-            </button>
-            {creatorSupport ? (
-              <div className="flex flex-col gap-2">
-                <p className="m-0 text-sm font-bold text-[color:var(--color-white)]">
-                  {creatorSupport.displayName}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {creatorSupport.paypalMeUrl ? (
-                    <a
-                      href={creatorSupport.paypalMeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="support-secondary-action px-3 py-2 text-sm transition-colors"
-                    >
-                      PayPal ↗
-                    </a>
-                  ) : null}
-                  {creatorSupport.venmoUrl ? (
-                    <a
-                      href={creatorSupport.venmoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="support-secondary-action px-3 py-2 text-sm transition-colors"
-                    >
-                      Venmo ↗
-                    </a>
-                  ) : null}
-                </div>
-                {hasDirectSupport ? (
-                  <p className="m-0 text-[11px] text-[color:color-mix(in_oklch,var(--color-white)_48%,transparent)]">
-                    Direct links · not counted here
-                  </p>
-                ) : (
-                  <p className="m-0 text-xs text-[color:color-mix(in_oklch,var(--color-white)_58%,transparent)]">
-                    Support links are not ready yet.
-                  </p>
-                )}
-              </div>
-            ) : null}
-            {!creatorSupport || hasCreatorManagedCheckout ? (
-              <>
-                {stripeSession ? (
-                  <div className="support-subtle-panel flex items-center justify-between px-3 py-2 text-sm">
-                    <span>
-                      {selectedProduct.name} — {formatContributionTotal(
-                        stripeSession.amountMinor,
-                        currency,
-                      )}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStripeSession(null);
-                        setError("");
-                      }}
-                      aria-label="Change story product"
-                      title="Change story product"
-                      className="text-base text-[color:var(--color-neon-magenta)]"
-                    >
-                      ↺
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2" aria-label="Story product">
-                    {SUPPORT_PRODUCTS.map((product) => (
-                      <button
-                        key={product.id}
-                        type="button"
-                        disabled={amountLocked}
-                        onClick={() => {
-                          setAmountMinor(product.amountMinor);
-                          setError("");
-                        }}
-                        className={`flex min-h-24 flex-col items-start justify-between border px-3 py-3 text-left transition-colors ${
-                          amountMinor === product.amountMinor
-                            ? "border-[color:color-mix(in_oklch,var(--color-neon-magenta)_58%,transparent)] bg-[color:color-mix(in_oklch,var(--color-neon-magenta)_10%,transparent)] text-[color:var(--color-white)]"
-                            : "border-[color:color-mix(in_oklch,var(--color-white)_13%,transparent)] bg-transparent text-[color:color-mix(in_oklch,var(--color-white)_68%,transparent)] hover:bg-[color:color-mix(in_oklch,var(--color-black)_14%,transparent)]"
-                        }`}
-                      >
-                        <span className="text-xs font-bold uppercase leading-tight">
-                          {product.name}
-                        </span>
-                        <span className="text-lg font-black">
-                          {formatContributionTotal(product.amountMinor, currency)}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {stripe?.enabled && stripe.publishableKey ? (
-                  stripeSession ? (
-                    <StripeContributionCheckout
-                      key={stripeSession.clientSecret}
-                      amountMinor={stripeSession.amountMinor}
-                      clientSecret={stripeSession.clientSecret}
-                      connectedAccountId={stripeSession.connectedAccountId}
-                      currency={stripe.currency}
-                      publishableKey={stripe.publishableKey}
-                      requiresShipping={
-                        getSupportProduct(stripeSession.amountMinor)
-                          ?.requiresShipping ?? false
-                      }
-                      returnUrl={stripeSession.returnUrl}
-                      onConfirmed={verifyStripeContribution}
-                      onError={setError}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      disabled={isStartingCheckout}
-                      onClick={() => void beginStripeCheckout()}
-                      aria-label={
-                        isStartingCheckout
-                          ? "Starting secure checkout"
-                          : "Continue with card or wallet"
-                      }
-                      className="support-primary-action min-h-11 px-4 py-2 text-sm font-bold uppercase transition-colors disabled:cursor-wait disabled:opacity-55"
-                    >
-                      {isStartingCheckout ? "…" : "💳 Card / wallet"}
-                    </button>
-                  )
-                ) : (
-                  <p className="support-subtle-panel m-0 px-3 py-2 text-center text-xs text-[color:color-mix(in_oklch,var(--color-white)_58%,transparent)]">
-                    Card and wallet checkout is not configured yet.
-                  </p>
-                )}
-
-                {paypal?.enabled && paypal.clientId ? (
-                  <div className="border-t border-[color:color-mix(in_oklch,var(--color-neon-teal)_24%,transparent)] pt-3">
-                    <button
-                      type="button"
-                      className="support-secondary-action mx-auto block min-h-11 w-full px-4 py-2 text-sm font-bold transition-colors"
-                      onClick={() =>
-                        setShowAlternativePayments((value) => !value)
-                      }
-                      aria-expanded={showAlternativePayments}
-                    >
-                      {showAlternativePayments ? "Hide" : "Use"} PayPal or Venmo
-                    </button>
-                    {showAlternativePayments ? (
-                      <div className="mt-3">
-                        <PayPalContributionCheckout
-                          amountMinor={amountMinor}
-                          clientId={paypal.clientId}
-                          currency={paypal.currency}
-                          perspectiveId={perspective.id}
-                          onConfirmed={applyStats}
-                          onError={setError}
-                          onStatus={setStatus}
-                        />
-                      </div>
-                    ) : null}
+        {showContribution
+          ? createPortal(
+              <dialog
+                open
+                aria-label="Support options"
+                className="support-surface scrollbar-transparent fixed inset-x-4 bottom-[max(env(safe-area-inset-bottom),1rem)] z-50 mx-auto flex max-h-[calc(100dvh-2rem)] w-auto max-w-sm flex-col gap-3 overflow-y-auto p-4"
+              >
+                <button
+                  type="button"
+                  onClick={() => setShowContribution(false)}
+                  aria-label="Close support options"
+                  title="Close"
+                  className="ml-auto inline-flex h-7 w-7 items-center justify-center border-0 bg-transparent text-base text-[color:color-mix(in_oklch,var(--color-white)_65%,transparent)] hover:text-[color:var(--color-white)]"
+                >
+                  ×
+                </button>
+                {creatorSupport ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="m-0 text-sm font-bold text-[color:var(--color-white)]">
+                      {creatorSupport.displayName}
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {creatorSupport.paypalMeUrl ? (
+                        <a
+                          href={creatorSupport.paypalMeUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="support-secondary-action px-3 py-2 text-sm transition-colors"
+                        >
+                          PayPal ↗
+                        </a>
+                      ) : null}
+                      {creatorSupport.venmoUrl ? (
+                        <a
+                          href={creatorSupport.venmoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="support-secondary-action px-3 py-2 text-sm transition-colors"
+                        >
+                          Venmo ↗
+                        </a>
+                      ) : null}
+                    </div>
+                    {hasDirectSupport ? (
+                      <p className="m-0 text-[11px] text-[color:color-mix(in_oklch,var(--color-white)_48%,transparent)]">
+                        Direct links · not counted here
+                      </p>
+                    ) : (
+                      <p className="m-0 text-xs text-[color:color-mix(in_oklch,var(--color-white)_58%,transparent)]">
+                        Support links are not ready yet.
+                      </p>
+                    )}
                   </div>
                 ) : null}
-              </>
-            ) : null}
-          </div>
-        ) : null}
+                {!creatorSupport || hasCreatorManagedCheckout ? (
+                  <>
+                    {stripeSession ? (
+                      <div className="support-subtle-panel flex items-center justify-between px-3 py-2 text-sm">
+                        <span>
+                          {selectedProduct.name} —{" "}
+                          {formatContributionTotal(
+                            stripeSession.amountMinor,
+                            currency,
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStripeSession(null);
+                            setError("");
+                          }}
+                          aria-label="Change story product"
+                          title="Change story product"
+                          className="text-base text-[color:var(--color-neon-magenta)]"
+                        >
+                          ↺
+                        </button>
+                      </div>
+                    ) : (
+                      <div
+                        className="grid grid-cols-2 gap-2"
+                        aria-label="Story product"
+                      >
+                        {SUPPORT_PRODUCTS.map((product) => (
+                          <button
+                            key={product.id}
+                            type="button"
+                            disabled={amountLocked}
+                            onClick={() => {
+                              setAmountMinor(product.amountMinor);
+                              setError("");
+                            }}
+                            className={`flex min-h-24 flex-col items-start justify-between border px-3 py-3 text-left transition-colors ${
+                              amountMinor === product.amountMinor
+                                ? "border-[color:color-mix(in_oklch,var(--color-neon-magenta)_58%,transparent)] bg-[color:color-mix(in_oklch,var(--color-neon-magenta)_10%,transparent)] text-[color:var(--color-white)]"
+                                : "border-[color:color-mix(in_oklch,var(--color-white)_13%,transparent)] bg-transparent text-[color:color-mix(in_oklch,var(--color-white)_68%,transparent)] hover:bg-[color:color-mix(in_oklch,var(--color-black)_14%,transparent)]"
+                            }`}
+                          >
+                            <span className="text-xs font-bold uppercase leading-tight">
+                              {product.name}
+                            </span>
+                            <span className="text-lg font-black">
+                              {formatContributionTotal(
+                                product.amountMinor,
+                                currency,
+                              )}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {stripe?.enabled && stripe.publishableKey ? (
+                      stripeSession ? (
+                        <StripeContributionCheckout
+                          key={stripeSession.clientSecret}
+                          amountMinor={stripeSession.amountMinor}
+                          clientSecret={stripeSession.clientSecret}
+                          connectedAccountId={stripeSession.connectedAccountId}
+                          currency={stripe.currency}
+                          publishableKey={stripe.publishableKey}
+                          requiresShipping={
+                            getSupportProduct(stripeSession.amountMinor)
+                              ?.requiresShipping ?? false
+                          }
+                          returnUrl={stripeSession.returnUrl}
+                          onConfirmed={verifyStripeContribution}
+                          onError={setError}
+                        />
+                      ) : (
+                        <button
+                          type="button"
+                          disabled={isStartingCheckout}
+                          onClick={() => void beginStripeCheckout()}
+                          aria-label={
+                            isStartingCheckout
+                              ? "Starting secure checkout"
+                              : "Continue with card or wallet"
+                          }
+                          className="support-primary-action min-h-11 px-4 py-2 text-sm font-bold uppercase transition-colors disabled:cursor-wait disabled:opacity-55"
+                        >
+                          {isStartingCheckout ? "…" : "💳 Card / wallet"}
+                        </button>
+                      )
+                    ) : (
+                      <p className="support-subtle-panel m-0 px-3 py-2 text-center text-xs text-[color:color-mix(in_oklch,var(--color-white)_58%,transparent)]">
+                        Card and wallet checkout is not configured yet.
+                      </p>
+                    )}
+
+                    {paypal?.enabled && paypal.clientId ? (
+                      <div className="border-t border-[color:color-mix(in_oklch,var(--color-neon-teal)_24%,transparent)] pt-3">
+                        <button
+                          type="button"
+                          className="support-secondary-action mx-auto block min-h-11 w-full px-4 py-2 text-sm font-bold transition-colors"
+                          onClick={() =>
+                            setShowAlternativePayments((value) => !value)
+                          }
+                          aria-expanded={showAlternativePayments}
+                        >
+                          {showAlternativePayments ? "Hide" : "Use"} PayPal or
+                          Venmo
+                        </button>
+                        {showAlternativePayments ? (
+                          <div className="mt-3">
+                            <PayPalContributionCheckout
+                              amountMinor={amountMinor}
+                              clientId={paypal.clientId}
+                              currency={paypal.currency}
+                              perspectiveId={perspective.id}
+                              onConfirmed={applyStats}
+                              onError={setError}
+                              onStatus={setStatus}
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                  </>
+                ) : null}
+              </dialog>,
+              document.body,
+            )
+          : null}
 
         {status ? (
           <output
-            className="absolute top-0 left-full ml-2 w-48 text-left text-xs text-emerald-200"
+            className={
+              horizontal
+                ? "absolute bottom-full right-0 mb-3 w-48 rounded-lg bg-black/90 p-2 text-left text-xs text-emerald-200"
+                : "absolute top-0 left-full ml-2 w-48 text-left text-xs text-emerald-200"
+            }
             aria-live="polite"
           >
             {status}
@@ -454,7 +480,11 @@ export const PerspectiveSupport = ({
         ) : null}
         {error ? (
           <output
-            className="absolute top-0 left-full ml-2 w-48 text-left text-xs text-red-200"
+            className={
+              horizontal
+                ? "absolute bottom-full right-0 mb-3 w-48 rounded-lg bg-black/90 p-2 text-left text-xs text-red-200"
+                : "absolute top-0 left-full ml-2 w-48 text-left text-xs text-red-200"
+            }
             aria-live="polite"
           >
             {error}

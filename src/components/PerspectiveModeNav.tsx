@@ -11,7 +11,13 @@ import {
   buildTopicWritePerspectivePath,
 } from "@/lib/topicRoutes";
 
-type PerspectiveMode = "view" | "listen" | "write" | "record" | "karaoke" | "karaoke-editor";
+type PerspectiveMode =
+  | "view"
+  | "listen"
+  | "write"
+  | "record"
+  | "karaoke"
+  | "karaoke-editor";
 
 type PerspectiveModeNavProps = {
   canWrite?: boolean;
@@ -24,6 +30,7 @@ type PerspectiveModeNavProps = {
   onShareToggle?: () => void;
   isShareActive?: boolean;
   onNewPerspective?: () => void;
+  placement?: "top" | "inline";
 };
 
 type NavItem = {
@@ -47,6 +54,7 @@ export const PerspectiveModeNav = ({
   onShareToggle,
   isShareActive = false,
   onNewPerspective,
+  placement = "top",
 }: PerspectiveModeNavProps) => {
   const trimmedTopicName = topicName.trim();
   const trimmedPerspectiveId = perspectiveId?.trim() ?? "";
@@ -139,7 +147,11 @@ export const PerspectiveModeNav = ({
 
   return (
     <nav
-      className={`absolute top-3 right-3 z-30 flex ${navMaxWidthClass} flex-wrap justify-end gap-1.5 sm:gap-2`}
+      className={
+        placement === "inline"
+          ? "flex flex-wrap items-center justify-center gap-1"
+          : `absolute top-3 right-3 z-30 flex ${navMaxWidthClass} flex-wrap justify-end gap-1.5 sm:gap-2`
+      }
       aria-label="Perspective modes"
     >
       {onShareToggle ? (

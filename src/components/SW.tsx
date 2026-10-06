@@ -14,7 +14,7 @@ import { SWEFooter, type SampleBoundSaveStatus } from "@/components/SWEFooter";
 import { AudioImport } from "@/components/AudioImport";
 import { LineLengthIndicator } from "@/components/LineLengthIndicator";
 import { PerspectiveExportImport } from "@/components/PerspectiveExportImport";
-import { PerspectiveSupport } from "@/components/PerspectiveSupport";
+import { PerspectiveActions } from "@/components/PerspectiveActions";
 import { coerceTimingEntry } from "@/components/sw/editorUtils";
 import {
   hasPlayableAudioSource,
@@ -57,13 +57,7 @@ import type {
 import { useServerFn } from "@tanstack/react-start";
 import { setPerspectiveBounds } from "@/lib/perspectiveBounds.functions";
 import { getPublicAudioBaseUrl } from "@/lib/publicAudioBase";
-import { setTimestampSearchParams } from "@/lib/routeSearch";
 import { getTimingDuration } from "@/lib/swPlayback";
-import {
-  buildTopicPerspectivePath,
-  buildTopicViewerPerspectivePath,
-  buildTopicWritePerspectivePath,
-} from "@/lib/topicRoutes";
 import type { Perspective } from "@/types/perspectives";
 
 export type { SWPlaybackMode } from "@/components/sw/types";
@@ -124,6 +118,7 @@ export const SW = ({
   const hasAudioBase = Boolean(getPublicAudioBaseUrl());
   const [selectedId, setSelectedId] = useState(initialId);
   const selectedIdRef = useRef(initialId);
+  const [centeredId, setCenteredId] = useState<string | null>(null);
   const [runtimeById, dispatchRuntime] = useReducer(
     perspectiveRuntimeReducer,
     {},
@@ -350,7 +345,7 @@ export const SW = ({
       : null;
   const selectedWordStart =
     selectedWordIndex !== undefined && selectedWordIndex >= 0
-      ? selectedWordTiming?.start ?? currentTime
+      ? (selectedWordTiming?.start ?? currentTime)
       : undefined;
   const selectedWordDuration =
     selectedWordIndex !== undefined &&
@@ -595,6 +590,56 @@ export const SW = ({
     };
   }, [isViewer, perspectives]);
 
+  useEffect(() => {
+    if (!isViewer) return;
+    const root = scrollRef.current;
+    if (!root) return;
+    let frame: number | null = null;
+    const updateCenteredPerspective = () => {
+      frame = null;
+      const viewport = root.getBoundingClientRect();
+      const center = viewport.left + root.clientWidth / 2;
+      let nextId: string | null = null;
+      for (const perspective of perspectives) {
+        const node = editorRefs.current[perspective.id];
+        if (!node) continue;
+        const rect = node.getBoundingClientRect();
+        if (Math.abs(rect.left + rect.width / 2 - center) <= 2) {
+          nextId = perspective.id;
+          break;
+        }
+      }
+      setCenteredId(nextId);
+      if (nextId && nextId !== selectedIdRef.current) {
+        selectedIdRef.current = nextId;
+        setSelectedId(nextId);
+      }
+    };
+    const scheduleUpdate = () => {
+      if (frame === null)
+        frame = requestAnimationFrame(updateCenteredPerspective);
+    };
+    root.addEventListener("scroll", scheduleUpdate, { passive: true });
+    window.addEventListener("resize", scheduleUpdate);
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
+    resizeObserver.observe(root);
+    for (const perspective of perspectives) {
+      const node = editorRefs.current[perspective.id];
+      if (node) resizeObserver.observe(node);
+    }
+    scheduleUpdate();
+    return () => {
+      if (frame !== null) cancelAnimationFrame(frame);
+      root.removeEventListener("scroll", scheduleUpdate);
+      window.removeEventListener("resize", scheduleUpdate);
+      resizeObserver.disconnect();
+    };
+  }, [isViewer, perspectives]);
+
+  const centeredPerspective = perspectives.find(
+    (perspective) => perspective.id === centeredId,
+  );
+
   const handleSelectWord = useCallback(
     (id: string, index: number) => {
       setSelectedId(id);
@@ -726,81 +771,30 @@ export const SW = ({
         const hasAudio = hasPlayableAudioSource(audioFor(perspective));
         const hasPlaybackError = Boolean(playbackErrorById[perspective.id]);
         const playDisabled = !hasAudio;
-        const showViewerEditActions =
-          isViewer && showViewerEditLink && canWrite && Boolean(topicName);
         const showStopState =
           !playDisabled && !hasPlaybackError && isActive && isPlaybackActive;
-        const playLabel =
-          isViewer && viewerPlayBehavior === "open-perspective-page"
-            ? "Open playback page"
-            : hasPlaybackError
-              ? "Audio unavailable"
-              : isActive && isPlaybackActive
-                ? "Pause audio"
-                : "Play audio";
-        const showInlinePlayControl = isViewer
-          ? !showViewerAudioControls && (hasAudio || showViewerEditActions)
-          : hasAudio &&
-            isStudioSurface &&
-            topicName &&
-            isActive;
-        const writeHref =
-          showViewerEditActions && topicName
-            ? buildTopicWritePerspectivePath({
-                topicName,
-                perspectiveId: perspective.id,
-              })
-            : "";
-        const recordHref =
-          showViewerEditActions && topicName
-            ? buildTopicPerspectivePath({
-                topicName,
-                perspectiveId: perspective.id,
-              })
-            : "";
-        const previewHref = topicName
-          ? (() => {
-              const base = buildTopicViewerPerspectivePath({
-                topicName,
-                perspectiveId: perspective.id,
-              });
-              const params = new URLSearchParams();
-              setTimestampSearchParams({
-                end: perspective.end_time,
-                params,
-                start: perspective.start_time,
-              });
-              const qs = params.toString();
-              return qs ? `${base}?${qs}` : base;
-            })()
-          : "";
+        const playLabel = hasPlaybackError
+          ? "Audio unavailable"
+          : isActive && isPlaybackActive
+            ? "Pause audio"
+            : "Play audio";
+        const showInlinePlayControl =
+          hasAudio && isStudioSurface && topicName && isActive;
 
         return {
           currentTime: isActive ? selectedPlaybackClockTime : currentTime,
           isActive,
-          leadingControl: (isStudioSurface || isViewer || showInlinePlayControl) ? (
+          leadingControl: isStudioSurface ? (
             <span className="inline-flex items-center gap-2">
-              {showInlinePlayControl || isViewer ? (
-                <span className="inline-flex w-11 shrink-0 flex-col items-center gap-0.5">
-                  {showInlinePlayControl ? (
-                    <SwInlinePlayControl
-                      playDisabled={playDisabled}
-                      playLabel={playLabel}
-                      previewHref={isStudioSurface || !hasAudio ? "" : previewHref}
-                      recordHref={recordHref}
-                      showStopState={showStopState}
-                      writeHref={writeHref}
-                      onPlayClick={isStudioSurface ? () => handlePlayControlActivate(perspective) : undefined}
-                    />
-                  ) : null}
-                  {isViewer ? (
-                    <PerspectiveSupport perspective={perspective} />
-                  ) : null}
-                </span>
+              {showInlinePlayControl ? (
+                <SwInlinePlayControl
+                  playDisabled={playDisabled}
+                  playLabel={playLabel}
+                  showStopState={showStopState}
+                  onPlayClick={() => handlePlayControlActivate(perspective)}
+                />
               ) : null}
-              {isStudioSurface ? (
-                <LineLengthIndicator text={perspective.perspective} />
-              ) : null}
+              <LineLengthIndicator text={perspective.perspective} />
             </span>
           ) : null,
           perspective,
@@ -810,29 +804,28 @@ export const SW = ({
       }),
     [
       audioFor,
-      canWrite,
       currentTime,
       handlePlayControlActivate,
       isPlaybackActive,
       isStudioSurface,
-      isViewer,
       playbackErrorById,
       perspectives,
       selectedId,
       selectedPlaybackClockTime,
       selectedWordIndex,
-      showViewerAudioControls,
-      showViewerEditLink,
       timingsFor,
       topicName,
-      viewerPlayBehavior,
     ],
   );
 
   return (
     <div
       className={`flex h-dvh w-full flex-col overflow-hidden ${
-        isStudioSurface ? (isFooterMinimized ? "pb-14" : "pb-32") : ""
+        isStudioSurface
+          ? isFooterMinimized
+            ? "pb-14"
+            : "pb-32"
+          : "pb-[calc(5rem+env(safe-area-inset-bottom))]"
       }`}
     >
       {showPerspectiveModeNav && topicName && selectedPerspective ? (
@@ -846,7 +839,7 @@ export const SW = ({
       <div
         ref={scrollRef}
         className={`flex w-screen min-h-0 flex-1 snap-x snap-mandatory touch-pan-x items-center overflow-x-auto overflow-y-hidden [scrollbar-gutter:stable] scrollbar-transparent ${
-          isStudioSurface ? "px-4 py-0" : "px-0 py-0"
+          isStudioSurface ? "px-4 py-0" : "px-[10vw] py-0"
         }`}
       >
         {isViewer ? (
@@ -857,7 +850,6 @@ export const SW = ({
             onSeek={handleTimeUpdate}
             onSelectWord={handleSelectWord}
             registerPerspectiveRef={registerPerspectiveRef}
-            topicName={topicName}
           />
         ) : (
           <SWStudioSurface
@@ -870,6 +862,17 @@ export const SW = ({
           />
         )}
       </div>
+      {isViewer && centeredPerspective ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 px-3 pt-2 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+          <PerspectiveActions
+            key={centeredPerspective.id}
+            perspective={centeredPerspective}
+            topicName={topicName}
+            canWrite={canWrite && showViewerEditLink}
+            showOpenLink
+          />
+        </div>
+      ) : null}
       {selectedPlaybackError ? (
         <output className="px-4 pb-2 text-xs text-red-200/90">
           audio unavailable for this perspective

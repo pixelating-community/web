@@ -1,7 +1,6 @@
 import type { RefObject } from "react";
 import { SWEditor } from "@/components/SWEditor";
 import type { SWSurfaceItem } from "@/components/sw/types";
-import { buildTopicViewerPerspectivePath } from "@/lib/topicRoutes";
 
 type SWViewerSurfaceProps = {
   audioRef: RefObject<HTMLAudioElement | null>;
@@ -13,7 +12,6 @@ type SWViewerSurfaceProps = {
     perspectiveId: string,
     node: HTMLDivElement | null,
   ) => void;
-  topicName?: string;
 };
 
 export const SWViewerSurface = ({
@@ -23,10 +21,8 @@ export const SWViewerSurface = ({
   onSeek,
   onSelectWord,
   registerPerspectiveRef,
-  topicName,
 }: SWViewerSurfaceProps) => {
   return items.map((item) => {
-    const reflectionCount = item.perspective.reflection_count ?? 0;
     const content = (
       <div className="flex w-full flex-col items-center">
         <SWEditor
@@ -41,27 +37,10 @@ export const SWViewerSurface = ({
           readOnly={true}
           showTimingLabels={false}
           showSelection={false}
-          selectedWordIndex={
-            item.isActive ? item.selectedWordIndex : undefined
-          }
+          selectedWordIndex={item.isActive ? item.selectedWordIndex : undefined}
           onSelectWord={(index) => onSelectWord(item.perspective.id, index)}
           leadingControl={item.leadingControl}
         />
-        {reflectionCount > 0 && topicName ? (
-          <a
-            href={`${buildTopicViewerPerspectivePath({
-              topicName,
-              perspectiveId: item.perspective.id,
-            })}#reflections`}
-            className="unstyled-link mt-2 text-xs text-white/40 hover:text-white/70"
-          >
-            💭 x {reflectionCount}
-          </a>
-        ) : reflectionCount > 0 ? (
-          <div className="mt-2 text-xs text-white/40">
-            💭 x {reflectionCount}
-          </div>
-        ) : null}
       </div>
     );
 
@@ -72,7 +51,7 @@ export const SWViewerSurface = ({
           registerPerspectiveRef(item.perspective.id, node);
         }}
         data-id={item.perspective.id}
-        className="defer-offscreen h-full min-w-[80vw] snap-center overflow-y-auto"
+        className="defer-offscreen h-full w-[80vw] shrink-0 snap-center overflow-y-auto"
       >
         <div className="flex min-h-full items-center justify-center p-4">
           {content}
