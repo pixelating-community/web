@@ -664,6 +664,7 @@ export const KaraokeListener = ({
         <PerspectiveBackground imageSrc={backgroundImageSrc} />
       ) : null}
       <PlaybackTimeline
+        audioSrc={resolvedVideoSrc || resolvedAudioSrc}
         className="mt-12"
         timings={timings}
         currentTime={currentTime}

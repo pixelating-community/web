@@ -38,7 +38,10 @@ export const resolvePlaybackRange = ({
   const mediaEnd = finiteNonnegative(duration);
   const timingEnd = getLastTimingEnd(timings);
   const endCandidate = requestedEnd ?? mediaEnd ?? timingEnd;
-  const end = Math.max(start + MINIMUM_RANGE_SECONDS, endCandidate || start + 1);
+  const end = Math.max(
+    start + MINIMUM_RANGE_SECONDS,
+    endCandidate || start + 1,
+  );
   return { end, start };
 };
 
@@ -47,54 +50,51 @@ export const clampPlaybackTime = (
   range: { end: number; start: number },
 ) => Math.min(range.end, Math.max(range.start, value));
 
-export const buildTimingWaveform = ({
+export const buildPlaybackWaveform = ({
   barCount = DEFAULT_BAR_COUNT,
+  buffer,
   end,
-  start,
-  timings,
+  start = 0,
 }: {
   barCount?: number;
-  end: number;
-  start: number;
-  timings: WordTimingEntry[];
+  buffer: AudioBuffer;
+  end?: number;
+  start?: number;
 }) => {
-  const count = Math.max(1, Math.floor(barCount));
-  const span = Math.max(MINIMUM_RANGE_SECONDS, end - start);
-  const binDuration = span / count;
-  const coverage = Array.from<number>({ length: count }).fill(0);
-
-  for (let index = 0; index < timings.length; index += 1) {
-    const timing = coerceTiming(timings, index);
-    if (!timing) continue;
-    const segmentStart = Math.max(start, timing.start);
-    const segmentEnd = Math.min(
-      end,
-      timing.start + getTimingDuration(timings, index),
-    );
-    if (segmentEnd <= segmentStart) continue;
-
-    const firstBin = Math.max(
-      0,
-      Math.min(count - 1, Math.floor((segmentStart - start) / binDuration)),
-    );
-    const lastBin = Math.max(
-      firstBin,
-      Math.min(
-        count - 1,
-        Math.floor((segmentEnd - start - Number.EPSILON) / binDuration),
-      ),
-    );
-
-    for (let bin = firstBin; bin <= lastBin; bin += 1) {
-      const binStart = start + bin * binDuration;
-      const binEnd = binStart + binDuration;
-      const overlap = Math.max(
-        0,
-        Math.min(segmentEnd, binEnd) - Math.max(segmentStart, binStart),
-      );
-      coverage[bin] = Math.min(1, (coverage[bin] ?? 0) + overlap / binDuration);
+  const count = Number.isFinite(barCount)
+    ? Math.max(1, Math.floor(barCount))
+    : DEFAULT_BAR_COUNT;
+  if (!buffer.length || !buffer.numberOfChannels || !(buffer.sampleRate > 0))
+    return [];
+  const firstSample = Math.min(
+    buffer.length,
+    Math.floor((finiteNonnegative(start) ?? 0) * buffer.sampleRate),
+  );
+  const lastSample = Math.min(
+    buffer.length,
+    Math.ceil((finiteNonnegative(end) ?? buffer.duration) * buffer.sampleRate),
+  );
+  if (lastSample <= firstSample) return [];
+  const channels = Array.from({ length: buffer.numberOfChannels }, (_, index) =>
+    buffer.getChannelData(index),
+  );
+  const waveform = Array.from<number>({ length: count }).fill(0);
+  for (let bin = 0; bin < count; bin += 1) {
+    const from =
+      firstSample + Math.floor(((lastSample - firstSample) * bin) / count);
+    const to =
+      firstSample +
+      Math.floor(((lastSample - firstSample) * (bin + 1)) / count);
+    let sumSquares = 0;
+    for (const channel of channels) {
+      for (let sample = from; sample < to; sample += 1) {
+        const value = channel[sample] ?? 0;
+        sumSquares += value * value;
+      }
     }
+    const sampleCount = (to - from) * channels.length;
+    waveform[bin] = sampleCount > 0 ? Math.sqrt(sumSquares / sampleCount) : 0;
   }
-
-  return coverage;
+  const peak = Math.max(...waveform);
+  return peak > 0 ? waveform.map((value) => value / peak) : waveform;
 };

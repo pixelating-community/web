@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AudioWaveform } from "@/components/AudioWaveform";
+import { decodeAudioBlob } from "@/lib/audioProcessing";
 import {
-  buildTimingWaveform,
+  buildPlaybackWaveform,
   clampPlaybackTime,
   resolvePlaybackRange,
 } from "@/lib/playbackTimeline";
 import type { WordTimingEntry } from "@/types/perspectives";
 
 type PlaybackTimelineProps = {
+  audioSrc?: string;
   className?: string;
   currentTime: number;
   disabled?: boolean;
@@ -25,6 +28,7 @@ type PlaybackTimelineProps = {
 };
 
 export const PlaybackTimeline = ({
+  audioSrc,
   className = "",
   currentTime,
   disabled = false,
@@ -38,18 +42,37 @@ export const PlaybackTimeline = ({
   startTime,
   timings,
 }: PlaybackTimelineProps) => {
+  const analysisQuery = useQuery({
+    queryKey: ["playback-waveform", audioSrc, startTime, endTime],
+    enabled: Boolean(audioSrc),
+    staleTime: Infinity,
+    retry: false,
+    refetchOnWindowFocus: false,
+    queryFn: async ({ signal }) => {
+      const response = await fetch(audioSrc!, { signal });
+      if (!response.ok) throw new Error("Could not load audio waveform.");
+      const buffer = await decodeAudioBlob(await response.blob());
+      signal.throwIfAborted();
+      return {
+        duration: buffer.duration,
+        waveform: buildPlaybackWaveform({
+          buffer,
+          start: startTime,
+          end: endTime,
+        }),
+      };
+    },
+  });
+  const resolvedDuration = duration ?? analysisQuery.data?.duration;
   const range = useMemo(
-    () => resolvePlaybackRange({ duration, endTime, startTime, timings }),
-    [duration, endTime, startTime, timings],
-  );
-  const waveform = useMemo(
     () =>
-      buildTimingWaveform({
-        end: range.end,
-        start: range.start,
+      resolvePlaybackRange({
+        duration: resolvedDuration,
+        endTime,
+        startTime,
         timings,
       }),
-    [range.end, range.start, timings],
+    [resolvedDuration, endTime, startTime, timings],
   );
   const clampedTime = clampPlaybackTime(currentTime, range);
   const playheadPercent =
@@ -80,7 +103,8 @@ export const PlaybackTimeline = ({
       </button>
       <div className="relative h-11 min-w-0 flex-1 rounded-lg focus-within:ring-2 focus-within:ring-[var(--color-neon-teal)] focus-within:ring-offset-2 focus-within:ring-offset-transparent">
         <AudioWaveform
-          waveform={waveform}
+          waveform={analysisQuery.data?.waveform}
+          fallbackWaveform={[]}
           playheadPercent={playheadPercent}
           className="pointer-events-none h-11 rounded-lg bg-black/15"
           barsClassName="px-2 py-1.5"
