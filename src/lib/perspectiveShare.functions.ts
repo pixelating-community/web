@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
+import { appendResponseHeader, getRequest } from "@tanstack/react-start/server";
 import { getClientIp, rateLimit } from "@/lib/rateLimit";
 import {
   generatePerspectiveShareCodeSchema,
@@ -73,9 +73,8 @@ export const redeemPerspectiveShareCode = createServerFn({ method: "POST" })
       return result;
     }
 
-    const headers = getResponseHeaders();
     for (const cookieHeader of result.setCookieHeaders) {
-      headers.append("Set-Cookie", cookieHeader);
+      appendResponseHeader("Set-Cookie", cookieHeader);
     }
 
     return {

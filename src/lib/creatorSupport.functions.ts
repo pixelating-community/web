@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
+import { appendResponseHeader, getRequest } from "@tanstack/react-start/server";
 import {
   claimTopicOwnerInviteSchema,
   createStripeConnectOnboardingSchema,
@@ -22,7 +22,7 @@ export const claimTopicOwnerInvite = createServerFn({ method: "POST" })
     const { claimTopicOwnerInviteServer } =
       await import("@/lib/creatorSupport.server");
     const result = await claimTopicOwnerInviteServer({ data, request });
-    if (result.ok) getResponseHeaders().append("Set-Cookie", result.setCookie);
+    if (result.ok) appendResponseHeader("Set-Cookie", result.setCookie);
     if (!result.ok) return result;
     return { ok: true as const, data: result.data };
   });

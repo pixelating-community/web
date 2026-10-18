@@ -21,7 +21,9 @@ describe("TanStack Start auth and boundary patterns", () => {
       /useServerFn\(redeemPerspectiveShareCode\)/,
     );
     expect(perspectiveShareSource).not.toMatch(/fetch\(`/);
-    expect(shareFunctionsSource).toMatch(/getResponseHeaders/);
+    expect(shareFunctionsSource).toMatch(
+      /appendResponseHeader\("Set-Cookie", cookieHeader\)/,
+    );
   });
 
   it("keeps perspective route modules importing .functions wrappers instead of inline server code", () => {

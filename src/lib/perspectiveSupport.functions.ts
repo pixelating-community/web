@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
+import { appendResponseHeader, getRequest } from "@tanstack/react-start/server";
 import { getClientIp, rateLimit } from "@/lib/rateLimit";
 import {
   capturePayPalContributionOrderSchema,
@@ -46,7 +46,7 @@ export const castPerspectiveVote = createServerFn({ method: "POST" })
       const { buildVoterCookie } = await import(
         "@/lib/perspectiveSupportIdentity.server"
       );
-      getResponseHeaders().append(
+      appendResponseHeader(
         "Set-Cookie",
         buildVoterCookie(result.voterToken),
       );

@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest, getResponseHeaders } from "@tanstack/react-start/server";
+import { appendResponseHeader, getRequest } from "@tanstack/react-start/server";
 import { z } from "zod/v4";
 import { topicTokenLoginSchema } from "@/lib/topicTokenLogin.schema";
 
@@ -26,9 +26,8 @@ export const saveTopicTokenAndRedirect = createServerFn({ method: "POST" })
       return { ok: false as const, error: result.error };
     }
 
-    const headers = getResponseHeaders();
     for (const cookieHeader of result.setCookieHeaders) {
-      headers.append("Set-Cookie", cookieHeader);
+      appendResponseHeader("Set-Cookie", cookieHeader);
     }
 
     return { ok: true as const, nextPath: data.nextPath };
