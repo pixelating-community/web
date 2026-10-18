@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-export const Route = createFileRoute("/t/$topic/tools")({
+export const Route = createFileRoute("/c/$topic/tools")({
   component: TopicToolsPlaceholder,
 });
 
@@ -17,13 +17,13 @@ function TopicToolsPlaceholder() {
         </p>
         <div className="mt-2">
           <Link
-            to="/t/$"
+            to="/c/$"
             params={{ _splat: topic }}
             preload="intent"
             viewTransition
             className="underline underline-offset-2"
           >
-            open topic
+            open chapter
           </Link>
         </div>
       </div>

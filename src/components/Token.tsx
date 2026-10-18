@@ -64,7 +64,7 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
     <div className="flex flex-col mt-1 mx-1 gap-1">
       <div className="flex flex-row">
         <label className="sr-only" htmlFor="token">
-          Topic key
+          Chapter key
         </label>
         <div className="relative w-full">
           <input
@@ -86,7 +86,7 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
             type={showToken ? "text" : "password"}
             id="token"
             name="token"
-            placeholder="Topic key 🔑"
+            placeholder="Chapter key 🔑"
             autoComplete="current-password"
             autoCapitalize="none"
             autoCorrect="off"

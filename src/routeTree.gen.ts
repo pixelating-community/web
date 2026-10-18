@@ -13,8 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TimingEditorRouteImport } from './routes/timing-editor'
 import { Route as ApiObjRouteImport } from './routes/api/obj'
 import { Route as ApiPRouteImport } from './routes/api/p'
+import { Route as CSplatRouteImport } from './routes/c.$'
 import { Route as PIdRouteImport } from './routes/p.$id'
-import { Route as TSplatRouteImport } from './routes/t.$'
 import { Route as ApiObjHealthRouteImport } from './routes/api/obj/health'
 import { Route as ApiObjMergeStatusRouteImport } from './routes/api/obj/merge-status'
 import { Route as ApiObjPaypalWebhookRouteImport } from './routes/api/obj/paypal-webhook'
@@ -27,16 +27,16 @@ import { Route as ApiPIdRouteImport } from './routes/api/p/$id'
 import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
 import { Route as ApiTARouteImport } from './routes/api/t/a'
 import { Route as ApiTTokenRouteImport } from './routes/api/t/token'
+import { Route as CTopicStoreRouteImport } from './routes/c.$topic.store'
+import { Route as CTopicToolsRouteImport } from './routes/c.$topic.tools'
+import { Route as CTopicUlRouteImport } from './routes/c.$topic.ul'
 import { Route as PIdCommitRouteImport } from './routes/p.$id.commit'
 import { Route as PIdJoinRouteImport } from './routes/p.$id.join'
-import { Route as TTopicStoreRouteImport } from './routes/t.$topic.store'
-import { Route as TTopicToolsRouteImport } from './routes/t.$topic.tools'
-import { Route as TTopicUlRouteImport } from './routes/t.$topic.ul'
 import { Route as ApiPIdAlignRouteImport } from './routes/api/p/$id/align'
 import { Route as ApiPIdAudioMixRouteImport } from './routes/api/p/$id/audio-mix'
 import { Route as ApiPIdAudioSnippetsRouteImport } from './routes/api/p/$id/audio-snippets'
 import { Route as ApiPIdPromptRouteImport } from './routes/api/p/$id/prompt'
-import { Route as TTopicSupportClaimRouteImport } from './routes/t.$topic.support.claim'
+import { Route as CTopicSupportClaimRouteImport } from './routes/c.$topic.support.claim'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,14 +58,14 @@ const ApiPRoute = ApiPRouteImport.update({
   path: '/api/p',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CSplatRoute = CSplatRouteImport.update({
+  id: '/c/$',
+  path: '/c/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PIdRoute = PIdRouteImport.update({
   id: '/p/$id',
   path: '/p/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TSplatRoute = TSplatRouteImport.update({
-  id: '/t/$',
-  path: '/t/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiObjHealthRoute = ApiObjHealthRouteImport.update({
@@ -129,6 +129,21 @@ const ApiTTokenRoute = ApiTTokenRouteImport.update({
   path: '/api/t/token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CTopicStoreRoute = CTopicStoreRouteImport.update({
+  id: '/c/$topic/store',
+  path: '/c/$topic/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CTopicToolsRoute = CTopicToolsRouteImport.update({
+  id: '/c/$topic/tools',
+  path: '/c/$topic/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CTopicUlRoute = CTopicUlRouteImport.update({
+  id: '/c/$topic/ul',
+  path: '/c/$topic/ul',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PIdCommitRoute = PIdCommitRouteImport.update({
   id: '/commit',
   path: '/commit',
@@ -138,21 +153,6 @@ const PIdJoinRoute = PIdJoinRouteImport.update({
   id: '/join',
   path: '/join',
   getParentRoute: () => PIdRoute,
-} as any)
-const TTopicStoreRoute = TTopicStoreRouteImport.update({
-  id: '/t/$topic/store',
-  path: '/t/$topic/store',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TTopicToolsRoute = TTopicToolsRouteImport.update({
-  id: '/t/$topic/tools',
-  path: '/t/$topic/tools',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TTopicUlRoute = TTopicUlRouteImport.update({
-  id: '/t/$topic/ul',
-  path: '/t/$topic/ul',
-  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPIdAlignRoute = ApiPIdAlignRouteImport.update({
   id: '/align',
@@ -174,9 +174,9 @@ const ApiPIdPromptRoute = ApiPIdPromptRouteImport.update({
   path: '/prompt',
   getParentRoute: () => ApiPIdRoute,
 } as any)
-const TTopicSupportClaimRoute = TTopicSupportClaimRouteImport.update({
-  id: '/t/$topic/support/claim',
-  path: '/t/$topic/support/claim',
+const CTopicSupportClaimRoute = CTopicSupportClaimRouteImport.update({
+  id: '/c/$topic/support/claim',
+  path: '/c/$topic/support/claim',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -185,8 +185,8 @@ export interface FileRoutesByFullPath {
   '/timing-editor': typeof TimingEditorRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
+  '/c/$': typeof CSplatRoute
   '/p/$id': typeof PIdRouteWithChildren
-  '/t/$': typeof TSplatRoute
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
@@ -199,24 +199,24 @@ export interface FileRoutesByFullPath {
   '/api/t/$topic': typeof ApiTTopicRoute
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
+  '/c/$topic/store': typeof CTopicStoreRoute
+  '/c/$topic/tools': typeof CTopicToolsRoute
+  '/c/$topic/ul': typeof CTopicUlRoute
   '/p/$id/commit': typeof PIdCommitRoute
   '/p/$id/join': typeof PIdJoinRoute
-  '/t/$topic/store': typeof TTopicStoreRoute
-  '/t/$topic/tools': typeof TTopicToolsRoute
-  '/t/$topic/ul': typeof TTopicUlRoute
   '/api/p/$id/align': typeof ApiPIdAlignRoute
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
   '/api/p/$id/prompt': typeof ApiPIdPromptRoute
-  '/t/$topic/support/claim': typeof TTopicSupportClaimRoute
+  '/c/$topic/support/claim': typeof CTopicSupportClaimRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/timing-editor': typeof TimingEditorRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
+  '/c/$': typeof CSplatRoute
   '/p/$id': typeof PIdRouteWithChildren
-  '/t/$': typeof TSplatRoute
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
@@ -229,16 +229,16 @@ export interface FileRoutesByTo {
   '/api/t/$topic': typeof ApiTTopicRoute
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
+  '/c/$topic/store': typeof CTopicStoreRoute
+  '/c/$topic/tools': typeof CTopicToolsRoute
+  '/c/$topic/ul': typeof CTopicUlRoute
   '/p/$id/commit': typeof PIdCommitRoute
   '/p/$id/join': typeof PIdJoinRoute
-  '/t/$topic/store': typeof TTopicStoreRoute
-  '/t/$topic/tools': typeof TTopicToolsRoute
-  '/t/$topic/ul': typeof TTopicUlRoute
   '/api/p/$id/align': typeof ApiPIdAlignRoute
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
   '/api/p/$id/prompt': typeof ApiPIdPromptRoute
-  '/t/$topic/support/claim': typeof TTopicSupportClaimRoute
+  '/c/$topic/support/claim': typeof CTopicSupportClaimRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -246,8 +246,8 @@ export interface FileRoutesById {
   '/timing-editor': typeof TimingEditorRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
+  '/c/$': typeof CSplatRoute
   '/p/$id': typeof PIdRouteWithChildren
-  '/t/$': typeof TSplatRoute
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
@@ -260,16 +260,16 @@ export interface FileRoutesById {
   '/api/t/$topic': typeof ApiTTopicRoute
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
+  '/c/$topic/store': typeof CTopicStoreRoute
+  '/c/$topic/tools': typeof CTopicToolsRoute
+  '/c/$topic/ul': typeof CTopicUlRoute
   '/p/$id/commit': typeof PIdCommitRoute
   '/p/$id/join': typeof PIdJoinRoute
-  '/t/$topic/store': typeof TTopicStoreRoute
-  '/t/$topic/tools': typeof TTopicToolsRoute
-  '/t/$topic/ul': typeof TTopicUlRoute
   '/api/p/$id/align': typeof ApiPIdAlignRoute
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
   '/api/p/$id/prompt': typeof ApiPIdPromptRoute
-  '/t/$topic/support/claim': typeof TTopicSupportClaimRoute
+  '/c/$topic/support/claim': typeof CTopicSupportClaimRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -278,8 +278,8 @@ export interface FileRouteTypes {
     | '/timing-editor'
     | '/api/obj'
     | '/api/p'
+    | '/c/$'
     | '/p/$id'
-    | '/t/$'
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
@@ -292,24 +292,24 @@ export interface FileRouteTypes {
     | '/api/t/$topic'
     | '/api/t/a'
     | '/api/t/token'
+    | '/c/$topic/store'
+    | '/c/$topic/tools'
+    | '/c/$topic/ul'
     | '/p/$id/commit'
     | '/p/$id/join'
-    | '/t/$topic/store'
-    | '/t/$topic/tools'
-    | '/t/$topic/ul'
     | '/api/p/$id/align'
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
     | '/api/p/$id/prompt'
-    | '/t/$topic/support/claim'
+    | '/c/$topic/support/claim'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/timing-editor'
     | '/api/obj'
     | '/api/p'
+    | '/c/$'
     | '/p/$id'
-    | '/t/$'
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
@@ -322,24 +322,24 @@ export interface FileRouteTypes {
     | '/api/t/$topic'
     | '/api/t/a'
     | '/api/t/token'
+    | '/c/$topic/store'
+    | '/c/$topic/tools'
+    | '/c/$topic/ul'
     | '/p/$id/commit'
     | '/p/$id/join'
-    | '/t/$topic/store'
-    | '/t/$topic/tools'
-    | '/t/$topic/ul'
     | '/api/p/$id/align'
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
     | '/api/p/$id/prompt'
-    | '/t/$topic/support/claim'
+    | '/c/$topic/support/claim'
   id:
     | '__root__'
     | '/'
     | '/timing-editor'
     | '/api/obj'
     | '/api/p'
+    | '/c/$'
     | '/p/$id'
-    | '/t/$'
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
@@ -352,16 +352,16 @@ export interface FileRouteTypes {
     | '/api/t/$topic'
     | '/api/t/a'
     | '/api/t/token'
+    | '/c/$topic/store'
+    | '/c/$topic/tools'
+    | '/c/$topic/ul'
     | '/p/$id/commit'
     | '/p/$id/join'
-    | '/t/$topic/store'
-    | '/t/$topic/tools'
-    | '/t/$topic/ul'
     | '/api/p/$id/align'
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
     | '/api/p/$id/prompt'
-    | '/t/$topic/support/claim'
+    | '/c/$topic/support/claim'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -369,15 +369,15 @@ export interface RootRouteChildren {
   TimingEditorRoute: typeof TimingEditorRoute
   ApiObjRoute: typeof ApiObjRouteWithChildren
   ApiPRoute: typeof ApiPRouteWithChildren
+  CSplatRoute: typeof CSplatRoute
   PIdRoute: typeof PIdRouteWithChildren
-  TSplatRoute: typeof TSplatRoute
   ApiTTopicRoute: typeof ApiTTopicRoute
   ApiTARoute: typeof ApiTARoute
   ApiTTokenRoute: typeof ApiTTokenRoute
-  TTopicStoreRoute: typeof TTopicStoreRoute
-  TTopicToolsRoute: typeof TTopicToolsRoute
-  TTopicUlRoute: typeof TTopicUlRoute
-  TTopicSupportClaimRoute: typeof TTopicSupportClaimRoute
+  CTopicStoreRoute: typeof CTopicStoreRoute
+  CTopicToolsRoute: typeof CTopicToolsRoute
+  CTopicUlRoute: typeof CTopicUlRoute
+  CTopicSupportClaimRoute: typeof CTopicSupportClaimRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -410,18 +410,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/c/$': {
+      id: '/c/$'
+      path: '/c/$'
+      fullPath: '/c/$'
+      preLoaderRoute: typeof CSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$id': {
       id: '/p/$id'
       path: '/p/$id'
       fullPath: '/p/$id'
       preLoaderRoute: typeof PIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/t/$': {
-      id: '/t/$'
-      path: '/t/$'
-      fullPath: '/t/$'
-      preLoaderRoute: typeof TSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/obj/health': {
@@ -508,6 +508,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/c/$topic/store': {
+      id: '/c/$topic/store'
+      path: '/c/$topic/store'
+      fullPath: '/c/$topic/store'
+      preLoaderRoute: typeof CTopicStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$topic/tools': {
+      id: '/c/$topic/tools'
+      path: '/c/$topic/tools'
+      fullPath: '/c/$topic/tools'
+      preLoaderRoute: typeof CTopicToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/c/$topic/ul': {
+      id: '/c/$topic/ul'
+      path: '/c/$topic/ul'
+      fullPath: '/c/$topic/ul'
+      preLoaderRoute: typeof CTopicUlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$id/commit': {
       id: '/p/$id/commit'
       path: '/commit'
@@ -521,27 +542,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/p/$id/join'
       preLoaderRoute: typeof PIdJoinRouteImport
       parentRoute: typeof PIdRoute
-    }
-    '/t/$topic/store': {
-      id: '/t/$topic/store'
-      path: '/t/$topic/store'
-      fullPath: '/t/$topic/store'
-      preLoaderRoute: typeof TTopicStoreRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/t/$topic/tools': {
-      id: '/t/$topic/tools'
-      path: '/t/$topic/tools'
-      fullPath: '/t/$topic/tools'
-      preLoaderRoute: typeof TTopicToolsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/t/$topic/ul': {
-      id: '/t/$topic/ul'
-      path: '/t/$topic/ul'
-      fullPath: '/t/$topic/ul'
-      preLoaderRoute: typeof TTopicUlRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/api/p/$id/align': {
       id: '/api/p/$id/align'
@@ -571,11 +571,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPIdPromptRouteImport
       parentRoute: typeof ApiPIdRoute
     }
-    '/t/$topic/support/claim': {
-      id: '/t/$topic/support/claim'
-      path: '/t/$topic/support/claim'
-      fullPath: '/t/$topic/support/claim'
-      preLoaderRoute: typeof TTopicSupportClaimRouteImport
+    '/c/$topic/support/claim': {
+      id: '/c/$topic/support/claim'
+      path: '/c/$topic/support/claim'
+      fullPath: '/c/$topic/support/claim'
+      preLoaderRoute: typeof CTopicSupportClaimRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -650,15 +650,15 @@ const rootRouteChildren: RootRouteChildren = {
   TimingEditorRoute: TimingEditorRoute,
   ApiObjRoute: ApiObjRouteWithChildren,
   ApiPRoute: ApiPRouteWithChildren,
+  CSplatRoute: CSplatRoute,
   PIdRoute: PIdRouteWithChildren,
-  TSplatRoute: TSplatRoute,
   ApiTTopicRoute: ApiTTopicRoute,
   ApiTARoute: ApiTARoute,
   ApiTTokenRoute: ApiTTokenRoute,
-  TTopicStoreRoute: TTopicStoreRoute,
-  TTopicToolsRoute: TTopicToolsRoute,
-  TTopicUlRoute: TTopicUlRoute,
-  TTopicSupportClaimRoute: TTopicSupportClaimRoute,
+  CTopicStoreRoute: CTopicStoreRoute,
+  CTopicToolsRoute: CTopicToolsRoute,
+  CTopicUlRoute: CTopicUlRoute,
+  CTopicSupportClaimRoute: CTopicSupportClaimRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

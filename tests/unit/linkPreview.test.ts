@@ -19,7 +19,7 @@ describe("shared link previews", () => {
       topicName: "voices",
       shortTitle: "Voices",
       emoji: "🎵",
-      path: "/t/voices/p/selected",
+      path: "/c/voices/p/selected",
       perspectives: [
         {
           perspective: "Unrelated story",
@@ -43,7 +43,7 @@ describe("shared link previews", () => {
     });
     expect(head.meta).toContainEqual({
       property: "og:url",
-      content: "https://pxl8.ing/t/voices/p/selected",
+      content: "https://pxl8.ing/c/voices/p/selected",
     });
     expect(JSON.stringify(head)).not.toContain("Unrelated");
   });
@@ -51,7 +51,7 @@ describe("shared link previews", () => {
   it("summarizes multiple perspectives for a topic link and finds markdown artwork", () => {
     const preview = buildContentLinkPreview({
       topicName: "stories",
-      path: "/t/stories",
+      path: "/c/stories",
       perspectives: [
         { perspective: "First story" },
         { perspective: "Second story\n![bg](https://example.com/cover.jpg)" },
@@ -64,7 +64,7 @@ describe("shared link previews", () => {
   it("does not expose locked content or media even when the viewer has loaded them", () => {
     const preview = buildContentLinkPreview({
       topicName: "private",
-      path: "/t/private",
+      path: "/c/private",
       locked: true,
       perspectives: [
         {
@@ -113,7 +113,7 @@ describe("shared link previews", () => {
   it("bounds long excerpts without breaking emoji", () => {
     const preview = buildContentLinkPreview({
       topicName: "long",
-      path: "/t/long",
+      path: "/c/long",
       selectedPerspective: { perspective: "🎵".repeat(400) },
     });
     expect(Array.from(preview.description)).toHaveLength(320);
@@ -122,7 +122,7 @@ describe("shared link previews", () => {
   });
 
   it("shows a snippet from one post on its karaoke link without cutting a word in half", () => {
-    const path = "/t/startsw/k/01a0fd95-3390-7f2e-8c9d-13239a3249c3";
+    const path = "/c/startsw/k/01a0fd95-3390-7f2e-8c9d-13239a3249c3";
     const preview = buildContentLinkPreview({
       topicName: "startsw",
       path,

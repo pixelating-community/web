@@ -8,7 +8,7 @@ import {
   saveCreatorSupportMethods,
 } from "@/lib/creatorSupport.functions";
 
-export const Route = createFileRoute("/t/$topic/support/claim")({
+export const Route = createFileRoute("/c/$topic/support/claim")({
   component: CreatorSupportClaimRoute,
 });
 
@@ -137,7 +137,7 @@ function CreatorSupportClaimRoute() {
         <div className="flex items-center justify-between gap-4">
           <h1 className="m-0 text-xl font-black">Creator support</h1>
           <Link
-            to="/t/$"
+            to="/c/$"
             params={{ _splat: topic }}
             className="text-sm text-white/65 underline underline-offset-4 hover:text-white"
           >

@@ -739,8 +739,8 @@ export function WritePerspective({
             ? "w-10 rounded-full text-lg"
             : "max-w-[5.5rem] rounded-xl px-2 text-xs font-medium sm:max-w-[12rem] sm:px-3 sm:text-sm"
         }`}
-        aria-label="Back to topic"
-        title="Back to topic"
+        aria-label="Back to chapter"
+        title="Back to chapter"
       >
         <span className={topicNavIsSingleEmoji ? "" : "truncate"}>
           {topicNavLabel}

@@ -26,7 +26,7 @@ describe("sw player compatibility", () => {
     const swSource = readSource("src/components/sw/useSwPlaybackController.ts");
     const listenerSource = readSource("src/components/PerspectiveListener.tsx");
     const editorSource = readSource("src/components/SWEditor.tsx");
-    const topicRouteSource = readSource("src/routes/t.$.tsx");
+    const topicRouteSource = readSource("src/routes/c.$.tsx");
     const perspectiveRouteSource = readSource("src/routes/p.$id.tsx");
 
     expect(listenerSource).toMatch(/void audio\s*\.play\(\)\s*\.then/);

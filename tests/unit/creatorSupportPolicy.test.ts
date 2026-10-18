@@ -10,7 +10,7 @@ const readSource = (relativePath: string) =>
 describe("creator support policy", () => {
   it("keeps invite secrets out of storage, requests, and readable cookies", () => {
     const server = readSource("src/lib/creatorSupport.server.ts");
-    const route = readSource("src/routes/t.$topic.support.claim.tsx");
+    const route = readSource("src/routes/c.$topic.support.claim.tsx");
 
     expect(server).toMatch(/createHash\("sha256"\)/);
     expect(server).toMatch(/claimUrl\.hash = `token=/);

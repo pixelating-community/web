@@ -70,8 +70,8 @@ describe("route search parsing", () => {
   });
 
   it("keeps only meaningful unlock search params", () => {
-    expect(parseTopicUnlockSearch({ next: "   /t/topic?w=n  " })).toEqual({
-      next: "/t/topic?w=n",
+    expect(parseTopicUnlockSearch({ next: "   /c/topic?w=n  " })).toEqual({
+      next: "/c/topic?w=n",
     });
     expect(parseTopicUnlockSearch({ next: "   " })).toEqual({
       next: undefined,

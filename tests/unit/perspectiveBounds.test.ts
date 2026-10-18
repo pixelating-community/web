@@ -21,7 +21,7 @@ vi.mock("@/lib/requestId", () => ({
 
 import { setPerspectiveBoundsServer } from "@/lib/perspectiveBounds.server";
 
-const request = new Request("https://pxl8.ing/t/art/ke/p1");
+const request = new Request("https://pxl8.ing/c/art/ke/p1");
 
 describe("setPerspectiveBoundsServer", () => {
   beforeEach(() => {
@@ -57,7 +57,7 @@ describe("setPerspectiveBoundsServer", () => {
       request,
       data: {
         actionToken: "align-token",
-        currentPath: "/t/art%20tools/ke/p1?i=img#words",
+        currentPath: "/c/art%20tools/ke/p1?i=img#words",
         perspectiveId: "p1",
         startTime: 1.194742,
         topicId: "topic-1",
@@ -72,7 +72,7 @@ describe("setPerspectiveBoundsServer", () => {
     expect(updates).toEqual([[1.194742, "p1"]]);
     expect(result).toEqual({
       ok: true,
-      href: "/t/art%20tools/ke/p1?i=img&s=1.194742#words",
+      href: "/c/art%20tools/ke/p1?i=img&s=1.194742#words",
       startTime: 1.194742,
       endTime: null,
     });
@@ -103,7 +103,7 @@ describe("setPerspectiveBoundsServer", () => {
       request,
       data: {
         actionToken: "align-token",
-        currentPath: "https://evil.example/t/art/ke/p1?x=1",
+        currentPath: "https://evil.example/c/art/ke/p1?x=1",
         endTime: 57.719742,
         perspectiveId: "p1",
         topicId: "topic-1",
@@ -112,7 +112,7 @@ describe("setPerspectiveBoundsServer", () => {
 
     expect(result).toEqual({
       ok: true,
-      href: "/t/art%20tools/ke/p1?s=1.194742&e=57.719742",
+      href: "/c/art%20tools/ke/p1?s=1.194742&e=57.719742",
       startTime: 1.194742,
       endTime: 57.719742,
     });
@@ -145,7 +145,7 @@ describe("setPerspectiveBoundsServer", () => {
       request,
       data: {
         actionToken: "align-token",
-        currentPath: "/t/art%20tools/ke/p1",
+        currentPath: "/c/art%20tools/ke/p1",
         endTime: 57.719742,
         perspectiveId: "p1",
         topicId: "topic-1",
@@ -155,7 +155,7 @@ describe("setPerspectiveBoundsServer", () => {
     expect(updates).toEqual([[0, "p1"], [57.719742, "p1"]]);
     expect(result).toEqual({
       ok: true,
-      href: "/t/art%20tools/ke/p1?s=0&e=57.719742",
+      href: "/c/art%20tools/ke/p1?s=0&e=57.719742",
       startTime: 0,
       endTime: 57.719742,
     });
@@ -188,7 +188,7 @@ describe("setPerspectiveBoundsServer", () => {
       request,
       data: {
         actionToken: "align-token",
-        currentPath: "/t/art%20tools/ke/p1",
+        currentPath: "/c/art%20tools/ke/p1",
         defaultEndTime: 90.1234567,
         perspectiveId: "p1",
         startTime: 1.194742,
@@ -199,7 +199,7 @@ describe("setPerspectiveBoundsServer", () => {
     expect(updates).toEqual([[1.194742, "p1"], [90.1234567, "p1"]]);
     expect(result).toEqual({
       ok: true,
-      href: "/t/art%20tools/ke/p1?s=1.194742&e=90.123457",
+      href: "/c/art%20tools/ke/p1?s=1.194742&e=90.123457",
       startTime: 1.194742,
       endTime: 90.1234567,
     });
@@ -230,7 +230,7 @@ describe("setPerspectiveBoundsServer", () => {
       request,
       data: {
         actionToken: "align-token",
-        currentPath: "/t/art%20tools/ke/p1?s=246.755671&e=246.911676",
+        currentPath: "/c/art%20tools/ke/p1?s=246.755671&e=246.911676",
         endTime: 246.911676,
         perspectiveId: "p1",
         topicId: "topic-1",
@@ -239,7 +239,7 @@ describe("setPerspectiveBoundsServer", () => {
 
     expect(result).toEqual({
       ok: true,
-      href: "/t/art%20tools/ke/p1?s=246.755671",
+      href: "/c/art%20tools/ke/p1?s=246.755671",
       startTime: 246.755671,
       endTime: 246.911676,
     });

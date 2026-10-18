@@ -9,8 +9,8 @@ const readSource = (relativePath: string) =>
   readFileSync(path.join(rootDir, relativePath), "utf8");
 
 describe("topic route guards", () => {
-  it("keeps /t/$ read-only by default while exposing an explicit create-or-unlock write action", () => {
-    const source = readSource("src/routes/t.$.tsx");
+  it("keeps /c/$ read-only by default while exposing an explicit create-or-unlock write action", () => {
+    const source = readSource("src/routes/c.$.tsx");
     expect(source).toMatch(
       /const shouldShowEmptyWriteSurface =\s+perspectives\.length === 0 && topic\.canWrite;/,
     );
@@ -26,8 +26,8 @@ describe("topic route guards", () => {
     expect(source).toMatch(/viewerPlayBehavior="open-perspective-page"/);
   });
 
-  it("keeps /t/$ editor requests on the studio SW surface with the existing prop contract", () => {
-    const source = readSource("src/routes/t.$.tsx");
+  it("keeps /c/$ editor requests on the studio SW surface with the existing prop contract", () => {
+    const source = readSource("src/routes/c.$.tsx");
     expect(source).toMatch(/if \(resolvedRequestedEditorId\)/);
     expect(source).toMatch(/mode="editor"/);
     expect(source).toMatch(/showPerspectiveModeNav/);
@@ -35,7 +35,7 @@ describe("topic route guards", () => {
   });
 
   it("allows the timing editor flag to use the requested production perspective", () => {
-    const source = readSource("src/routes/t.$.tsx");
+    const source = readSource("src/routes/c.$.tsx");
     const routeSource = readSource("src/routes/timing-editor.tsx");
     expect(source).toMatch(/lazy\(\(\) =>\s*import\("@\/components\/TimingEditorSurface"\)/);
     expect(routeSource).toMatch(/lazy\(\(\) =>\s*import\("@\/components\/TimingEditorSurface"\)/);
@@ -46,7 +46,7 @@ describe("topic route guards", () => {
   });
 
   it("keeps dedicated listen routes on the simplified listener surface", () => {
-    const source = readSource("src/routes/t.$.tsx");
+    const source = readSource("src/routes/c.$.tsx");
     expect(source).toMatch(/else if \(resolvedRequestedViewerId\)/);
     expect(source).toMatch(/<PerspectiveListener/);
     expect(source).not.toMatch(/autoStartOnLoad/);
@@ -57,7 +57,7 @@ describe("topic route guards", () => {
   });
 
   it("keeps the dark topic background isolated to the topic shell", () => {
-    const source = readSource("src/routes/t.$.tsx");
+    const source = readSource("src/routes/c.$.tsx");
     const cssSource = readSource("src/styles/globals.css");
     const editorSource = readSource("src/components/SWEditor.tsx");
     const studioSource = readSource("src/components/sw/SWStudioSurface.tsx");
@@ -88,8 +88,8 @@ describe("topic route guards", () => {
   });
 
   it("requires write access for karaoke editor routes", () => {
-    const topicRoute = readSource("src/routes/t.$.tsx");
-    const unlockRoute = readSource("src/routes/t.$topic.ul.tsx");
+    const topicRoute = readSource("src/routes/c.$.tsx");
+    const unlockRoute = readSource("src/routes/c.$topic.ul.tsx");
 
     expect(topicRoute).toMatch(
       /wantsWriteAccess: mode === "r" \|\| mode === "w" \|\| mode === "ke"/,

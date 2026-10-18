@@ -20,10 +20,11 @@ describe("topicRoutes", () => {
   });
 
   it("builds canonical topic and action paths", () => {
-    expect(buildTopicPath("art")).toBe("/t/art");
-    expect(buildTopicPath("art", "w")).toBe("/t/art/w");
+    expect(buildTopicPath("art")).toBe("/c/art");
+    expect(buildTopicPath("  ")).toBe("/c");
+    expect(buildTopicPath("art", "w")).toBe("/c/art/w");
     expect(buildTopicPath("art tools", "listen mode")).toBe(
-      "/t/art%20tools/listen%20mode",
+      "/c/art%20tools/listen%20mode",
     );
   });
 
@@ -31,9 +32,9 @@ describe("topicRoutes", () => {
     expect(
       buildTopicUnlockHref({
         topicName: "art",
-        nextPath: "/t/art",
+        nextPath: "/c/art",
       }),
-    ).toBe("/t/art/ul?next=%2Ft%2Fart");
+    ).toBe("/c/art/ul?next=%2Fc%2Fart");
   });
 
   it("builds perspective editor links as path segments", () => {
@@ -42,7 +43,7 @@ describe("topicRoutes", () => {
         topicName: "art tools",
         perspectiveId: "1234-abcd",
       }),
-    ).toBe("/t/art%20tools/r/1234-abcd");
+    ).toBe("/c/art%20tools/r/1234-abcd");
   });
 
   it("builds perspective write links as path segments with hash", () => {
@@ -51,17 +52,17 @@ describe("topicRoutes", () => {
         topicName: "art tools",
         perspectiveId: "1234-abcd",
       }),
-    ).toBe("/t/art%20tools/w/1234-abcd");
+    ).toBe("/c/art%20tools/w/1234-abcd");
   });
 
   it("builds new perspective links with the create sentinel", () => {
     expect(NEW_PERSPECTIVE_HASH).toBe("n");
     expect(NEW_PERSPECTIVE_QUERY_VALUE).toBe("n");
     expect(buildTopicNewPerspectivePath("art tools")).toBe(
-      "/t/art%20tools/w/n",
+      "/c/art%20tools/w/n",
     );
     expect(buildTopicNewPerspectivePath("art tools")).toBe(
-      "/t/art%20tools/w/n",
+      "/c/art%20tools/w/n",
     );
   });
 
@@ -71,7 +72,7 @@ describe("topicRoutes", () => {
         topicName: "art tools",
         perspectiveId: "1234-abcd",
       }),
-    ).toBe("/t/art%20tools/p/1234-abcd");
+    ).toBe("/c/art%20tools/p/1234-abcd");
   });
 
   it("builds karaoke and karaoke editor links as path segments", () => {
@@ -80,24 +81,24 @@ describe("topicRoutes", () => {
         topicName: "art tools",
         perspectiveId: "1234-abcd",
       }),
-    ).toBe("/t/art%20tools/k/1234-abcd");
+    ).toBe("/c/art%20tools/k/1234-abcd");
     expect(
       buildTopicKaraokeEditorPath({
         topicName: "art tools",
         perspectiveId: "1234-abcd",
       }),
-    ).toBe("/t/art%20tools/ke/1234-abcd");
+    ).toBe("/c/art%20tools/ke/1234-abcd");
   });
 
   it("sanitizes unsafe unlock next paths", () => {
-    const fallbackPath = "/t/art";
+    const fallbackPath = "/c/art";
     // Valid paths with mode segments pass through
     expect(
       sanitizeTopicNextPath({
-        nextPath: "/t/art/w/1234",
+        nextPath: "/c/art/w/1234",
         fallbackPath,
       }),
-    ).toBe("/t/art/w/1234");
+    ).toBe("/c/art/w/1234");
     expect(
       sanitizeTopicNextPath({
         nextPath: "https://evil.example/steal",
@@ -118,7 +119,7 @@ describe("topicRoutes", () => {
     ).toBe(fallbackPath);
     expect(
       sanitizeTopicNextPath({
-        nextPath: "/t/art/ul",
+        nextPath: "/c/art/ul",
         fallbackPath,
       }),
     ).toBe(fallbackPath);

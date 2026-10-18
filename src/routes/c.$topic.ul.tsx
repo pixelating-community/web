@@ -7,11 +7,11 @@ import { loadUnlockTopic } from "@/lib/topicUnlockRoute.functions";
 
 const getNextAction = (nextPath: string) => {
   const segments = nextPath.split("/").filter(Boolean);
-  if (segments[0] !== "t" || segments.length < 2) return "";
+  if (segments[0] !== "c" || segments.length < 2) return "";
   return segments[2] ?? "";
 };
 
-export const Route = createFileRoute("/t/$topic/ul")({
+export const Route = createFileRoute("/c/$topic/ul")({
   validateSearch: parseTopicUnlockSearch,
   loader: async ({ location, params }) => {
     const topicName = params.topic?.trim() ?? "";

@@ -16,7 +16,7 @@ export const sanitizeCommitReturnPath = (
   if (!raw) return fallbackPath;
   if (!raw.startsWith("/")) return fallbackPath;
   if (raw.startsWith("//")) return fallbackPath;
-  if (!raw.startsWith("/t/") && !raw.startsWith("/p/")) return fallbackPath;
+  if (!raw.startsWith("/c/") && !raw.startsWith("/p/")) return fallbackPath;
   return raw;
 };
 

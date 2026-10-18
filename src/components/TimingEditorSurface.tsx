@@ -45,7 +45,7 @@ const NAV_ITEMS = {
   karaokeEdit: { icon: "🎛", label: "Karaoke edit" },
   listen: { icon: "👂", label: "Listen" },
   record: { icon: "⏺", label: "Record" },
-  topic: { icon: "👾", label: "Back to topic" },
+  topic: { icon: "👾", label: "Back to chapter" },
 } as const;
 
 const DEMO_WORDS =

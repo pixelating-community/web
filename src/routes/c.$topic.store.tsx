@@ -7,7 +7,7 @@ import {
   SUPPORT_PRODUCTS,
 } from "@/lib/perspectiveSupport";
 
-export const Route = createFileRoute("/t/$topic/store")({
+export const Route = createFileRoute("/c/$topic/store")({
   loader: ({ params }) =>
     loadTopicPayload({ data: { topicName: params.topic } }),
   pendingMs: 1500,
@@ -41,7 +41,7 @@ function TopicStoreRoute() {
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-8">
         <header className="flex flex-col gap-4">
           <Link
-            to="/t/$"
+            to="/c/$"
             params={{ _splat: topic.name || requestedTopic }}
             className="w-fit text-sm text-[color:var(--color-neon-teal-light)] underline decoration-[color:color-mix(in_oklch,var(--color-neon-teal)_45%,transparent)] underline-offset-4"
           >
