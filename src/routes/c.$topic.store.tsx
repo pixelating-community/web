@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { NotFoundPage } from "@/components/NotFoundPage";
-import { loadTopicPayload } from "@/lib/topicPayloadRoute.functions";
+import { loadChapterPayload as loadTopicPayload } from "@/lib/chapterPayloadRoute.functions";
 import {
   formatContributionTotal,
   SUPPORT_CURRENCY,
@@ -8,8 +8,11 @@ import {
 } from "@/lib/perspectiveSupport";
 
 export const Route = createFileRoute("/c/$topic/store")({
-  loader: ({ params }) =>
-    loadTopicPayload({ data: { topicName: params.topic } }),
+  loader: async ({ params }) => {
+    const result = await loadTopicPayload({ data: { topicName: params.topic } });
+    if (!result.data) throw notFound();
+    return result;
+  },
   pendingMs: 1500,
   pendingComponent: StorePending,
   component: TopicStoreRoute,

@@ -21,13 +21,7 @@ import {
   extractMarkdownBackgroundImageSrc,
   resolvePerspectiveBackgroundImageSrc,
 } from "@/lib/perspectiveImage";
-import {
-  NEW_PERSPECTIVE_HASH,
-  buildTopicPath,
-  buildTopicViewerPerspectivePath,
-  buildTopicWritePerspectivePath,
-  buildTopicUnlockHref,
-} from "@/lib/topicRoutes";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 import { patchTopicPayloadQueryResult } from "@/lib/topicPayloadCache";
 import type { Perspective, WritePerspectiveProps } from "@/types/perspectives";
 import type { TopicPayloadQueryResult } from "@/types/topic";
@@ -92,6 +86,15 @@ export function WritePerspective({
   onRefresh,
   onCreateSuccess,
 }: WritePerspectiveProps) {
+  const {
+    NEW_PERSPECTIVE_HASH,
+    buildTopicPath,
+    buildTopicViewerPerspectivePath,
+    buildTopicWritePerspectivePath,
+    buildTopicUnlockHref,
+    CONTENT_LABEL,
+  } = useContentRoutes();
+
   const MAX_LENGTH = 555;
   const btnText = "🖋️";
   const createPerspectiveFn = useServerFn(createPerspective);
@@ -739,8 +742,8 @@ export function WritePerspective({
             ? "w-10 rounded-full text-lg"
             : "max-w-[5.5rem] rounded-xl px-2 text-xs font-medium sm:max-w-[12rem] sm:px-3 sm:text-sm"
         }`}
-        aria-label="Back to chapter"
-        title="Back to chapter"
+        aria-label={`Back to ${CONTENT_LABEL}`}
+        title={`Back to ${CONTENT_LABEL}`}
       >
         <span className={topicNavIsSingleEmoji ? "" : "truncate"}>
           {topicNavLabel}

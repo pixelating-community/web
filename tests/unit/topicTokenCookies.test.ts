@@ -24,7 +24,7 @@ describe("topicTokenCookies", () => {
   });
 
   it("resolves token by canonical name first and falls back to id cookie", () => {
-    const requestWithIdOnly = new Request("http://localhost:3000/c/art", {
+    const requestWithIdOnly = new Request("http://localhost:3000/t/art", {
       headers: {
         cookie: "x=y; t_f0b8be17-5be9-44e4-8ac0-d11fa0123456=secret-by-id; a=b",
       },
@@ -37,7 +37,7 @@ describe("topicTokenCookies", () => {
       }),
     ).toBe("secret-by-id");
 
-    const requestWithBoth = new Request("http://localhost:3000/c/art", {
+    const requestWithBoth = new Request("http://localhost:3000/t/art", {
       headers: {
         cookie:
           "t_f0b8be17-5be9-44e4-8ac0-d11fa0123456=secret-by-id; t_art=secret-by-name",

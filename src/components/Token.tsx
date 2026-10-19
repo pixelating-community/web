@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 import { resolveTokenInputValue } from "@/components/token/tokenUtils";
 import { saveTopicTokenAndRedirect } from "@/lib/topicTokenLogin.functions";
 
+import { useContentRoutes } from "@/lib/useContentRoutes";
+
 type TokenProps = {
   name: string;
   nextPath: string;
@@ -12,6 +14,8 @@ type TokenProps = {
 };
 
 export const Token = ({ name, nextPath, topicId }: TokenProps) => {
+  const { CONTENT_LABEL } = useContentRoutes();
+  const contentLabel = CONTENT_LABEL === "chapter" ? "Chapter" : "Topic";
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
@@ -64,7 +68,7 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
     <div className="flex flex-col mt-1 mx-1 gap-1">
       <div className="flex flex-row">
         <label className="sr-only" htmlFor="token">
-          Chapter key
+          {contentLabel} key
         </label>
         <div className="relative w-full">
           <input
@@ -86,7 +90,7 @@ export const Token = ({ name, nextPath, topicId }: TokenProps) => {
             type={showToken ? "text" : "password"}
             id="token"
             name="token"
-            placeholder="Chapter key 🔑"
+            placeholder={`${contentLabel} key 🔑`}
             autoComplete="current-password"
             autoCapitalize="none"
             autoCorrect="off"

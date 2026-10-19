@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { loadChapterPayload } from "@/lib/chapterPayloadRoute.functions";
 import { useServerFn } from "@tanstack/react-start";
 import { type FormEvent, useEffect, useState } from "react";
 import {
@@ -9,6 +10,10 @@ import {
 } from "@/lib/creatorSupport.functions";
 
 export const Route = createFileRoute("/c/$topic/support/claim")({
+  beforeLoad: async ({ params }) => {
+    const result = await loadChapterPayload({ data: { topicName: params.topic } });
+    if (!result.data) throw notFound();
+  },
   component: CreatorSupportClaimRoute,
 });
 

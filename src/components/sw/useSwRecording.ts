@@ -24,7 +24,7 @@ import {
   processDecodedWithWorker,
 } from "@/lib/audioWorkerClient";
 import { savePerspectiveAlignment } from "@/lib/perspectiveAlignment.functions";
-import { buildTopicUnlockHref } from "@/lib/topicRoutes";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 import type { Perspective, WordTimingEntry } from "@/types/perspectives";
 import {
   UPLOAD_ACTION_TOKEN_HEADER,
@@ -81,6 +81,8 @@ export const useSwRecording = ({
   topicId,
   topicName,
 }: UseSwRecordingArgs) => {
+  const { buildTopicUnlockHref, CONTENT_QUERY_KEY } = useContentRoutes();
+
   const savePerspectiveAlignmentFn = useServerFn(savePerspectiveAlignment);
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -152,7 +154,8 @@ export const useSwRecording = ({
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-      const payload: { key: string; publicUrl?: string } = await response.json();
+      const payload: { key: string; publicUrl?: string } =
+        await response.json();
       return {
         key: payload.key,
         publicUrl: payload.publicUrl ?? payload.key,
@@ -207,8 +210,7 @@ export const useSwRecording = ({
             ? { duration: payload.duration }
             : {}),
           ...(preserveTimings ? { preserveTimings: true } : {}),
-          ...(typeof voiceOffsetSeconds === "number" &&
-          voiceOffsetSeconds > 0
+          ...(typeof voiceOffsetSeconds === "number" && voiceOffsetSeconds > 0
             ? { voiceOffsetSeconds }
             : {}),
           perspectiveId: id,
@@ -233,7 +235,7 @@ export const useSwRecording = ({
         );
       }
       await queryClient.invalidateQueries({
-        queryKey: ["topic-payload"],
+        queryKey: [CONTENT_QUERY_KEY],
       });
       return result.data as {
         timings?: WordTimingEntry[];
@@ -405,7 +407,9 @@ export const useSwRecording = ({
         const resolvedAudioSrc = result.audio_src?.trim() || "";
         clearDraftTimings(perspectiveId);
         patchRuntime(perspectiveId, {
-          recording: result.merging ? { status: "merging" } : { status: "idle" },
+          recording: result.merging
+            ? { status: "merging" }
+            : { status: "idle" },
           timings: persistedTimings,
           lastSavedRevision: nextRevision,
           lastDraftRevision: nextRevision,
@@ -433,7 +437,7 @@ export const useSwRecording = ({
                 });
                 triggerSaveSuccess(perspectiveId);
                 void queryClient.invalidateQueries({
-                  queryKey: ["topic-payload"],
+                  queryKey: [CONTENT_QUERY_KEY],
                 });
                 es.close();
               } else if (data.status === "error") {
@@ -459,7 +463,9 @@ export const useSwRecording = ({
         setRecordingState(perspectiveId, {
           status: "error",
           error:
-            error instanceof Error ? error.message : "Failed to process recording",
+            error instanceof Error
+              ? error.message
+              : "Failed to process recording",
         });
       }
     },

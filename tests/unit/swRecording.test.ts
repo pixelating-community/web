@@ -28,7 +28,7 @@ describe("buildPersistedAudioPatch", () => {
     const source = readSource("src/components/sw/useSwRecording.ts");
 
     expect(source).toMatch(
-      /await queryClient\.invalidateQueries\(\{\s*queryKey: \["topic-payload"\],\s*\}\);\s*return result\.data/,
+      /await queryClient\.invalidateQueries\(\{\s*queryKey: \[CONTENT_QUERY_KEY\],\s*\}\);\s*return result\.data/,
     );
   });
 });

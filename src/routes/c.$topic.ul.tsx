@@ -1,9 +1,9 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { parseTopicUnlockSearch } from "@/lib/routeSearch";
 import { NotFoundPage } from "@/components/NotFoundPage";
 import { Token } from "@/components/Token";
-import { buildTopicPath, sanitizeTopicNextPath } from "@/lib/topicRoutes";
-import { loadUnlockTopic } from "@/lib/topicUnlockRoute.functions";
+import { buildTopicPath, sanitizeTopicNextPath } from "@/lib/chapterRoutes";
+import { loadUnlockChapter as loadUnlockTopic } from "@/lib/chapterUnlockRoute.functions";
 
 const getNextAction = (nextPath: string) => {
   const segments = nextPath.split("/").filter(Boolean);
@@ -32,6 +32,7 @@ export const Route = createFileRoute("/c/$topic/ul")({
       },
     });
     const hasAccess = requiresWriteToken ? data.canWrite : data.canAccess;
+    if (data.error) throw notFound();
 
     if (!data.error && hasAccess) {
       throw redirect({

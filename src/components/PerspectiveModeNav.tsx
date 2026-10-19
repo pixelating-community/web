@@ -2,14 +2,7 @@
 
 import { Link } from "@tanstack/react-router";
 import { useRouterState } from "@tanstack/react-router";
-import {
-  buildTopicKaraokeEditorPath,
-  buildTopicKaraokePath,
-  buildTopicPath,
-  buildTopicPerspectivePath,
-  buildTopicViewerPerspectivePath,
-  buildTopicWritePerspectivePath,
-} from "@/lib/topicRoutes";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 
 type PerspectiveMode =
   | "view"
@@ -56,6 +49,15 @@ export const PerspectiveModeNav = ({
   onNewPerspective,
   placement = "top",
 }: PerspectiveModeNavProps) => {
+  const {
+    buildTopicKaraokeEditorPath,
+    buildTopicKaraokePath,
+    buildTopicPath,
+    buildTopicPerspectivePath,
+    buildTopicViewerPerspectivePath,
+    buildTopicWritePerspectivePath,
+  } = useContentRoutes();
+
   const trimmedTopicName = topicName.trim();
   const trimmedPerspectiveId = perspectiveId?.trim() ?? "";
   const { location } = useRouterState();
@@ -68,10 +70,12 @@ export const PerspectiveModeNav = ({
   const items: NavItem[] = [];
 
   const parentHref = parentPerspectiveId
-    ? appendSearch(buildTopicViewerPerspectivePath({
-        topicName: trimmedTopicName,
-        perspectiveId: parentPerspectiveId,
-      }))
+    ? appendSearch(
+        buildTopicViewerPerspectivePath({
+          topicName: trimmedTopicName,
+          perspectiveId: parentPerspectiveId,
+        }),
+      )
     : "";
 
   if (showViewMode) {
@@ -86,29 +90,35 @@ export const PerspectiveModeNav = ({
   if (trimmedPerspectiveId) {
     items.push({
       emoji: "🔊",
-      href: appendSearch(buildTopicViewerPerspectivePath({
-        topicName: trimmedTopicName,
-        perspectiveId: trimmedPerspectiveId,
-      })),
+      href: appendSearch(
+        buildTopicViewerPerspectivePath({
+          topicName: trimmedTopicName,
+          perspectiveId: trimmedPerspectiveId,
+        }),
+      ),
       key: "listen",
       label: "Listen",
     });
     items.push({
       emoji: "🎤",
-      href: appendSearch(buildTopicKaraokePath({
-        topicName: trimmedTopicName,
-        perspectiveId: trimmedPerspectiveId,
-      })),
+      href: appendSearch(
+        buildTopicKaraokePath({
+          topicName: trimmedTopicName,
+          perspectiveId: trimmedPerspectiveId,
+        }),
+      ),
       key: "karaoke",
       label: "Karaoke",
     });
     if (canWrite) {
       items.push({
         emoji: "🎛️",
-        href: appendSearch(buildTopicKaraokeEditorPath({
-          topicName: trimmedTopicName,
-          perspectiveId: trimmedPerspectiveId,
-        })),
+        href: appendSearch(
+          buildTopicKaraokeEditorPath({
+            topicName: trimmedTopicName,
+            perspectiveId: trimmedPerspectiveId,
+          }),
+        ),
         key: "karaoke-editor",
         label: "Karaoke Editor",
       });
@@ -117,19 +127,23 @@ export const PerspectiveModeNav = ({
       items.push(
         {
           emoji: "🖋️",
-          href: appendSearch(buildTopicWritePerspectivePath({
-            topicName: trimmedTopicName,
-            perspectiveId: trimmedPerspectiveId,
-          })),
+          href: appendSearch(
+            buildTopicWritePerspectivePath({
+              topicName: trimmedTopicName,
+              perspectiveId: trimmedPerspectiveId,
+            }),
+          ),
           key: "write",
           label: "Write",
         },
         {
           emoji: "🔴",
-          href: appendSearch(buildTopicPerspectivePath({
-            topicName: trimmedTopicName,
-            perspectiveId: trimmedPerspectiveId,
-          })),
+          href: appendSearch(
+            buildTopicPerspectivePath({
+              topicName: trimmedTopicName,
+              perspectiveId: trimmedPerspectiveId,
+            }),
+          ),
           key: "record",
           label: "Record",
         },
@@ -161,9 +175,7 @@ export const PerspectiveModeNav = ({
           aria-label="Share"
           title="Share"
           className={`${BASE_ITEM_CLASS} ${
-            isShareActive
-              ? "text-white"
-              : "text-white/85 hover:text-white"
+            isShareActive ? "text-white" : "text-white/85 hover:text-white"
           }`}
         >
           <span aria-hidden="true">🫂</span>

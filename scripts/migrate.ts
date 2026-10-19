@@ -71,6 +71,16 @@ const topicStatements = [
   `,
 ] as const;
 
+const chapterStatements = [
+  `
+    CREATE TABLE IF NOT EXISTS chapters (
+      id uuid PRIMARY KEY DEFAULT uuidv7(),
+      topic_id uuid NOT NULL UNIQUE REFERENCES topics(id) ON DELETE CASCADE,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+] as const;
+
 const perspectiveStatements = [
   `
     CREATE TABLE IF NOT EXISTS perspectives (
@@ -455,6 +465,7 @@ const indexStatements = [
 
 const migrationGroups = [
   topicStatements,
+  chapterStatements,
   perspectiveStatements,
   retiredCollectionStatements,
   collaborationCodeStatements,

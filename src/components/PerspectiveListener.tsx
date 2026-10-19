@@ -17,10 +17,7 @@ import { SWEditor } from "@/components/SWEditor";
 import { loadChildPerspectives } from "@/lib/childPerspectiveRoute.functions";
 import { resolvePerspectiveBackgroundImageSrc } from "@/lib/perspectiveImage";
 import { resolvePublicAudioSrc } from "@/lib/publicAudioBase";
-import {
-  buildNewReflectionPerspectivePath,
-  buildPerspectiveJoinPath,
-} from "@/lib/topicRoutes";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 import type { Perspective } from "@/types/perspectives";
 
 type PerspectiveListenerProps = {
@@ -66,6 +63,8 @@ const PerspectiveReflections = memo(function PerspectiveReflections({
   topicName: string;
   canWrite: boolean;
 }) {
+  const { buildNewReflectionPerspectivePath, buildPerspectiveJoinPath } =
+    useContentRoutes();
   const loadChildPerspectivesFn = useServerFn(loadChildPerspectives);
   const childPerspectivesQuery = useQuery({
     queryKey: ["child-perspectives", perspective.id],

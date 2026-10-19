@@ -107,8 +107,8 @@ describe("TanStack Start auth and boundary patterns", () => {
   });
 
   it("keeps route search parsing at the router boundary and preloads the topic query cache", () => {
-    const topicRouteSource = readSource("src/routes/c.$.tsx");
-    const unlockRouteSource = readSource("src/routes/c.$topic.ul.tsx");
+    const topicRouteSource = readSource("src/routes/t.$.tsx");
+    const unlockRouteSource = readSource("src/routes/t.$topic.ul.tsx");
 
     expect(topicRouteSource).toMatch(/validateSearch: parseTopicRouteSearch/);
     expect(topicRouteSource).toMatch(/ensureQueryData/);

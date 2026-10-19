@@ -10,7 +10,7 @@ const readSource = (relativePath: string) =>
 describe("story product checkout", () => {
   it("publishes product prices, delivery timing, and refund guidance", () => {
     const products = readSource("src/lib/perspectiveSupport.ts");
-    const store = readSource("src/routes/c.$topic.store.tsx");
+    const store = readSource("src/routes/t.$topic.store.tsx");
 
     expect(products).toMatch(/id: "digital-story"[\s\S]*amountMinor: 2500/);
     expect(products).toContain("within 2 business days");

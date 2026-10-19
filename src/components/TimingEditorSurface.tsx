@@ -11,13 +11,7 @@ import {
 import { resolvePublicAudioSrc } from "@/lib/publicAudioBase";
 import { setTimestampSearchParams } from "@/lib/routeSearch";
 import { getTimingDuration as getPlaybackTimingDuration } from "@/lib/swPlayback";
-import {
-  buildTopicKaraokeEditorPath,
-  buildTopicKaraokePath,
-  buildTopicPath,
-  buildTopicPerspectivePath,
-  buildTopicViewerPerspectivePath,
-} from "@/lib/topicRoutes";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 import type { Perspective, WordTimingEntry } from "@/types/perspectives";
 
 type EditableTiming = {
@@ -186,6 +180,15 @@ export function TimingEditorSurface({
   urlEndTime,
   urlStartTime,
 }: TimingEditorSurfaceProps) {
+  const {
+    buildTopicKaraokeEditorPath,
+    buildTopicKaraokePath,
+    buildTopicPath,
+    buildTopicPerspectivePath,
+    buildTopicViewerPerspectivePath,
+    CONTENT_LABEL,
+  } = useContentRoutes();
+
   const sourceKey = `${perspective?.id ?? "demo"}:${urlStartTime ?? ""}:${
     urlEndTime ?? ""
   }`;
@@ -222,33 +225,41 @@ export function TimingEditorSurface({
 
     return [
       {
-        href: withBounds(buildTopicPerspectivePath({
-          perspectiveId,
-          topicName: trimmedTopicName,
-        })),
+        href: withBounds(
+          buildTopicPerspectivePath({
+            perspectiveId,
+            topicName: trimmedTopicName,
+          }),
+        ),
         ...NAV_ITEMS.record,
       },
       {
-        href: withBounds(buildTopicViewerPerspectivePath({
-          perspectiveId,
-          topicName: trimmedTopicName,
-        })),
+        href: withBounds(
+          buildTopicViewerPerspectivePath({
+            perspectiveId,
+            topicName: trimmedTopicName,
+          }),
+        ),
         ...NAV_ITEMS.listen,
       },
       {
-        href: withBounds(buildTopicKaraokePath({
-          perspectiveId,
-          topicName: trimmedTopicName,
-        })),
+        href: withBounds(
+          buildTopicKaraokePath({
+            perspectiveId,
+            topicName: trimmedTopicName,
+          }),
+        ),
         ...NAV_ITEMS.karaoke,
       },
       ...(canWrite
         ? [
             {
-              href: withBounds(buildTopicKaraokeEditorPath({
-                perspectiveId,
-                topicName: trimmedTopicName,
-              })),
+              href: withBounds(
+                buildTopicKaraokeEditorPath({
+                  perspectiveId,
+                  topicName: trimmedTopicName,
+                }),
+              ),
               ...NAV_ITEMS.karaokeEdit,
             },
           ]
@@ -481,7 +492,10 @@ export function TimingEditorSurface({
           onLoadedMetadata={(event) => {
             const duration = event.currentTarget.duration;
             if (!Number.isFinite(duration) || duration <= 0) return;
-            if (urlEndTime !== undefined || perspective?.end_time !== undefined) {
+            if (
+              urlEndTime !== undefined ||
+              perspective?.end_time !== undefined
+            ) {
               return;
             }
             setSampleEnd((previous) =>
@@ -513,8 +527,8 @@ export function TimingEditorSurface({
                   preload="intent"
                   viewTransition
                   className="unstyled-link inline-flex h-10 w-10 shrink-0 items-center justify-center border-0 bg-transparent text-[2rem] leading-none text-white/85 transition hover:text-white"
-                  aria-label={NAV_ITEMS.topic.label}
-                  title={NAV_ITEMS.topic.label}
+                  aria-label={`Back to ${CONTENT_LABEL}`}
+                  title={`Back to ${CONTENT_LABEL}`}
                 >
                   {NAV_ITEMS.topic.icon}
                 </Link>
@@ -657,7 +671,9 @@ export function TimingEditorSurface({
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedDuration(selectedDuration - WORD_STEP_SECONDS)
+                        setSelectedDuration(
+                          selectedDuration - WORD_STEP_SECONDS,
+                        )
                       }
                       className="h-10 rounded-lg bg-white/[0.07] text-lg font-semibold"
                       aria-label="Shorten selected word duration"
@@ -677,7 +693,9 @@ export function TimingEditorSurface({
                     <button
                       type="button"
                       onClick={() =>
-                        setSelectedDuration(selectedDuration + WORD_STEP_SECONDS)
+                        setSelectedDuration(
+                          selectedDuration + WORD_STEP_SECONDS,
+                        )
                       }
                       className="h-10 rounded-lg bg-white/[0.07] text-lg font-semibold"
                       aria-label="Lengthen selected word duration"

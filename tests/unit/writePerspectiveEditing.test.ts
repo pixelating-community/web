@@ -61,7 +61,7 @@ describe("write perspective editing", () => {
   });
 
   it("keys the write surface by the requested route target so write-link navigation remounts cleanly", () => {
-    const source = readSource("src/routes/c.$.tsx");
+    const source = readSource("src/routes/t.$.tsx");
     expect(source).toMatch(/const writeSurfaceKey = resolvedRequestedWriteId/);
     expect(source).toMatch(/shouldShowNewWriteSurface/);
     expect(source).toMatch(/<WritePerspective\s+key=\{writeSurfaceKey\}/s);

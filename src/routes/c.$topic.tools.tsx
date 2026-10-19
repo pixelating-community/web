@@ -1,6 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { loadChapterPayload } from "@/lib/chapterPayloadRoute.functions";
 
 export const Route = createFileRoute("/c/$topic/tools")({
+  beforeLoad: async ({ params }) => {
+    const result = await loadChapterPayload({ data: { topicName: params.topic } });
+    if (!result.data) throw notFound();
+  },
   component: TopicToolsPlaceholder,
 });
 

@@ -5,11 +5,7 @@ import type { ReactNode } from "react";
 import { PerspectiveSupport } from "@/components/PerspectiveSupport";
 import { hasPlayableAudioSource } from "@/components/sw/runtime";
 import { setTimestampSearchParams } from "@/lib/routeSearch";
-import {
-  buildTopicPerspectivePath,
-  buildTopicViewerPerspectivePath,
-  buildTopicWritePerspectivePath,
-} from "@/lib/topicRoutes";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 import type { Perspective } from "@/types/perspectives";
 
 const ACTION_CLASS =
@@ -28,6 +24,11 @@ export const PerspectiveActions = ({
   showOpenLink?: boolean;
   children?: ReactNode;
 }) => {
+  const {
+    buildTopicPerspectivePath,
+    buildTopicViewerPerspectivePath,
+    buildTopicWritePerspectivePath,
+  } = useContentRoutes();
   const previewPath = topicName
     ? buildTopicViewerPerspectivePath({
         topicName,

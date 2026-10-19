@@ -30,9 +30,9 @@ describe("commitRouteSearch", () => {
   });
 
   it("sanitizes return paths to topic or perspective routes", () => {
-    const fallback = "/c/art?p=abc&m=1";
-    expect(sanitizeCommitReturnPath("/c/art?p=abc", fallback)).toBe(
-      "/c/art?p=abc",
+    const fallback = "/t/art?p=abc&m=1";
+    expect(sanitizeCommitReturnPath("/t/art?p=abc", fallback)).toBe(
+      "/t/art?p=abc",
     );
     expect(sanitizeCommitReturnPath("/p/123", fallback)).toBe("/p/123");
     expect(sanitizeCommitReturnPath("https://evil.example", fallback)).toBe(
@@ -44,13 +44,13 @@ describe("commitRouteSearch", () => {
   });
 
   it("decodes encoded return paths safely", () => {
-    const fallback = "/c/art?p=abc&m=1";
+    const fallback = "/t/art?p=abc&m=1";
     expect(
       parseCommitReturnPath({
         fallbackPath: fallback,
-        rawReturn: "%2Fc%2Fart%3Fp%3Dabc",
+        rawReturn: "%2Ft%2Fart%3Fp%3Dabc",
       }),
-    ).toBe("/c/art?p=abc");
+    ).toBe("/t/art?p=abc");
     expect(
       parseCommitReturnPath({
         fallbackPath: fallback,
@@ -60,11 +60,11 @@ describe("commitRouteSearch", () => {
   });
 
   it("appends saved=1 while preserving existing params", () => {
-    expect(appendSavedSearchParam("/c/art?p=abc")).toBe(
-      "/c/art?p=abc&saved=1",
+    expect(appendSavedSearchParam("/t/art?p=abc")).toBe(
+      "/t/art?p=abc&saved=1",
     );
-    expect(appendSavedSearchParam("/c/art?p=abc#x")).toBe(
-      "/c/art?p=abc&saved=1#x",
+    expect(appendSavedSearchParam("/t/art?p=abc#x")).toBe(
+      "/t/art?p=abc&saved=1#x",
     );
   });
 });

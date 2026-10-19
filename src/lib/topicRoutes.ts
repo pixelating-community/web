@@ -1,3 +1,6 @@
+export const CONTENT_LABEL = "topic";
+export const CONTENT_QUERY_KEY = "topic-payload";
+
 const normalizePathSegment = (value: string) =>
   encodeURIComponent(value.trim());
 
@@ -12,14 +15,14 @@ export const buildTopicPath = (topicName: string, action = "") => {
   const normalizedAction = action.trim();
 
   if (!normalizedTopicName) {
-    return "/c";
+    return "/t";
   }
 
   if (!normalizedAction) {
-    return `/c/${normalizePathSegment(normalizedTopicName)}`;
+    return `/t/${normalizePathSegment(normalizedTopicName)}`;
   }
 
-  return `/c/${normalizePathSegment(normalizedTopicName)}/${normalizePathSegment(normalizedAction)}`;
+  return `/t/${normalizePathSegment(normalizedTopicName)}/${normalizePathSegment(normalizedAction)}`;
 };
 
 export const buildTopicPerspectivePath = ({
@@ -86,7 +89,7 @@ export const buildTopicUnlockHref = ({
   topicName: string;
   nextPath: string;
 }) =>
-  `/c/${normalizePathSegment(topicName)}/ul?next=${encodeURIComponent(nextPath)}`;
+  `/t/${normalizePathSegment(topicName)}/ul?next=${encodeURIComponent(nextPath)}`;
 
 export const sanitizeTopicNextPath = ({
   nextPath,
@@ -99,7 +102,7 @@ export const sanitizeTopicNextPath = ({
   if (!raw) return fallbackPath;
   if (!raw.startsWith("/")) return fallbackPath;
   if (raw.startsWith("//")) return fallbackPath;
-  if (!raw.startsWith("/c/")) return fallbackPath;
+  if (!raw.startsWith("/t/")) return fallbackPath;
   if (raw.includes("/ul")) return fallbackPath;
 
   return raw;

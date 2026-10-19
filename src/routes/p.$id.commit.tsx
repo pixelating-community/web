@@ -236,7 +236,9 @@ function CommitRoute() {
 
       await clearPendingRecordingAsync(recordingId);
       await queryClient.invalidateQueries({
-        queryKey: ["topic-payload"],
+        predicate: (query) =>
+          query.queryKey[0] === "topic-payload" ||
+          query.queryKey[0] === "chapter-payload",
       });
       if (isDisposedRef.current) return;
       setStatus("success");

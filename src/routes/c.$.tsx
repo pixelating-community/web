@@ -3,7 +3,7 @@ import {
   useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
 import { lazy, Suspense, useMemo } from "react";
@@ -14,7 +14,7 @@ import { SW } from "@/components/SW";
 import { WritePerspective } from "@/components/WritePerspective";
 import { shouldUseTimingEditor } from "@/lib/featureFlags";
 import { loadPerspectiveById } from "@/lib/getPerspectiveById.functions";
-import { loadTopicPayload } from "@/lib/topicPayloadRoute.functions";
+import { loadChapterPayload as loadTopicPayload } from "@/lib/chapterPayloadRoute.functions";
 import { parseTopicRouteSearch } from "@/lib/routeSearch";
 import {
   buildTopicNewPerspectivePath,
@@ -24,7 +24,7 @@ import {
   buildTopicViewerPerspectivePath,
   buildTopicWritePerspectivePath,
   NEW_PERSPECTIVE_QUERY_VALUE,
-} from "@/lib/topicRoutes";
+} from "@/lib/chapterRoutes";
 import { shouldRequireTopicUnlock } from "@/lib/topicWriteAccess";
 import type { TopicPayload, TopicPayloadQueryResult } from "@/types/topic";
 import { z } from "zod/v4";
@@ -70,7 +70,7 @@ const getWildcardParam = (params: Record<string, unknown>) => {
 };
 
 const getTopicQueryKey = (topicName: string) =>
-  ["topic-payload", topicName] as const;
+  ["chapter-payload", topicName] as const;
 
 const DARK_TOPIC_NAME = "dark";
 const TOPIC_SHELL_CLASS = "flex h-dvh w-full flex-col items-center";
@@ -170,6 +170,7 @@ export const Route = createFileRoute("/c/$")({
       }),
     );
     const resolvedTopicName = result.data?.topic.name ?? topicName;
+    if (!result.data) throw notFound();
     const requestedPath =
       mode && modeParam
         ? `${buildTopicPath(resolvedTopicName)}/${mode}/${encodeURIComponent(modeParam)}`

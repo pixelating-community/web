@@ -22,14 +22,14 @@ describe("topic unlock/write auth flow", () => {
       topicId,
       topicName: originalTopicName,
     });
-    const nextPath = `/c/${renamedTopicName}`;
+    const nextPath = `/t/${renamedTopicName}`;
     const unlockHref = buildTopicUnlockHref({
       topicName: renamedTopicName,
       nextPath,
     });
 
     expect(unlockHref).toBe(
-      `/c/${renamedTopicName}/ul?next=${encodeURIComponent(nextPath)}`,
+      `/t/${renamedTopicName}/ul?next=${encodeURIComponent(nextPath)}`,
     );
 
     const request = new Request(`http://localhost:3000${nextPath}`, {
@@ -48,7 +48,7 @@ describe("topic unlock/write auth flow", () => {
   });
 
   it("uses document navigation after unlock so the fresh cookie is present on the next request", () => {
-    const routeSource = readSource("src/routes/c.$topic.ul.tsx");
+    const routeSource = readSource("src/routes/t.$topic.ul.tsx");
     const tokenSource = readSource("src/components/Token.tsx");
     const loginFunctionSource = readSource("src/lib/topicTokenLogin.functions.ts");
 
@@ -61,8 +61,8 @@ describe("topic unlock/write auth flow", () => {
   });
 
   it("keeps server-only topic auth code out of client route modules", () => {
-    const topicRouteSource = readSource("src/routes/c.$.tsx");
-    const unlockRouteSource = readSource("src/routes/c.$topic.ul.tsx");
+    const topicRouteSource = readSource("src/routes/t.$.tsx");
+    const unlockRouteSource = readSource("src/routes/t.$topic.ul.tsx");
     const tokenComponentSource = readSource("src/components/Token.tsx");
     const topicPayloadFunctionsSource = readSource(
       "src/lib/topicPayloadRoute.functions.ts",

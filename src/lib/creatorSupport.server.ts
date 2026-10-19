@@ -183,7 +183,7 @@ export const createTopicOwnerInviteServer = async ({
     requestUrl: request.url,
   });
   const claimUrl = new URL(
-    `/c/${encodeURIComponent(result.topicName)}/support/claim`,
+    `/t/${encodeURIComponent(result.topicName)}/support/claim`,
     origin,
   );
   claimUrl.hash = `token=${encodeURIComponent(rawToken)}`;
@@ -429,7 +429,7 @@ export const createStripeConnectOnboardingServer = async ({
       requestUrl: request.url,
     });
     const claimUrl = new URL(
-      `/c/${encodeURIComponent(setup.topicName)}/support/claim`,
+      `/t/${encodeURIComponent(setup.topicName)}/support/claim`,
       origin,
     );
     const refreshUrl = new URL(claimUrl);
