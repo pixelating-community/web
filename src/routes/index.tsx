@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Pixelate } from "@/components/Pixelate";
 
 export const Route = createFileRoute("/")({
@@ -13,6 +13,9 @@ function Home() {
         <div>
           <Pixelate />
         </div>
+        <Link to="/sm" className="mb-8 text-sm">
+          Secret messages ↗
+        </Link>
       </div>
     </main>
   );
