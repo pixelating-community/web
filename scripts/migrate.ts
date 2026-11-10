@@ -79,6 +79,46 @@ const chapterStatements = [
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `,
+  `
+    ALTER TABLE chapters
+      ADD COLUMN IF NOT EXISTS title TEXT,
+      ADD COLUMN IF NOT EXISTS position INTEGER NOT NULL DEFAULT 1,
+      ADD COLUMN IF NOT EXISTS published BOOLEAN NOT NULL DEFAULT true;
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS book_settings (
+      singleton BOOLEAN PRIMARY KEY DEFAULT true CHECK (singleton),
+      slug TEXT NOT NULL DEFAULT 'book',
+      title TEXT NOT NULL DEFAULT 'The Book',
+      author TEXT NOT NULL DEFAULT '',
+      introduction TEXT NOT NULL DEFAULT ''
+    );
+  `,
+  `INSERT INTO book_settings (singleton) VALUES (true) ON CONFLICT DO NOTHING;`,
+  `
+    CREATE TABLE IF NOT EXISTS chapter_drafts (
+      chapter_id UUID PRIMARY KEY REFERENCES chapters(id) ON DELETE CASCADE,
+      revision INTEGER NOT NULL DEFAULT 0,
+      draft JSONB NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `,
+] as const;
+
+const bookAccessStatements = [
+  `ALTER TABLE chapter_drafts ADD COLUMN IF NOT EXISTS base_hash TEXT;`,
+  `ALTER TABLE book_settings ADD COLUMN IF NOT EXISTS price_minor INTEGER CHECK (price_minor BETWEEN 100 AND 100000);`,
+  `ALTER TABLE chapters ADD COLUMN IF NOT EXISTS free BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN IF NOT EXISTS perspective_order UUID[] NOT NULL DEFAULT '{}';`,
+  `CREATE TABLE IF NOT EXISTS book_readers (id UUID PRIMARY KEY DEFAULT uuidv7(), email TEXT NOT NULL UNIQUE);`,
+  `CREATE TABLE IF NOT EXISTS book_login_tokens (hash TEXT PRIMARY KEY, reader_id UUID NOT NULL REFERENCES book_readers(id), expires_at TIMESTAMPTZ NOT NULL);`,
+  `CREATE TABLE IF NOT EXISTS book_reader_sessions (hash TEXT PRIMARY KEY, reader_id UUID NOT NULL REFERENCES book_readers(id), expires_at TIMESTAMPTZ NOT NULL);`,
+  `CREATE TABLE IF NOT EXISTS book_orders (
+    id UUID PRIMARY KEY DEFAULT uuidv7(), reader_id UUID NOT NULL REFERENCES book_readers(id),
+    amount_minor INTEGER NOT NULL CHECK (amount_minor BETWEEN 100 AND 100000),
+    session_id TEXT UNIQUE, payment_intent_id TEXT UNIQUE,
+    paid BOOLEAN NOT NULL DEFAULT false, refunded_minor INTEGER NOT NULL DEFAULT 0,
+    CHECK (refunded_minor BETWEEN 0 AND amount_minor));`,
 ] as const;
 
 const perspectiveStatements = [
@@ -466,6 +506,7 @@ const indexStatements = [
 const migrationGroups = [
   topicStatements,
   chapterStatements,
+  bookAccessStatements,
   perspectiveStatements,
   retiredCollectionStatements,
   collaborationCodeStatements,

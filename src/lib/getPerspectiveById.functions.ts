@@ -9,9 +9,8 @@ const schema = z.object({
 });
 
 export const loadPerspectiveById = createServerFn({ method: "GET" })
-  .validator(
-    (value: { perspectiveId?: string; topicName?: string }) =>
-      schema.parse(value),
+  .validator((value: { perspectiveId?: string; topicName?: string }) =>
+    schema.parse(value),
   )
   .handler(async ({ data, context }) => {
     const request =
@@ -24,9 +23,11 @@ export const loadPerspectiveById = createServerFn({ method: "GET" })
         })
       : null;
 
-    const { getPerspectiveById } = await import("@/lib/getPerspectiveById.server");
+    const { getPerspectiveById } =
+      await import("@/lib/getPerspectiveById.server");
     const perspective = await getPerspectiveById({
       perspectiveId: data.perspectiveId,
+      request,
       cookieToken: cookie?.value ?? undefined,
     });
 

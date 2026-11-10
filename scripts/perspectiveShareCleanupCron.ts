@@ -1,5 +1,5 @@
 import { purgePerspectiveShareCodes } from "../src/lib/perspectiveShareCleanup.server";
-import { sql } from "../src/lib/db.server";
+import { createSqlClient } from "../src/lib/db.server";
 
 const DEFAULT_HEARTBEAT_PATH = "/tmp/perspective-share-cleanup-heartbeat.json";
 
@@ -30,7 +30,14 @@ const runCleanup = async ({
   scheduledTime?: number;
   trigger: "cron" | "manual";
 }) => {
-  const result = await purgePerspectiveShareCodes();
+  // This short, sequential job must not close a pool with connections still starting.
+  const sql = createSqlClient({ max: 1 });
+  let result: Awaited<ReturnType<typeof purgePerspectiveShareCodes>>;
+  try {
+    result = await purgePerspectiveShareCodes({ db: sql });
+  } finally {
+    await sql.close?.();
+  }
   const payload = {
     batchSize: result.batchSize,
     deletedCount: result.deletedCount,
@@ -51,14 +58,10 @@ const runCleanup = async ({
 };
 
 const scheduled = async (controller?: ScheduledControllerLike) => {
-  try {
-    await runCleanup({
-      scheduledTime: controller?.scheduledTime,
-      trigger: "cron",
-    });
-  } finally {
-    await sql.close?.();
-  }
+  await runCleanup({
+    scheduledTime: controller?.scheduledTime,
+    trigger: "cron",
+  });
 };
 
 export default {
@@ -66,11 +69,7 @@ export default {
 };
 
 if (import.meta.main) {
-  try {
-    await runCleanup({
-      trigger: "manual",
-    });
-  } finally {
-    await sql.close?.();
-  }
+  await runCleanup({
+    trigger: "manual",
+  });
 }

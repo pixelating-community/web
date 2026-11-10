@@ -16,10 +16,12 @@ export const getPerspectiveShareCleanupBatchSize = () =>
 
 export const purgePerspectiveShareCodes = async ({
   batchSize = getPerspectiveShareCleanupBatchSize(),
+  db = sql,
 }: {
   batchSize?: number;
+  db?: typeof sql;
 } = {}) => {
-  const rows = await sql<{ id: string }>`
+  const rows = await db<{ id: string }>`
     DELETE FROM perspective_collaboration_codes
     WHERE id IN (
       SELECT id

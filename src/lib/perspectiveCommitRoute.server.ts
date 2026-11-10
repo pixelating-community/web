@@ -1,4 +1,5 @@
 import "@tanstack/react-start/server-only";
+import { canReadBookPerspective } from "@/lib/bookAccess.server";
 import { z } from "zod/v4";
 import { PERSPECTIVE_ALIGN_ACTION_SCOPES } from "@/lib/actionToken";
 import { issueActionToken } from "@/lib/actionToken.server";
@@ -66,6 +67,8 @@ export const loadPerspectiveCommitMetaServer = async ({
       return { data: null, error: "Perspective not found" };
     }
 
+    if (!(await canReadBookPerspective(id, request)))
+      return { data: null, error: "Book purchase required" };
     const row = rows[0];
     const isLocked = Boolean(row.topic_locked);
     const storedTopicToken = resolveStoredTopicToken(

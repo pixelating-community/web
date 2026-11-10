@@ -1,4 +1,5 @@
 import "@tanstack/react-start/server-only";
+import { canReadBookTopic } from "@/lib/bookAccess.server";
 import { issueActionToken } from "@/lib/actionToken.server";
 import { TOPIC_UI_ACTION_SCOPES } from "@/lib/actionToken";
 import { getRequestId } from "@/lib/requestId";
@@ -34,6 +35,8 @@ export const getTopicPayload = async ({
     }
 
     const topicId = String(topic.id);
+    if (!(await canReadBookTopic(topicId, request)))
+      return { data: null, error: "Book purchase required" };
     const canonicalTopicName = String(topic.name ?? trimmedTopicName);
     const topicEmoji =
       typeof topic.emoji === "string" ? topic.emoji.trim() : "";
@@ -74,12 +77,12 @@ export const getTopicPayload = async ({
     const canAccess = locked ? canWrite : true;
     const perspectives =
       !locked || canAccess
-        ? ((await getPerspectives({
+        ? (((await getPerspectives({
             topicId,
             isLocked: locked,
             token: validToken,
             forward: true,
-          })) as TopicPayload["perspectives"] | undefined) ?? []
+          })) as TopicPayload["perspectives"] | undefined) ?? [])
         : [];
     const actionToken = canWrite
       ? issueActionToken({

@@ -6,7 +6,7 @@ export const getChapter = async (topicName: string) => {
     SELECT chapters.id, chapters.topic_id
     FROM chapters
     JOIN topics ON topics.id = chapters.topic_id
-    WHERE topics.name = ${topicName}
+    WHERE topics.name = ${topicName} AND chapters.published
     LIMIT 1;
   `;
   return rows[0] ?? null;

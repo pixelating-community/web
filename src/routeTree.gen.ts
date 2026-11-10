@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SmRouteImport } from './routes/sm'
 import { Route as TimingEditorRouteImport } from './routes/timing-editor'
+import { Route as BookIndexRouteImport } from './routes/$book.index'
+import { Route as BookSplatRouteImport } from './routes/$book.$'
 import { Route as ApiObjRouteImport } from './routes/api/obj'
 import { Route as ApiPRouteImport } from './routes/api/p'
 import { Route as CSplatRouteImport } from './routes/c.$'
 import { Route as PIdRouteImport } from './routes/p.$id'
 import { Route as TSplatRouteImport } from './routes/t.$'
+import { Route as ApiObjBookRouteImport } from './routes/api/obj/book'
 import { Route as ApiObjHealthRouteImport } from './routes/api/obj/health'
 import { Route as ApiObjMergeStatusRouteImport } from './routes/api/obj/merge-status'
 import { Route as ApiObjPaypalWebhookRouteImport } from './routes/api/obj/paypal-webhook'
@@ -59,6 +62,16 @@ const TimingEditorRoute = TimingEditorRouteImport.update({
   path: '/timing-editor',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookIndexRoute = BookIndexRouteImport.update({
+  id: '/$book/',
+  path: '/$book/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookSplatRoute = BookSplatRouteImport.update({
+  id: '/$book/$',
+  path: '/$book/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiObjRoute = ApiObjRouteImport.update({
   id: '/api/obj',
   path: '/api/obj',
@@ -83,6 +96,11 @@ const TSplatRoute = TSplatRouteImport.update({
   id: '/t/$',
   path: '/t/$',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiObjBookRoute = ApiObjBookRouteImport.update({
+  id: '/book',
+  path: '/book',
+  getParentRoute: () => ApiObjRoute,
 } as any)
 const ApiObjHealthRoute = ApiObjHealthRouteImport.update({
   id: '/health',
@@ -220,11 +238,14 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sm': typeof SmRoute
   '/timing-editor': typeof TimingEditorRoute
+  '/$book/$': typeof BookSplatRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
   '/c/$': typeof CSplatRoute
   '/p/$id': typeof PIdRouteWithChildren
   '/t/$': typeof TSplatRoute
+  '/$book/': typeof BookIndexRoute
+  '/api/obj/book': typeof ApiObjBookRoute
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
@@ -256,11 +277,14 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sm': typeof SmRoute
   '/timing-editor': typeof TimingEditorRoute
+  '/$book/$': typeof BookSplatRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
   '/c/$': typeof CSplatRoute
   '/p/$id': typeof PIdRouteWithChildren
   '/t/$': typeof TSplatRoute
+  '/$book': typeof BookIndexRoute
+  '/api/obj/book': typeof ApiObjBookRoute
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
@@ -293,11 +317,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/sm': typeof SmRoute
   '/timing-editor': typeof TimingEditorRoute
+  '/$book/$': typeof BookSplatRoute
   '/api/obj': typeof ApiObjRouteWithChildren
   '/api/p': typeof ApiPRouteWithChildren
   '/c/$': typeof CSplatRoute
   '/p/$id': typeof PIdRouteWithChildren
   '/t/$': typeof TSplatRoute
+  '/$book/': typeof BookIndexRoute
+  '/api/obj/book': typeof ApiObjBookRoute
   '/api/obj/health': typeof ApiObjHealthRoute
   '/api/obj/merge-status': typeof ApiObjMergeStatusRoute
   '/api/obj/paypal-webhook': typeof ApiObjPaypalWebhookRoute
@@ -331,11 +358,14 @@ export interface FileRouteTypes {
     | '/'
     | '/sm'
     | '/timing-editor'
+    | '/$book/$'
     | '/api/obj'
     | '/api/p'
     | '/c/$'
     | '/p/$id'
     | '/t/$'
+    | '/$book/'
+    | '/api/obj/book'
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
@@ -367,11 +397,14 @@ export interface FileRouteTypes {
     | '/'
     | '/sm'
     | '/timing-editor'
+    | '/$book/$'
     | '/api/obj'
     | '/api/p'
     | '/c/$'
     | '/p/$id'
     | '/t/$'
+    | '/$book'
+    | '/api/obj/book'
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
@@ -403,11 +436,14 @@ export interface FileRouteTypes {
     | '/'
     | '/sm'
     | '/timing-editor'
+    | '/$book/$'
     | '/api/obj'
     | '/api/p'
     | '/c/$'
     | '/p/$id'
     | '/t/$'
+    | '/$book/'
+    | '/api/obj/book'
     | '/api/obj/health'
     | '/api/obj/merge-status'
     | '/api/obj/paypal-webhook'
@@ -440,11 +476,13 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SmRoute: typeof SmRoute
   TimingEditorRoute: typeof TimingEditorRoute
+  BookSplatRoute: typeof BookSplatRoute
   ApiObjRoute: typeof ApiObjRouteWithChildren
   ApiPRoute: typeof ApiPRouteWithChildren
   CSplatRoute: typeof CSplatRoute
   PIdRoute: typeof PIdRouteWithChildren
   TSplatRoute: typeof TSplatRoute
+  BookIndexRoute: typeof BookIndexRoute
   ApiTTopicRoute: typeof ApiTTopicRoute
   ApiTARoute: typeof ApiTARoute
   ApiTTokenRoute: typeof ApiTTokenRoute
@@ -481,6 +519,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TimingEditorRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$book/': {
+      id: '/$book/'
+      path: '/$book'
+      fullPath: '/$book/'
+      preLoaderRoute: typeof BookIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$book/$': {
+      id: '/$book/$'
+      path: '/$book/$'
+      fullPath: '/$book/$'
+      preLoaderRoute: typeof BookSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/obj': {
       id: '/api/obj'
       path: '/api/obj'
@@ -515,6 +567,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/t/$'
       preLoaderRoute: typeof TSplatRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/obj/book': {
+      id: '/api/obj/book'
+      path: '/book'
+      fullPath: '/api/obj/book'
+      preLoaderRoute: typeof ApiObjBookRouteImport
+      parentRoute: typeof ApiObjRoute
     }
     '/api/obj/health': {
       id: '/api/obj/health'
@@ -702,6 +761,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface ApiObjRouteChildren {
+  ApiObjBookRoute: typeof ApiObjBookRoute
   ApiObjHealthRoute: typeof ApiObjHealthRoute
   ApiObjMergeStatusRoute: typeof ApiObjMergeStatusRoute
   ApiObjPaypalWebhookRoute: typeof ApiObjPaypalWebhookRoute
@@ -713,6 +773,7 @@ interface ApiObjRouteChildren {
 }
 
 const ApiObjRouteChildren: ApiObjRouteChildren = {
+  ApiObjBookRoute: ApiObjBookRoute,
   ApiObjHealthRoute: ApiObjHealthRoute,
   ApiObjMergeStatusRoute: ApiObjMergeStatusRoute,
   ApiObjPaypalWebhookRoute: ApiObjPaypalWebhookRoute,
@@ -769,11 +830,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SmRoute: SmRoute,
   TimingEditorRoute: TimingEditorRoute,
+  BookSplatRoute: BookSplatRoute,
   ApiObjRoute: ApiObjRouteWithChildren,
   ApiPRoute: ApiPRouteWithChildren,
   CSplatRoute: CSplatRoute,
   PIdRoute: PIdRouteWithChildren,
   TSplatRoute: TSplatRoute,
+  BookIndexRoute: BookIndexRoute,
   ApiTTopicRoute: ApiTTopicRoute,
   ApiTARoute: ApiTARoute,
   ApiTTokenRoute: ApiTTokenRoute,

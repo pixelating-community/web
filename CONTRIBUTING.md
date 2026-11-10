@@ -48,14 +48,14 @@ requirements or change repository merge settings.
 ## Linting and formatting
 
 - Linter: `oxlint` via `bun run lint`
-- Optional formatter: `oxfmt`
+- Optional formatter: `bun fmt`, using the existing `.oxfmtrc.json` config
 
 Manual formatter examples:
 
 - Check:
-  `docker compose -f compose.yml exec web bunx oxfmt --check --no-error-on-unmatched-pattern 'src/**/*.{ts,tsx,js,jsx}' 'scripts/**/*.{ts,tsx,js,jsx}' 'tests/**/*.{ts,tsx,js,jsx}' '*.config.{ts,js,mjs,cjs}'`
+  `docker compose -f compose.yml exec web bun fmt --check --no-error-on-unmatched-pattern 'src/**/*.{ts,tsx,js,jsx}' 'scripts/**/*.{ts,tsx,js,jsx}' 'tests/**/*.{ts,tsx,js,jsx}' '*.config.{ts,js,mjs,cjs}'`
 - Write:
-  `docker compose -f compose.yml exec web bunx oxfmt --write --no-error-on-unmatched-pattern 'src/**/*.{ts,tsx,js,jsx}' 'scripts/**/*.{ts,tsx,js,jsx}' 'tests/**/*.{ts,tsx,js,jsx}' '*.config.{ts,js,mjs,cjs}'`
+  `docker compose -f compose.yml exec web bun fmt --write --no-error-on-unmatched-pattern 'src/**/*.{ts,tsx,js,jsx}' 'scripts/**/*.{ts,tsx,js,jsx}' 'tests/**/*.{ts,tsx,js,jsx}' '*.config.{ts,js,mjs,cjs}'`
 
 ## Notes
 

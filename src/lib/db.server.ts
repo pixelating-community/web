@@ -15,7 +15,12 @@ type BunSQLClient = {
   close?: () => Promise<void> | void;
 };
 
-type BunSQLConstructor = new (url: string) => BunSQLClient;
+type BunSQLOptions = { max?: number };
+
+type BunSQLConstructor = new (
+  url: string,
+  options?: BunSQLOptions,
+) => BunSQLClient;
 
 const resolveConnectionString = () => {
   const databaseUrl = process.env.DATABASE_URL?.trim();
@@ -46,9 +51,9 @@ const globalCache = globalThis as typeof globalThis & {
   __pxl8SqlConnection?: string;
 };
 
-const createSqlClient = (connectionString: string) => {
+export const createSqlClient = (options?: BunSQLOptions) => {
   const SQL = getBunSQL();
-  return new SQL(connectionString) as BunSQLClient;
+  return new SQL(resolveConnectionString(), options) as BunSQLClient;
 };
 
 const connectionString = resolveConnectionString();
@@ -62,7 +67,7 @@ if (
 }
 
 if (!globalCache.__pxl8Sql) {
-  globalCache.__pxl8Sql = createSqlClient(connectionString);
+  globalCache.__pxl8Sql = createSqlClient();
   globalCache.__pxl8SqlConnection = connectionString;
 }
 

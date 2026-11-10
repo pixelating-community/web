@@ -237,7 +237,8 @@ const processJob = async (sql: InstanceType<typeof SQL>, job: JobRow) => {
 };
 
 const processQueue = async () => {
-  const sql = new SQL(resolveConnectionString());
+  // This short, sequential job must not close a pool with connections still starting.
+  const sql = new SQL(resolveConnectionString(), { max: 1 });
 
   try {
     const staleThreshold = new Date(Date.now() - STALE_JOB_TIMEOUT_MS).toISOString();

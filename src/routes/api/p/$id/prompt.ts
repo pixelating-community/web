@@ -24,6 +24,13 @@ export const Route = createFileRoute("/api/p/$id/prompt")({
           return Response.json({ error: "Invalid id" }, { status: 400 });
         }
 
+        const { canReadBookPerspective } =
+          await import("@/lib/bookAccess.server");
+        if (!(await canReadBookPerspective(data.id, request)))
+          return Response.json(
+            { error: "Book purchase required" },
+            { status: 403 },
+          );
         const rows = await sql`
       SELECT id, perspective, topic_id, rendered_html, audio_src, remix_audio_src, remix_duration, remix_updated_at, start_time, end_time
       FROM perspectives

@@ -17,9 +17,8 @@ export const Route = createFileRoute("/api/obj/stripe-webhook")({
         let event;
         try {
           const payload = await request.text();
-          const { constructStripeWebhookEvent } = await import(
-            "@/lib/stripe.server"
-          );
+          const { constructStripeWebhookEvent } =
+            await import("@/lib/stripe.server");
           event = await constructStripeWebhookEvent({ payload, signature });
         } catch (error) {
           console.warn("Rejected Stripe webhook", {
@@ -33,10 +32,12 @@ export const Route = createFileRoute("/api/obj/stripe-webhook")({
         }
 
         try {
-          const { processStripeWebhookServer } = await import(
-            "@/lib/perspectiveSupport.server"
-          );
+          const { processStripeWebhookServer } =
+            await import("@/lib/perspectiveSupport.server");
           await processStripeWebhookServer(event);
+          const { processBookWebhook } =
+            await import("@/lib/bookPayments.server");
+          await processBookWebhook(event);
           return new Response(null, {
             status: 204,
             headers: requestIdHeaders(requestId),

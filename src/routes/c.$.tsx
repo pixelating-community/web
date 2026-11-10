@@ -3,7 +3,12 @@ import {
   useQuery,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { createFileRoute, Link, notFound, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  notFound,
+  redirect,
+} from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import type { ReactNode } from "react";
 import { lazy, Suspense, useMemo } from "react";
@@ -123,8 +128,20 @@ export const Route = createFileRoute("/c/$")({
     );
     const { topicName, mode, modeParam } = parsed;
 
-    if (!topicName) {
-      return { topicName, mode, modeParam };
+    if (!topicName || !mode) {
+      const { loadBookPage } = await import("@/lib/bookPage.functions");
+      const page = await loadBookPage({ data: { slug: "book" } });
+      if (
+        page &&
+        (!topicName || page.chapters.some((c) => c.slug === topicName))
+      )
+        throw redirect({
+          href: topicName
+            ? `/${page.book.slug}/c/${encodeURIComponent(topicName)}`
+            : `/${page.book.slug}`,
+          replace: true,
+        });
+      if (!topicName) return { topicName, mode, modeParam };
     }
 
     const validatedSearch = parseTopicRouteSearch(
@@ -294,10 +311,19 @@ function TopicRoute() {
 
   const loadPerspectiveByIdFn = useServerFn(loadPerspectiveById);
 
-  const requestedModeId = mode === "r" || mode === "p" || mode === "w" || mode === "k" || mode === "ke" ? modeParam : "";
+  const requestedModeId =
+    mode === "r" ||
+    mode === "p" ||
+    mode === "w" ||
+    mode === "k" ||
+    mode === "ke"
+      ? modeParam
+      : "";
   const perspectives = resolvedData?.perspectives ?? [];
   const isInTopLevel = requestedModeId
-    ? perspectives.some((p: TopicPayload["perspectives"][number]) => p.id === requestedModeId)
+    ? perspectives.some(
+        (p: TopicPayload["perspectives"][number]) => p.id === requestedModeId,
+      )
     : true;
   const childPerspectiveQuery = useQuery({
     queryKey: ["perspective-by-id", requestedModeId],
@@ -335,30 +361,49 @@ function TopicRoute() {
       ? (perspectives.find(
           (p: TopicPayload["perspectives"][number]) =>
             p.id === requestedEditorId,
-        )?.id ?? (childPerspective?.id === requestedEditorId ? requestedEditorId : undefined))
+        )?.id ??
+        (childPerspective?.id === requestedEditorId
+          ? requestedEditorId
+          : undefined))
       : undefined;
     const resolvedRequestedViewerId = requestedViewerId
       ? (perspectives.find(
-          (p: TopicPayload["perspectives"][number]) => p.id === requestedViewerId,
-        )?.id ?? (childPerspective?.id === requestedViewerId ? requestedViewerId : undefined))
+          (p: TopicPayload["perspectives"][number]) =>
+            p.id === requestedViewerId,
+        )?.id ??
+        (childPerspective?.id === requestedViewerId
+          ? requestedViewerId
+          : undefined))
       : undefined;
     const requestsNewPerspective =
       requestedWriteId === NEW_PERSPECTIVE_QUERY_VALUE;
     const resolvedRequestedWriteId =
       requestedWriteId && !requestsNewPerspective
-      ? (perspectives.find(
-          (p: TopicPayload["perspectives"][number]) => p.id === requestedWriteId,
-        )?.id ?? (childPerspective?.id === requestedWriteId ? requestedWriteId : undefined))
-      : undefined;
+        ? (perspectives.find(
+            (p: TopicPayload["perspectives"][number]) =>
+              p.id === requestedWriteId,
+          )?.id ??
+          (childPerspective?.id === requestedWriteId
+            ? requestedWriteId
+            : undefined))
+        : undefined;
     const resolvedRequestedKaraokeId = requestedKaraokeId
       ? (perspectives.find(
-          (p: TopicPayload["perspectives"][number]) => p.id === requestedKaraokeId,
-        )?.id ?? (childPerspective?.id === requestedKaraokeId ? requestedKaraokeId : undefined))
+          (p: TopicPayload["perspectives"][number]) =>
+            p.id === requestedKaraokeId,
+        )?.id ??
+        (childPerspective?.id === requestedKaraokeId
+          ? requestedKaraokeId
+          : undefined))
       : undefined;
     const resolvedRequestedKaraokeEditorId = requestedKaraokeEditorId
       ? (perspectives.find(
-          (p: TopicPayload["perspectives"][number]) => p.id === requestedKaraokeEditorId,
-        )?.id ?? (childPerspective?.id === requestedKaraokeEditorId ? requestedKaraokeEditorId : undefined))
+          (p: TopicPayload["perspectives"][number]) =>
+            p.id === requestedKaraokeEditorId,
+        )?.id ??
+        (childPerspective?.id === requestedKaraokeEditorId
+          ? requestedKaraokeEditorId
+          : undefined))
       : undefined;
     const requestedTimingEditorId =
       resolvedRequestedEditorId ??
@@ -367,15 +412,16 @@ function TopicRoute() {
       resolvedRequestedKaraokeEditorId;
     const timingEditorPerspective = requestedTimingEditorId
       ? (perspectives.find(
-          (p: TopicPayload["perspectives"][number]) => p.id === requestedTimingEditorId,
-        ) ?? (childPerspective?.id === requestedTimingEditorId
+          (p: TopicPayload["perspectives"][number]) =>
+            p.id === requestedTimingEditorId,
+        ) ??
+        (childPerspective?.id === requestedTimingEditorId
           ? (childPerspective as TopicPayload["perspectives"][number])
           : null))
       : null;
     const shouldShowEmptyWriteSurface =
       perspectives.length === 0 && topic.canWrite;
-    const shouldShowNewWriteSurface =
-      requestsNewPerspective && topic.canWrite;
+    const shouldShowNewWriteSurface = requestsNewPerspective && topic.canWrite;
     const shouldShowWriteSurface =
       Boolean(resolvedRequestedWriteId) ||
       shouldShowEmptyWriteSurface ||
@@ -386,17 +432,32 @@ function TopicRoute() {
         ? `write-${NEW_PERSPECTIVE_QUERY_VALUE}`
         : "write-topic";
     const swEditorPerspectives = resolvedRequestedEditorId
-      ? (perspectives.find((p: TopicPayload["perspectives"][number]) => p.id === resolvedRequestedEditorId)
-          ? perspectives.filter((p: TopicPayload["perspectives"][number]) => p.id === resolvedRequestedEditorId)
-          : childPerspective ? [childPerspective as TopicPayload["perspectives"][number]] : [])
+      ? perspectives.find(
+          (p: TopicPayload["perspectives"][number]) =>
+            p.id === resolvedRequestedEditorId,
+        )
+        ? perspectives.filter(
+            (p: TopicPayload["perspectives"][number]) =>
+              p.id === resolvedRequestedEditorId,
+          )
+        : childPerspective
+          ? [childPerspective as TopicPayload["perspectives"][number]]
+          : []
       : perspectives;
     const viewerPerspectives = resolvedRequestedViewerId
-      ? (perspectives.find((p: TopicPayload["perspectives"][number]) => p.id === resolvedRequestedViewerId)
-          ? perspectives.filter((p: TopicPayload["perspectives"][number]) => p.id === resolvedRequestedViewerId)
-          : childPerspective ? [childPerspective as TopicPayload["perspectives"][number]] : [])
+      ? perspectives.find(
+          (p: TopicPayload["perspectives"][number]) =>
+            p.id === resolvedRequestedViewerId,
+        )
+        ? perspectives.filter(
+            (p: TopicPayload["perspectives"][number]) =>
+              p.id === resolvedRequestedViewerId,
+          )
+        : childPerspective
+          ? [childPerspective as TopicPayload["perspectives"][number]]
+          : []
       : perspectives;
-    const initialId =
-      resolvedRequestedEditorId ?? perspectives[0]?.id ?? "";
+    const initialId = resolvedRequestedEditorId ?? perspectives[0]?.id ?? "";
     const newPerspectiveHref = buildTopicNewPerspectivePath(topic.name);
     const topicWriteActionHref = topic.canWrite
       ? newPerspectiveHref
@@ -428,7 +489,10 @@ function TopicRoute() {
       content = (
         <Suspense
           fallback={
-            <div className={getTopicShellClassName(topic.name)} aria-hidden="true" />
+            <div
+              className={getTopicShellClassName(topic.name)}
+              aria-hidden="true"
+            />
           }
         >
           <TimingEditorSurface
@@ -471,11 +535,13 @@ function TopicRoute() {
         content = <NotFoundPage />;
       }
     } else if (resolvedRequestedKaraokeId || resolvedRequestedKaraokeEditorId) {
-      const karaokeId = resolvedRequestedKaraokeId ?? resolvedRequestedKaraokeEditorId;
+      const karaokeId =
+        resolvedRequestedKaraokeId ?? resolvedRequestedKaraokeEditorId;
       const karaokeEditable = Boolean(resolvedRequestedKaraokeEditorId);
       const karaokePerspective =
-        perspectives.find((p: TopicPayload["perspectives"][number]) => p.id === karaokeId)
-        ?? (childPerspective as TopicPayload["perspectives"][number] | null);
+        perspectives.find(
+          (p: TopicPayload["perspectives"][number]) => p.id === karaokeId,
+        ) ?? (childPerspective as TopicPayload["perspectives"][number] | null);
       if (karaokePerspective) {
         content = (
           <KaraokeListener
@@ -488,12 +554,12 @@ function TopicRoute() {
             imageSrc={search.i}
             startTime={
               karaokeEditable
-                ? search.s ?? karaokePerspective.start_time ?? undefined
+                ? (search.s ?? karaokePerspective.start_time ?? undefined)
                 : search.s
             }
             endTime={
               karaokeEditable
-                ? search.e ?? karaokePerspective.end_time ?? undefined
+                ? (search.e ?? karaokePerspective.end_time ?? undefined)
                 : search.e
             }
             topicId={topic.id}
@@ -512,7 +578,10 @@ function TopicRoute() {
           ? childPerspective
           : null;
       const writePerspectives = writeChildPerspective
-        ? [...perspectives, writeChildPerspective as TopicPayload["perspectives"][number]]
+        ? [
+            ...perspectives,
+            writeChildPerspective as TopicPayload["perspectives"][number],
+          ]
         : perspectives;
       content = (
         <WritePerspective
@@ -527,7 +596,8 @@ function TopicRoute() {
           initialPerspectiveId={resolvedRequestedWriteId}
           parentPerspectiveId={
             search.parent ??
-            (writeChildPerspective?.parent_perspective_id ?? undefined)
+            writeChildPerspective?.parent_perspective_id ??
+            undefined
           }
           queryKey={queryKey}
           onRefresh={refreshTopicPayload}

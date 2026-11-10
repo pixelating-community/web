@@ -1,4 +1,5 @@
 import "@tanstack/react-start/server-only";
+import { canReadBookPerspective } from "@/lib/bookAccess.server";
 import { z } from "zod/v4";
 import { compilePerspective } from "@/lib/compilePerspective";
 import { decrypt } from "@/lib/crypto";
@@ -33,20 +34,31 @@ type PerspectiveWithTopicRow = {
   contribution_total_minor: number | string | null;
 };
 
-const decryptIfLocked = (value: string | null, isLocked: boolean, token?: string) => {
+const decryptIfLocked = (
+  value: string | null,
+  isLocked: boolean,
+  token?: string,
+) => {
   if (!value || !isLocked || !token) return value;
-  try { return decrypt(value, token); } catch { return value; }
+  try {
+    return decrypt(value, token);
+  } catch {
+    return value;
+  }
 };
 
 export const getPerspectiveById = async ({
   perspectiveId,
   cookieToken,
+  request,
 }: {
   perspectiveId: string;
   cookieToken?: string;
+  request?: Request;
 }) => {
   try {
     const id = z.uuid().parse(perspectiveId);
+    if (!(await canReadBookPerspective(id, request))) return null;
 
     const rows = await sql<PerspectiveWithTopicRow>`
       SELECT p.id, p.perspective, p.topic_id, p.parent_perspective_id,
@@ -65,7 +77,8 @@ export const getPerspectiveById = async ({
     if (!row) return null;
 
     const isLocked = Boolean(row.topic_locked);
-    const storedToken = typeof row.topic_token === "string" ? row.topic_token : undefined;
+    const storedToken =
+      typeof row.topic_token === "string" ? row.topic_token : undefined;
     let canAccess = !isLocked;
     if (isLocked && cookieToken && storedToken) {
       canAccess = await verifyTopicToken(cookieToken, storedToken);
@@ -74,7 +87,11 @@ export const getPerspectiveById = async ({
 
     const token = cookieToken;
     const text = decryptIfLocked(row.perspective, isLocked, token);
-    let renderedHtml: string | null = decryptIfLocked(row.rendered_html, isLocked, token);
+    let renderedHtml: string | null = decryptIfLocked(
+      row.rendered_html,
+      isLocked,
+      token,
+    );
     let words: string[] = [];
     if (text) {
       const compiled = compilePerspective(text);
@@ -90,19 +107,28 @@ export const getPerspectiveById = async ({
       perspective: text,
       topic_id: row.topic_id,
       parent_perspective_id: row.parent_perspective_id ?? null,
-      audio_src: resolveStoredAudioSrc(decryptIfLocked(row.audio_src, isLocked, token)),
-      image_src: resolveStoredAudioSrc(decryptIfLocked(row.image_src, isLocked, token)),
-      video_src: resolveStoredAudioSrc(decryptIfLocked(row.video_src, isLocked, token)),
-      recording_src: resolveStoredAudioSrc(decryptIfLocked(row.recording_src, isLocked, token)),
-      remix_audio_src: resolveStoredAudioSrc(decryptIfLocked(row.remix_audio_src, isLocked, token)),
+      audio_src: resolveStoredAudioSrc(
+        decryptIfLocked(row.audio_src, isLocked, token),
+      ),
+      image_src: resolveStoredAudioSrc(
+        decryptIfLocked(row.image_src, isLocked, token),
+      ),
+      video_src: resolveStoredAudioSrc(
+        decryptIfLocked(row.video_src, isLocked, token),
+      ),
+      recording_src: resolveStoredAudioSrc(
+        decryptIfLocked(row.recording_src, isLocked, token),
+      ),
+      remix_audio_src: resolveStoredAudioSrc(
+        decryptIfLocked(row.remix_audio_src, isLocked, token),
+      ),
       remix_duration: row.remix_duration ?? null,
       remix_updated_at: row.remix_updated_at ?? null,
-      remix_waveform:
-        Array.isArray(row.remix_waveform_json)
-          ? row.remix_waveform_json.filter(
-              (v): v is number => typeof v === "number" && Number.isFinite(v),
-            )
-          : [],
+      remix_waveform: Array.isArray(row.remix_waveform_json)
+        ? row.remix_waveform_json.filter(
+            (v): v is number => typeof v === "number" && Number.isFinite(v),
+          )
+        : [],
       start_time: row.start_time ?? null,
       end_time: row.end_time ?? null,
       symbols: normalizeSymbolList(row.symbols),
@@ -110,7 +136,9 @@ export const getPerspectiveById = async ({
       words,
       wordTimings,
       virtual_vote_count: coerceSupportCount(row.virtual_vote_count),
-      contribution_total_minor: coerceSupportCount(row.contribution_total_minor),
+      contribution_total_minor: coerceSupportCount(
+        row.contribution_total_minor,
+      ),
       contribution_currency: SUPPORT_CURRENCY,
     };
   } catch (e) {

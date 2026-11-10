@@ -13,6 +13,9 @@ function Home() {
         <div>
           <Pixelate />
         </div>
+        <a href="/book" className="mb-6 underline">
+          Read the book ↗
+        </a>
         <Link to="/sm" className="mb-8 text-sm">
           Secret messages ↗
         </Link>
