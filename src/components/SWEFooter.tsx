@@ -11,6 +11,7 @@ import { Audio } from "@/components/Audio";
 import { AudioRecorder } from "@/components/AudioRecorder";
 import { AudioWaveform } from "@/components/AudioWaveform";
 import { useConfirmAction } from "@/components/sw/useConfirmAction";
+import { SelectedWordInput } from "@/components/SelectedWordInput";
 import type { AudioAnalysis } from "@/lib/audioProcessing";
 import type { Perspective } from "@/types/perspectives";
 
@@ -63,6 +64,7 @@ type SWEFooterProps = {
   selectedWordCount: number;
   selectedWordIndex?: number;
   selectedWord: string;
+  onReplaceSelectedWord?: (value: string) => Promise<void>;
   selectedWordDuration?: number;
   selectedWordStart?: number;
   currentTrack: Perspective | null;
@@ -122,6 +124,7 @@ export const SWEFooter = ({
   selectedWordCount,
   selectedWordIndex,
   selectedWord,
+  onReplaceSelectedWord,
   selectedWordDuration,
   selectedWordStart,
   currentTrack,
@@ -548,7 +551,14 @@ export const SWEFooter = ({
               <div className="flex flex-wrap items-center gap-2 rounded-xl bg-white/5 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-white/50">
                 <div className="flex min-w-0 items-center gap-2">
                   <span>Word {selectedWordIndex + 1}</span>
-                  {selectedWord ? (
+                  {selectedWord && onReplaceSelectedWord ? (
+                    <SelectedWordInput
+                      key={`${currentTrack?.id}:${selectedWordIndex}:${selectedWord}`}
+                      word={selectedWord}
+                      disabled={isBusy}
+                      onSave={onReplaceSelectedWord}
+                    />
+                  ) : selectedWord ? (
                     <span className="max-w-48 truncate text-[11px] normal-case tracking-normal text-white/70">
                       "{selectedWord}"
                     </span>

@@ -24,6 +24,7 @@ import { saveKaraokePhrases } from "@/lib/karaokePhrases.functions";
 import { setPerspectiveBounds } from "@/lib/perspectiveBounds.functions";
 import { resolvePerspectiveBackgroundImageSrc } from "@/lib/perspectiveImage";
 import { resolvePublicAudioSrc } from "@/lib/publicAudioBase";
+import { resolveKaraokeLoop } from "@/lib/karaokeLoop";
 import type { Perspective } from "@/types/perspectives";
 
 const SYNC_MAX_FPS = 24;
@@ -97,6 +98,7 @@ export const KaraokeListener = ({
   const savePhrasesFn = useServerFn(saveKaraokePhrases);
   const mediaRef = useRef<HTMLMediaElement | null>(null);
   const pendingSeekTimeRef = useRef<number | null>(null);
+  const playbackRequestedRef = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [mediaDuration, setMediaDuration] = useState<number | undefined>();
   const [boundButtonStatus, setBoundButtonStatus] = useState<Record<BoundField, BoundSaveStatus>>({
@@ -136,6 +138,7 @@ export const KaraokeListener = ({
   }, [perspective.id, perspective.symbols]);
 
   const timings = perspective.wordTimings ?? [];
+  const playbackLoop = useMemo(() => resolveKaraokeLoop(startTime, endTime, mediaDuration), [startTime, endTime, mediaDuration]);
   const resolvedAudioSrc = useMemo(
     () =>
       resolvePublicAudioSrc(perspective.recording_src) ||
@@ -259,18 +262,48 @@ export const KaraokeListener = ({
     [],
   );
 
+  const enforcePlaybackBoundary = useCallback(() => {
+    const media = mediaRef.current;
+    if (!media || media.paused || media.ended || !playbackRequestedRef.current) return false;
+    const phrase = activePhraseRef.current;
+    const bounds = (phrase ? getPhraseBounds(timings, phrase) : null) ?? playbackLoop;
+    if (bounds && media.currentTime >= bounds.end - 0.02) {
+      media.currentTime = bounds.start;
+      commitCurrentTime(bounds.start, true);
+      return true;
+    }
+    if (!bounds && endTime !== undefined && media.currentTime >= endTime - 0.02) {
+      playbackRequestedRef.current = false;
+      media.pause();
+      media.currentTime = endTime;
+      commitCurrentTime(endTime, true);
+      setIsPlaying(false);
+      return true;
+    }
+    return false;
+  }, [commitCurrentTime, endTime, playbackLoop, timings]);
+
   const handleTogglePlayback = useCallback(() => {
     const media = mediaRef.current;
     if (!media) return;
     media.muted = false;
     media.volume = 1;
 
-    if (!media.paused) {
+    if (playbackRequestedRef.current || !media.paused) {
+      playbackRequestedRef.current = false;
       media.pause();
+      setIsPlaying(false);
+      if (playbackLoop) {
+        media.currentTime = playbackLoop.start;
+        commitCurrentTime(playbackLoop.start, true);
+      }
       return;
     }
 
-    if (media.ended || (Number.isFinite(media.duration) && media.currentTime >= media.duration - 0.05)) {
+    if (playbackLoop && (media.currentTime < playbackLoop.start || media.currentTime >= playbackLoop.end - 0.02)) {
+      media.currentTime = playbackLoop.start;
+      commitCurrentTime(playbackLoop.start, true);
+    } else if (media.ended || (Number.isFinite(media.duration) && media.currentTime >= media.duration - 0.05)) {
       media.currentTime = startTime ?? 0;
       commitCurrentTime(startTime ?? 0, true);
     } else if (startTime !== undefined && startTime > 0 && media.currentTime < startTime - 0.1) {
@@ -280,8 +313,9 @@ export const KaraokeListener = ({
     if (media.networkState === HTMLMediaElement.NETWORK_EMPTY) {
       media.load();
     }
-    void media.play().catch(() => {});
-  }, [commitCurrentTime, startTime]);
+    playbackRequestedRef.current = true;
+    void media.play().catch(() => { playbackRequestedRef.current = false; setIsPlaying(false); });
+  }, [commitCurrentTime, playbackLoop, startTime]);
 
   const handleSeek = useCallback(
     (time: number) => {
@@ -563,8 +597,20 @@ export const KaraokeListener = ({
       setIsPlaying(false);
     };
     const handleEnded = () => {
+      const phrase = activePhraseRef.current;
+      const bounds = (phrase ? getPhraseBounds(timings, phrase) : null) ?? playbackLoop;
+      if (playbackRequestedRef.current && bounds) {
+        media.currentTime = bounds.start;
+        commitCurrentTime(bounds.start, true);
+        void media.play().catch(() => { playbackRequestedRef.current = false; setIsPlaying(false); });
+        return;
+      }
+      playbackRequestedRef.current = false;
       commitCurrentTime(media.currentTime, true);
       setIsPlaying(false);
+    };
+    const handleTimeUpdate = () => {
+      if (!enforcePlaybackBoundary()) commitCurrentTime(media.currentTime);
     };
     const handleLoadedMetadata = () => {
       if (Number.isFinite(media.duration) && media.duration > 0) {
@@ -581,14 +627,16 @@ export const KaraokeListener = ({
     media.addEventListener("playing", handlePlaying);
     media.addEventListener("pause", handlePause);
     media.addEventListener("ended", handleEnded);
+    media.addEventListener("timeupdate", handleTimeUpdate);
     media.addEventListener("loadedmetadata", handleLoadedMetadata);
     return () => {
       media.removeEventListener("playing", handlePlaying);
       media.removeEventListener("pause", handlePause);
       media.removeEventListener("ended", handleEnded);
+      media.removeEventListener("timeupdate", handleTimeUpdate);
       media.removeEventListener("loadedmetadata", handleLoadedMetadata);
     };
-  }, [commitCurrentTime]);
+  }, [commitCurrentTime, enforcePlaybackBoundary, playbackLoop, timings]);
 
   // Throttled RAF loop with phrase loop enforcement
   useEffect(() => {
@@ -608,24 +656,8 @@ export const KaraokeListener = ({
             return;
           }
 
-          // Phrase loop enforcement
-          const phrase = activePhraseRef.current;
-          if (phrase) {
-            const bounds = getPhraseBounds(timings, phrase);
-            if (bounds && media.currentTime >= bounds.end - 0.02) {
-              media.currentTime = bounds.start;
-              commitCurrentTime(bounds.start, true);
-              rafId = requestAnimationFrame(tick);
-              return;
-            }
-          }
-
-          // End-time boundary
-          if (endTime !== undefined && media.currentTime >= endTime - 0.02) {
-            media.pause();
-            media.currentTime = endTime;
-            commitCurrentTime(endTime, true);
-            setIsPlaying(false);
+          if (enforcePlaybackBoundary()) {
+            if (playbackRequestedRef.current) rafId = requestAnimationFrame(tick);
             return;
           }
 
@@ -639,7 +671,7 @@ export const KaraokeListener = ({
     return () => {
       if (rafId !== null) cancelAnimationFrame(rafId);
     };
-  }, [commitCurrentTime, endTime, isPlaying, timings]);
+  }, [commitCurrentTime, enforcePlaybackBoundary, isPlaying]);
 
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-hidden">
@@ -674,6 +706,7 @@ export const KaraokeListener = ({
         isPlaying={isPlaying}
         disabled={!resolvedVideoSrc && !resolvedAudioSrc}
         onTogglePlayback={handleTogglePlayback}
+        playLabel={playbackLoop && isPlaying ? "Stop audio" : undefined}
         onSeek={handleSeek}
       />
       <div className="flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden relative z-10">

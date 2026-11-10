@@ -50,12 +50,25 @@ type PerspectiveRuntimeAction = {
   id: string;
   patch: Partial<PerspectiveRuntimeState>;
   type: "patch";
-};
+} | { id: string; index: number; word: string; type: "replaceWord" };
 
 export const perspectiveRuntimeReducer = (
   state: PerspectiveRuntimeMap,
   action: PerspectiveRuntimeAction,
 ): PerspectiveRuntimeMap => {
+  if (action.type === "replaceWord") {
+    const current = state[action.id];
+    if (!current?.timings?.[action.index]) return state;
+    return {
+      ...state,
+      [action.id]: {
+        ...current,
+        timings: current.timings.map((entry, index) =>
+          index === action.index && entry ? { ...entry, word: action.word } : entry,
+        ),
+      },
+    };
+  }
   if (action.type !== "patch") return state;
   const previous = state[action.id] ?? {};
   const next = { ...previous } as PerspectiveRuntimeState;

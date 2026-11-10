@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useCallback,
   useEffect,
@@ -59,6 +60,10 @@ import { setPerspectiveBounds } from "@/lib/perspectiveBounds.functions";
 import { getPublicAudioBaseUrl } from "@/lib/publicAudioBase";
 import { getTimingDuration } from "@/lib/swPlayback";
 import type { Perspective } from "@/types/perspectives";
+import type { TopicPayloadQueryResult } from "@/types/topic";
+import { updatePerspectiveWord } from "@/lib/perspectiveWord.functions";
+import { patchTopicPayloadQueryResult } from "@/lib/topicPayloadCache";
+import { useContentRoutes } from "@/lib/useContentRoutes";
 
 export type { SWPlaybackMode } from "@/components/sw/types";
 
@@ -108,6 +113,10 @@ export const SW = ({
   onViewerPlaybackComplete?: (perspectiveId: string) => void;
 }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { CONTENT_QUERY_KEY } = useContentRoutes();
+  const saveWordFn = useServerFn(updatePerspectiveWord);
+  const [isSavingWord, setIsSavingWord] = useState(false);
   const currentLocation = useRouterState({
     select: (state) => state.location,
   });
@@ -739,9 +748,44 @@ export const SW = ({
   ]);
 
   const selectedRecordingState = selectedRuntime?.recording;
+  const replaceSelectedWord = async (word: string) => {
+    if (!selectedPerspective || selectedWordIndex === undefined || !actionToken || !canWrite) {
+      throw new Error("Unauthorized");
+    }
+    const id = selectedPerspective.id;
+    const index = selectedWordIndex;
+    setIsSavingWord(true);
+    try {
+      const result = await saveWordFn({
+        data: {
+          actionToken,
+          topicId,
+          perspectiveId: id,
+          index,
+          expectedWord: selectPerspectiveWords(selectedPerspective)[index],
+          word,
+        },
+      });
+      if (!result.ok) throw new Error(result.error);
+      dispatchRuntime({ type: "replaceWord", id, index, word: result.data.words[index] });
+      queryClient.setQueriesData<TopicPayloadQueryResult>(
+        { queryKey: [CONTENT_QUERY_KEY, topicName] },
+        current => patchTopicPayloadQueryResult({
+          current,
+          updater: items => items.map(item => item.id === id ? { ...item, ...result.data } : item),
+        }),
+      );
+      queryClient.setQueryData<{ perspective: Perspective | null }>(
+        ["perspective-by-id", id],
+        current => current?.perspective ? { perspective: { ...current.perspective, ...result.data } } : current,
+      );
+    } finally {
+      setIsSavingWord(false);
+    }
+  };
   const recordingStatus = selectedRecordingState?.status ?? "idle";
   const isBusy =
-    recordingStatus === "uploading" || recordingStatus === "saving";
+    isSavingWord || recordingStatus === "uploading" || recordingStatus === "saving";
   const hasTimings = selectedTimings.some(Boolean);
   const isRecentlySaved = Boolean(selectedRuntime?.saveSuccess);
   const {
@@ -896,6 +940,7 @@ export const SW = ({
           selectedWordCount={selectedWordCount}
           selectedWordIndex={selectedWordIndex}
           selectedWord={selectedWord}
+          onReplaceSelectedWord={canWrite && actionToken ? replaceSelectedWord : undefined}
           selectedWordDuration={selectedWordDuration}
           selectedWordStart={selectedWordStart}
           currentTrack={currentTrack}
