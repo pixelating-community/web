@@ -25,6 +25,8 @@ export const PerspectiveActions = ({
   children?: ReactNode;
 }) => {
   const {
+    buildTopicKaraokePath,
+    buildTopicKaraokeEditorPath,
     buildTopicPerspectivePath,
     buildTopicViewerPerspectivePath,
     buildTopicWritePerspectivePath,
@@ -65,8 +67,34 @@ export const PerspectiveActions = ({
           >
             {hasAudio ? "▶" : "↗"}
           </Link>
+          {topicName ? (
+            <Link
+              to={buildTopicKaraokePath({
+                topicName,
+                perspectiveId: perspective.id,
+              })}
+              preload="intent"
+              aria-label="Karaoke"
+              title="Karaoke"
+              className={ACTION_CLASS}
+            >
+              🎤
+            </Link>
+          ) : null}
           {canWrite && topicName ? (
             <>
+              <Link
+                to={buildTopicKaraokeEditorPath({
+                  topicName,
+                  perspectiveId: perspective.id,
+                })}
+                preload="intent"
+                aria-label="Karaoke Editor"
+                title="Karaoke Editor"
+                className={ACTION_CLASS}
+              >
+                🎛️
+              </Link>
               <Link
                 to={buildTopicWritePerspectivePath({
                   topicName,

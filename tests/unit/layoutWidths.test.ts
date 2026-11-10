@@ -48,13 +48,11 @@ describe("layout widths", () => {
     expect(source).not.toMatch(/⊕ Add reflection/);
   });
 
-  it("uses a single stable scrollbar gutter on the root document", () => {
-    expect(readSource("src/styles/globals.css")).toMatch(
-      /scrollbar-gutter:\s*stable;/,
-    );
-    expect(readSource("src/styles/globals.css")).not.toMatch(
-      /scrollbar-gutter:\s*stable both-edges;/,
-    );
+  it("allows document scrolling without reserving an empty scrollbar gutter", () => {
+    const source = readSource("src/styles/globals.css");
+    expect(source).toMatch(/overflow-y:\s*auto;/);
+    expect(source).not.toMatch(/scrollbar-gutter:\s*stable/);
+    expect(source).not.toMatch(/overflow-y:\s*scroll;/);
   });
 
   it("keeps karaoke text descenders from being clipped", () => {

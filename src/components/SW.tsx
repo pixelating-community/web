@@ -838,7 +838,7 @@ export const SW = ({
       ) : null}
       <div
         ref={scrollRef}
-        className={`flex w-screen min-h-0 flex-1 snap-x snap-mandatory touch-pan-x items-center overflow-x-auto overflow-y-hidden [scrollbar-gutter:stable] scrollbar-transparent ${
+        className={`flex w-screen min-h-0 flex-1 snap-x snap-mandatory touch-pan-x items-center overflow-x-auto overflow-y-hidden scrollbar-transparent ${
           isStudioSurface ? "px-4 py-0" : "px-[10vw] py-0"
         }`}
       >
