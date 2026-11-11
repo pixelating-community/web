@@ -22,6 +22,8 @@ const guessContentType = (filename: string) => {
   const ext = path.extname(filename).toLowerCase();
   const map: Record<string, string> = {
     ".webm": "audio/webm",
+    ".mp4": "video/mp4",
+    ".mov": "video/quicktime",
     ".m4a": "audio/mp4",
     ".wav": "audio/wav",
     ".aac": "audio/aac",
@@ -126,17 +128,22 @@ export const Route = createFileRoute("/api/obj/upload")({
             : 0;
           const resolvedContentType =
             contentTypeHint.startsWith("audio/") ||
-            contentTypeHint.startsWith("image/")
+            contentTypeHint.startsWith("image/") ||
+            contentTypeHint.startsWith("video/")
               ? contentTypeHint
               : file.type?.startsWith("audio/")
                 ? file.type
-                : file.type?.startsWith("image/")
+                : file.type?.startsWith("image/") ||
+                    file.type?.startsWith("video/")
                   ? file.type
                   : guessContentType(filename);
           const sizeLimit = getUploadSizeLimit(resolvedContentType);
           if (!sizeLimit) {
             return Response.json(
-              { error: "Only audio and image files are supported" },
+              {
+                error:
+                  "Only audio, image, and MP4, WebM or MOV video files are supported",
+              },
               { status: 415 },
             );
           }

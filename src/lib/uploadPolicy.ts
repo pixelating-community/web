@@ -7,7 +7,9 @@ export const UPLOAD_PERSPECTIVE_ID_HEADER = "x-pxl8-perspective-id";
 
 export const MAX_IMAGE_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_AUDIO_UPLOAD_BYTES = 50 * 1024 * 1024;
-export const MAX_MULTIPART_UPLOAD_BYTES = MAX_AUDIO_UPLOAD_BYTES + 1024 * 1024;
+export const MAX_VIDEO_UPLOAD_BYTES = 50 * 1024 * 1024;
+export const MAX_MULTIPART_UPLOAD_BYTES =
+  Math.max(MAX_AUDIO_UPLOAD_BYTES, MAX_VIDEO_UPLOAD_BYTES) + 1024 * 1024;
 
 const uploadScopes = new Set<ActionScope>([
   "perspective:add",
@@ -45,5 +47,7 @@ export const readUploadRequestMetadata = (
 export const getUploadSizeLimit = (contentType: string) => {
   if (contentType.startsWith("audio/")) return MAX_AUDIO_UPLOAD_BYTES;
   if (contentType.startsWith("image/")) return MAX_IMAGE_UPLOAD_BYTES;
+  if (["video/mp4", "video/webm", "video/quicktime"].includes(contentType))
+    return MAX_VIDEO_UPLOAD_BYTES;
   return 0;
 };

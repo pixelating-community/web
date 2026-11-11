@@ -462,6 +462,30 @@ button.sw-word:focus-visible {
 }
 
 /* Karaoke sampler view */
+.perspective-video-surface {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: saturate(1.15) contrast(1.06);
+}
+
+.perspective-video-pixels {
+  image-rendering: pixelated;
+}
+
+.perspective-video-scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 3px,
+    rgb(0 0 0 / 0.12) 3px,
+    rgb(0 0 0 / 0.12) 4px
+  );
+}
+
 .karaoke-view {
   font-size: clamp(1.2rem, 4vw, 3rem);
   color: var(--color-white, #fff);

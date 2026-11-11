@@ -12,7 +12,6 @@ import {
 } from "@/lib/topicWriteAccess";
 import { getTopic } from "@/lib/getTopic.server";
 
-
 export const editPerspective = async ({
   id,
   name,
@@ -37,6 +36,10 @@ export const editPerspective = async ({
       hasImageSrc && typeof rawImageSrc === "string"
         ? rawImageSrc.trim()
         : null;
+    const hasVideoSrc = formData.has("video_src");
+    const rawVideoSrc = formData.get("video_src");
+    const videoSrcValue =
+      typeof rawVideoSrc === "string" ? rawVideoSrc.trim() || null : null;
     const schema = z.object({
       id: z.uuid(),
       name: z.string().min(1),
@@ -44,6 +47,7 @@ export const editPerspective = async ({
       perspective: z.string().min(1),
       audio_src: z.string().min(1).nullable().optional(),
       image_src: z.string().min(1).nullable().optional(),
+      video_src: z.string().min(1).nullable().optional(),
     });
     const rawToken = formData.get("token");
     const data = schema.parse({
@@ -53,6 +57,7 @@ export const editPerspective = async ({
       perspective: formData.get("perspective"),
       audio_src: hasAudioSrc ? audioSrcValue || null : undefined,
       image_src: hasImageSrc ? imageSrcValue || null : undefined,
+      video_src: hasVideoSrc ? videoSrcValue : undefined,
     });
 
     const topic = await getTopic({ name });
@@ -107,6 +112,10 @@ export const editPerspective = async ({
         : locked && data.image_src && token
           ? encrypt(data.image_src, token)
           : data.image_src;
+    const storedVideoSrc =
+      locked && data.video_src && token
+        ? encrypt(data.video_src, token)
+        : data.video_src;
     if (locked && token) {
       data.perspective = encrypt(data.perspective, token);
       renderedHtml = encrypt(renderedHtml, token);
@@ -159,45 +168,16 @@ export const editPerspective = async ({
         ? encrypt(nextWordsJsonPlain, token)
         : nextWordsJsonPlain;
 
-    const shouldUpdateAudioSrc = data.audio_src !== undefined;
-    const shouldUpdateImageSrc = data.image_src !== undefined;
-    const result =
-      shouldUpdateAudioSrc && shouldUpdateImageSrc
-        ? await sql`
-            UPDATE perspectives
-            SET perspective = ${data.perspective},
-                audio_src = ${storedAudioSrc},
-                image_src = ${storedImageSrc},
-                rendered_html = ${renderedHtml},
-                words_json = ${wordsJson}
-            WHERE id = ${id};
-          `
-        : shouldUpdateAudioSrc
-          ? await sql`
-            UPDATE perspectives
-            SET perspective = ${data.perspective},
-                audio_src = ${storedAudioSrc},
-                rendered_html = ${renderedHtml},
-                words_json = ${wordsJson}
-            WHERE id = ${id};
-          `
-          : shouldUpdateImageSrc
-            ? await sql`
-            UPDATE perspectives
-            SET perspective = ${data.perspective},
-                image_src = ${storedImageSrc},
-                rendered_html = ${renderedHtml},
-                words_json = ${wordsJson}
-            WHERE id = ${id};
-          `
-            : await sql`
-            UPDATE perspectives
-            SET perspective = ${data.perspective},
-                rendered_html = ${renderedHtml},
-                words_json = ${wordsJson}
-            WHERE id = ${id};
-          `;
-
+    const result = await sql`
+      UPDATE perspectives
+      SET perspective = ${data.perspective},
+          audio_src = CASE WHEN ${data.audio_src !== undefined} THEN ${storedAudioSrc ?? null} ELSE audio_src END,
+          image_src = CASE WHEN ${data.image_src !== undefined} THEN ${storedImageSrc ?? null} ELSE image_src END,
+          video_src = CASE WHEN ${data.video_src !== undefined} THEN ${storedVideoSrc ?? null} ELSE video_src END,
+          rendered_html = ${renderedHtml},
+          words_json = ${wordsJson}
+      WHERE id = ${id} AND topic_id = ${topicId};
+    `;
 
     return { result };
   } catch (e) {

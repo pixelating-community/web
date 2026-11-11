@@ -31,19 +31,16 @@ describe("sw player compatibility", () => {
 
     expect(listenerSource).toMatch(/void audio\s*\.play\(\)\s*\.then/);
     expect(listenerSource).not.toMatch(/audio\.src\s*=/);
-    expect(listenerSource).not.toMatch(/\bautoPlay=\{/);
+    expect(listenerSource).toMatch(/autoPlay=\{false\}/);
     expect(listenerSource).toMatch(/isBenignPlaybackRejection/);
     expect(listenerSource).toMatch(/MEDIA_ERR_ABORTED/);
     expect(listenerSource).toMatch(/onTogglePlayback=\{handleTogglePlayback\}/);
     expect(listenerSource).toMatch(/audio\.ended/);
     expect(listenerSource).toMatch(/audio\.load\(\)/);
     expect(listenerSource).toMatch(/NETWORK_EMPTY/);
-    expect(listenerSource).toMatch(
-      /<video[\s\S]*className=\{`h-full w-full object-cover \$\{PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS\}`\}[\s\S]*preload="none"/,
-    );
-    expect(listenerSource).not.toMatch(/\bobject-contain\b/);
+    expect(listenerSource).toMatch(/<PerspectiveVideoBackground/);
     expect(listenerSource).toMatch(/<audio[\s\S]*preload="metadata"/);
-    expect(listenerSource).not.toMatch(/\bautoPlay(?:=|\b)/);
+    expect(listenerSource).not.toMatch(/autoPlay=\{true\}/);
     expect(listenerSource).not.toMatch(/hasAutoStartedRef/);
     expect(swSource).toMatch(/playIntentUntilRef/);
     expect(swSource).toMatch(/audio\.currentTime = 0/);
@@ -65,7 +62,10 @@ describe("sw player compatibility", () => {
       /resolvePublicAudioSrc\(videoSrc\) \|\| resolvePublicAudioSrc\(perspective\.video_src\)/,
     );
     expect(source).toMatch(/src=\{resolvedVideoSrc\}/);
-    expect(source).toMatch(/\{!resolvedVideoSrc \? \(/);
+    expect(source).toMatch(/resolvedAudioSrc \|\| !resolvedVideoSrc \? \(/);
+    expect(source).toMatch(
+      /audioSrc=\{resolvedAudioSrc \|\| resolvedVideoSrc\}/,
+    );
     expect(source).not.toMatch(/\{!videoSrc \? \(/);
   });
 

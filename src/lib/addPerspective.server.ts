@@ -35,6 +35,9 @@ export const addPerspective = async ({
       typeof rawImageSrc === "string" && rawImageSrc.trim().length > 0
         ? rawImageSrc.trim()
         : null;
+    const rawVideoSrc = formData.get("video_src");
+    const videoSrcValue =
+      typeof rawVideoSrc === "string" ? rawVideoSrc.trim() || null : null;
     if (!topicId) {
       throw new Error("Topic not found");
     }
@@ -45,6 +48,7 @@ export const addPerspective = async ({
       name: z.string(),
       audio_src: z.string().min(1).nullable().optional(),
       image_src: z.string().min(1).nullable().optional(),
+      video_src: z.string().min(1).nullable().optional(),
     });
     const rawToken = formData.get("token");
     const data = schema.parse({
@@ -54,6 +58,7 @@ export const addPerspective = async ({
       name,
       audio_src: audioSrcValue,
       image_src: imageSrcValue,
+      video_src: videoSrcValue,
     });
     const compiled = compilePerspective(data.perspective);
     let renderedHtml = compiled.renderedHtml;
@@ -116,14 +121,16 @@ export const addPerspective = async ({
       if (data.audio_src) {
         data.audio_src = encrypt(data.audio_src, verifiedToken);
       }
+      if (data.video_src)
+        data.video_src = encrypt(data.video_src, verifiedToken);
       if (data.image_src) {
         data.image_src = encrypt(data.image_src, verifiedToken);
       }
     }
 
     await sql`
-      INSERT INTO perspectives (perspective, topic_id, audio_src, image_src, rendered_html, words_json, parent_perspective_id)
-      VALUES (${data.perspective}, ${data.topicId}, ${data.audio_src}, ${data.image_src}, ${renderedHtml}, ${wordsJson}, ${parentPerspectiveId ?? null});
+      INSERT INTO perspectives (perspective, topic_id, audio_src, image_src, video_src, rendered_html, words_json, parent_perspective_id)
+      VALUES (${data.perspective}, ${data.topicId}, ${data.audio_src}, ${data.image_src}, ${data.video_src}, ${renderedHtml}, ${wordsJson}, ${parentPerspectiveId ?? null});
     `;
 
     return { ok: true };

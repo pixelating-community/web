@@ -71,6 +71,7 @@ const addPerspectiveSchema = z.object({
   actionToken: z.string().min(1),
   audioSrc: z.string().trim().min(1).optional(),
   imageSrc: z.string().trim().min(1).optional(),
+  videoSrc: z.string().trim().min(1).optional(),
   perspective: z.string().min(1),
   topicId: z.uuid(),
   topicName: z.string().trim().min(1),
@@ -81,6 +82,7 @@ const editPerspectiveSchema = z.object({
   actionToken: z.string().min(1),
   audioSrc: z.string().trim().optional(),
   imageSrc: z.string().trim().optional(),
+  videoSrc: z.string().trim().optional(),
   perspective: z.string().min(1),
   perspectiveId: z.uuid(),
   topicId: z.uuid(),
@@ -175,6 +177,7 @@ export const createPerspectiveServer = async ({
   if (data.imageSrc) {
     formData.set("image_src", data.imageSrc);
   }
+  if (data.videoSrc) formData.set("video_src", data.videoSrc);
   const resolvedToken = resolveTopicWriteToken({
     request,
     topicId: data.topicId,
@@ -244,6 +247,7 @@ export const updatePerspectiveServer = async ({
   if (data.imageSrc !== undefined) {
     formData.set("image_src", data.imageSrc);
   }
+  if (data.videoSrc !== undefined) formData.set("video_src", data.videoSrc);
   const resolvedToken = resolveTopicWriteToken({
     request,
     topicId: row.topic_id,

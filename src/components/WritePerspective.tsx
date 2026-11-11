@@ -7,6 +7,8 @@ import { useServerFn } from "@tanstack/react-start";
 import type { ChangeEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { PerspectiveShare } from "@/components/PerspectiveShare";
+import { PerspectiveVideoBackground } from "@/components/PerspectiveVideoBackground";
+import { resolvePublicAudioSrc } from "@/lib/publicAudioBase";
 import { PerspectiveBackground } from "@/components/PerspectiveBackground";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
 import { hasPlayableAudioSource } from "@/components/sw/runtime";
@@ -26,6 +28,7 @@ import { patchTopicPayloadQueryResult } from "@/lib/topicPayloadCache";
 import type { Perspective, WritePerspectiveProps } from "@/types/perspectives";
 import type { TopicPayloadQueryResult } from "@/types/topic";
 import {
+  getUploadSizeLimit,
   UPLOAD_ACTION_TOKEN_HEADER,
   UPLOAD_PERSPECTIVE_ID_HEADER,
   UPLOAD_SCOPE_HEADER,
@@ -36,6 +39,7 @@ type PerspectiveUpdate = {
   id: string;
   perspective: string;
   image_src?: string | null;
+  video_src?: string | null;
 };
 
 type EditPerspectiveVariables = {
@@ -67,6 +71,7 @@ const applyPerspectiveUpdate = (
       ...item,
       perspective: payload.perspective,
       image_src: payload.image_src ?? undefined,
+      video_src: payload.video_src ?? undefined,
       rendered_html: undefined,
     };
   });
@@ -111,10 +116,21 @@ export function WritePerspective({
   const [characters, setCharacters] = useState(0);
   const [perspectiveText, setPerspectiveText] = useState("");
   const [imageSrc, setImageSrc] = useState("");
-  const [imageUploadStatus, setImageUploadStatus] = useState<
+  const [videoSrc, setVideoSrc] = useState("");
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
+  const backgroundUploadControllerRef = useRef<AbortController | null>(null);
+  const [backgroundUploadStatus, setBackgroundUploadStatus] = useState<
     "idle" | "uploading" | "error"
   >("idle");
-  const [imageUploadError, setImageUploadError] = useState("");
+  const [backgroundUploadError, setBackgroundUploadError] = useState("");
+  useEffect(
+    () => () => {
+      backgroundUploadControllerRef.current?.abort();
+      setBackgroundUploadStatus("idle");
+      setBackgroundUploadError("");
+    },
+    [perspectiveId],
+  );
   const [submitError, setSubmitError] = useState("");
   const perspectivesEndRef = useRef<HTMLDivElement | null>(null);
   const perspectivesForwardEndRef = useRef<HTMLDivElement | null>(null);
@@ -184,6 +200,7 @@ export function WritePerspective({
     setPerspectiveId(null);
     setPerspectiveText("");
     setImageSrc("");
+    setVideoSrc("");
     setCharacters(0);
     if (newPerspectiveRef.current) {
       newPerspectiveRef.current.textContent = "";
@@ -241,6 +258,7 @@ export function WritePerspective({
       const perspective = String(formData.get("perspective") ?? "");
       const rawAudioSrc = formData.get("audio_src");
       const rawImageSrc = formData.get("image_src");
+      const rawVideoSrc = formData.get("video_src");
       const result = await updatePerspectiveFn({
         data: {
           actionToken,
@@ -248,6 +266,8 @@ export function WritePerspective({
             typeof rawAudioSrc === "string" ? rawAudioSrc.trim() : undefined,
           imageSrc:
             typeof rawImageSrc === "string" ? rawImageSrc.trim() : undefined,
+          videoSrc:
+            typeof rawVideoSrc === "string" ? rawVideoSrc.trim() : undefined,
           perspective,
           perspectiveId,
           topicId: id,
@@ -324,6 +344,7 @@ export function WritePerspective({
       const perspective = String(formData.get("perspective") ?? "");
       const rawAudioSrc = formData.get("audio_src");
       const rawImageSrc = formData.get("image_src");
+      const rawVideoSrc = formData.get("video_src");
       const result = await createPerspectiveFn({
         data: {
           actionToken,
@@ -331,6 +352,8 @@ export function WritePerspective({
             typeof rawAudioSrc === "string" ? rawAudioSrc.trim() : undefined,
           imageSrc:
             typeof rawImageSrc === "string" ? rawImageSrc.trim() : undefined,
+          videoSrc:
+            typeof rawVideoSrc === "string" ? rawVideoSrc.trim() : undefined,
           perspective,
           topicId: id,
           topicName: name,
@@ -368,12 +391,14 @@ export function WritePerspective({
     const formData = new FormData();
     formData.set("perspective", perspectiveText);
     formData.set("image_src", imageSrc.trim());
+    formData.set("video_src", videoSrc.trim());
 
     if (perspectiveId) {
       const optimisticUpdate: PerspectiveUpdate = {
         id: perspectiveId,
         perspective: perspectiveText,
         image_src: imageSrc.trim() || null,
+        video_src: videoSrc.trim() || null,
       };
       await editPerspectiveMutation.mutateAsync({
         perspectiveId,
@@ -388,6 +413,7 @@ export function WritePerspective({
         perspective: perspectiveText,
         topic_id: id as Perspective["topic_id"],
         image_src: imageSrc.trim() || undefined,
+        video_src: videoSrc.trim() || undefined,
         symbols: [],
         words: [],
         wordTimings: [],
@@ -409,20 +435,36 @@ export function WritePerspective({
     resetForm();
   };
 
-  const handleImageFileChange = async (
+  const handleBackgroundFileChange = async (
     event: ChangeEvent<HTMLInputElement>,
+    kind: "image" | "video",
   ) => {
     const file = event.currentTarget.files?.[0];
     event.currentTarget.value = "";
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setImageUploadStatus("error");
-      setImageUploadError("Choose an image file.");
+    if (!file.type.startsWith(`${kind}/`) || !getUploadSizeLimit(file.type)) {
+      setBackgroundUploadStatus("error");
+      setBackgroundUploadError(
+        kind === "image"
+          ? "Choose an image file."
+          : "Choose an MP4, WebM or MOV video.",
+      );
       return;
     }
 
-    setImageUploadStatus("uploading");
-    setImageUploadError("");
+    if (file.size > getUploadSizeLimit(file.type)) {
+      setBackgroundUploadStatus("error");
+      setBackgroundUploadError(
+        kind === "video"
+          ? "Choose a video under 50 MB."
+          : "Choose an image under 10 MB.",
+      );
+      return;
+    }
+    const controller = new AbortController();
+    backgroundUploadControllerRef.current = controller;
+    setBackgroundUploadStatus("uploading");
+    setBackgroundUploadError("");
     try {
       const uploadFormData = new FormData();
       uploadFormData.set("file", file);
@@ -442,6 +484,7 @@ export function WritePerspective({
       const response = await fetch("/api/obj/upload", {
         method: "POST",
         body: uploadFormData,
+        signal: controller.signal,
         headers: uploadHeaders,
       });
       const payload = await response.json().catch(() => null);
@@ -449,7 +492,7 @@ export function WritePerspective({
         throw new Error(
           payload && typeof payload.error === "string"
             ? payload.error
-            : "Image upload failed",
+            : "Background upload failed",
         );
       }
       const nextSrc =
@@ -458,13 +501,21 @@ export function WritePerspective({
           : payload && typeof payload.key === "string"
             ? payload.key
             : "";
-      if (!nextSrc) throw new Error("Image upload did not return a URL");
-      setImageSrc(nextSrc);
-      setImageUploadStatus("idle");
+      if (!nextSrc) throw new Error("Background upload did not return a URL");
+      if (controller.signal.aborted) return;
+      if (kind === "image") {
+        setImageSrc(nextSrc);
+        setVideoSrc("");
+      } else {
+        setVideoSrc(nextSrc);
+        setImageSrc("");
+      }
+      setBackgroundUploadStatus("idle");
     } catch (error) {
-      setImageUploadStatus("error");
-      setImageUploadError(
-        error instanceof Error ? error.message : "Image upload failed",
+      if (controller.signal.aborted) return;
+      setBackgroundUploadStatus("error");
+      setBackgroundUploadError(
+        error instanceof Error ? error.message : "Background upload failed",
       );
     }
   };
@@ -548,6 +599,19 @@ export function WritePerspective({
             ? activeEditorImageSrc
             : "";
 
+  const visibleBackgroundVideoSrc =
+    visibleBackgroundId === NEW_PERSPECTIVE_HASH
+      ? !isEditingPerspective
+        ? videoSrc
+        : ""
+      : visibleBackgroundPerspective
+        ? visibleBackgroundPerspective.id === perspectiveId
+          ? videoSrc
+          : visibleBackgroundPerspective.video_src
+        : selectedPerspective || !isEditingPerspective
+          ? videoSrc
+          : "";
+
   useEffect(() => {
     if (initializedPerspectiveRef.current) return;
     const targetId = initialPerspectiveId?.trim();
@@ -574,7 +638,8 @@ export function WritePerspective({
     initializedPerspectiveRef.current = true;
     setPerspectiveId(targetPerspective.id);
     setPerspectiveText(targetPerspective.perspective);
-    setImageSrc(targetPerspective.image_src ?? "");
+    setImageSrc(targetPerspective.video_src ? "" : targetPerspective.image_src ?? "");
+    setVideoSrc(targetPerspective.video_src ?? "");
     setCharacters(targetPerspective.perspective.length);
     pendingEditorHydrationRef.current = {
       perspectiveId: targetPerspective.id,
@@ -707,17 +772,17 @@ export function WritePerspective({
     !trimmedTopicShortTitle &&
     Boolean(trimmedTopicEmoji) &&
     Array.from(trimmedTopicEmoji).length <= 2;
-  const isImageUploading = imageUploadStatus === "uploading";
+  const isBackgroundUploading = backgroundUploadStatus === "uploading";
   const isSubmitDisabled =
-    !hasPerspectiveText || isMutationBusy || isImageUploading;
+    !hasPerspectiveText || isMutationBusy || isBackgroundUploading;
   const showNewPerspectivePlaceholder =
     !isEditingPerspective && !focus && !hasPerspectiveText;
   const submitDisabledReason = !hasPerspectiveText
     ? "Enter perspective text first."
     : isMutationBusy
       ? "Saving..."
-      : isImageUploading
-        ? "Uploading image..."
+      : isBackgroundUploading
+        ? "Uploading background..."
         : undefined;
   const confirmDeletePerspective = useConfirmAction({
     enabled: Boolean(perspectiveId) && !isMutationBusy,
@@ -730,9 +795,14 @@ export function WritePerspective({
   return (
     <div className="relative flex flex-col w-full overflow-hidden h-dvh">
       <PerspectiveBackground
-        imageSrc={visibleBackgroundImageSrc}
+        imageSrc={visibleBackgroundVideoSrc ? undefined : visibleBackgroundImageSrc}
         overlayClassName="bg-black/25"
       />
+      {visibleBackgroundVideoSrc ? (
+        <PerspectiveVideoBackground
+          src={resolvePublicAudioSrc(visibleBackgroundVideoSrc)}
+        />
+      ) : null}
       <Link
         to={buildTopicPath(name)}
         preload="intent"
@@ -989,6 +1059,7 @@ export function WritePerspective({
                       confirmDeletePerspective.reset();
                       setPerspectiveText("");
                       setImageSrc("");
+                      setVideoSrc("");
                       setCharacters(0);
                       e.currentTarget.textContent = "";
                     }
@@ -1064,14 +1135,23 @@ export function WritePerspective({
             accept="image/*"
             className="sr-only"
             onChange={(event) => {
-              void handleImageFileChange(event);
+              void handleBackgroundFileChange(event, "image");
+            }}
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/mp4,video/webm,video/quicktime"
+            className="sr-only"
+            onChange={(event) => {
+              void handleBackgroundFileChange(event, "video");
             }}
           />
           <div className="flex items-center justify-center mt-1 gap-2">
             <button
               type="button"
               onClick={() => imageInputRef.current?.click()}
-              disabled={isMutationBusy || isImageUploading}
+              disabled={isMutationBusy || isBackgroundUploading}
               aria-label={
                 imageSrc ? "Replace background image" : "Add background image"
               }
@@ -1080,20 +1160,46 @@ export function WritePerspective({
               }
               className="inline-flex h-9 w-9 items-center justify-center border-0 bg-transparent p-0 text-lg text-white/75 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
             >
-              {isImageUploading ? "…" : "▧"}
+              {isBackgroundUploading ? "…" : "▧"}
             </button>
             {imageSrc ? (
               <button
                 type="button"
                 onClick={() => {
                   setImageSrc("");
-                  setImageUploadError("");
-                  setImageUploadStatus("idle");
+                  setBackgroundUploadError("");
+                  setBackgroundUploadStatus("idle");
                 }}
-                disabled={isMutationBusy || isImageUploading}
+                disabled={isMutationBusy || isBackgroundUploading}
                 aria-label="Remove background image"
                 title="Remove background image"
                 className="inline-flex h-9 w-9 items-center justify-center border-0 bg-transparent p-0 text-lg text-white/55 transition hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                ×
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={() => videoInputRef.current?.click()}
+              disabled={isMutationBusy || isBackgroundUploading}
+              aria-label={
+                videoSrc ? "Replace background video" : "Add background video"
+              }
+              title={
+                videoSrc ? "Replace background video" : "Add background video"
+              }
+              className="inline-flex h-9 w-9 items-center justify-center border-0 bg-transparent p-0 text-lg text-white/75 transition hover:text-white disabled:opacity-30"
+            >
+              🎞️
+            </button>
+            {videoSrc ? (
+              <button
+                type="button"
+                onClick={() => setVideoSrc("")}
+                disabled={isMutationBusy || isBackgroundUploading}
+                aria-label="Remove background video"
+                title="Remove background video"
+                className="inline-flex h-9 w-9 items-center justify-center border-0 bg-transparent p-0 text-lg text-white/55 hover:text-white disabled:opacity-30"
               >
                 ×
               </button>
@@ -1117,9 +1223,9 @@ export function WritePerspective({
               {submitError}
             </div>
           ) : null}
-          {imageUploadError ? (
+          {backgroundUploadError ? (
             <div className="mt-1 text-xs text-red-300" role="alert">
-              {imageUploadError}
+              {backgroundUploadError}
             </div>
           ) : null}
         </div>

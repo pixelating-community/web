@@ -6,6 +6,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { KaraokePresenter } from "@/components/KaraokePresenter";
 import { PlaybackTimeline } from "@/components/PlaybackTimeline";
+import { PerspectiveVideoBackground } from "@/components/PerspectiveVideoBackground";
 import { PerspectiveBackground } from "@/components/PerspectiveBackground";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
 import {
@@ -681,22 +682,18 @@ export const KaraokeListener = ({
         perspectiveId={perspective.id}
         topicName={topicName}
       />
+      <PerspectiveBackground imageSrc={resolvedVideoSrc ? undefined : backgroundImageSrc} />
       {resolvedVideoSrc ? (
-        // Background video — drives currentTime for karaoke sync
-        // oxlint-disable-next-line jsx-a11y/media-has-caption
-        <video
-          ref={mediaRef as RefObject<HTMLVideoElement | null>}
-          className="absolute inset-0 z-0 h-full w-full object-cover"
+        <PerspectiveVideoBackground
           src={resolvedVideoSrc}
-          playsInline
-          preload="auto"
+          videoRef={resolvedAudioSrc ? undefined : mediaRef as RefObject<HTMLVideoElement | null>}
+          autoPlay={Boolean(resolvedAudioSrc)}
+          muted={Boolean(resolvedAudioSrc)}
+          loop={Boolean(resolvedAudioSrc)}
         />
       ) : null}
-      {!resolvedVideoSrc ? (
-        <PerspectiveBackground imageSrc={backgroundImageSrc} />
-      ) : null}
       <PlaybackTimeline
-        audioSrc={resolvedVideoSrc || resolvedAudioSrc}
+        audioSrc={resolvedAudioSrc || resolvedVideoSrc}
         className="mt-12"
         timings={timings}
         currentTime={currentTime}
@@ -850,8 +847,8 @@ export const KaraokeListener = ({
               ) : null}
             </div>
           ) : null}
-          {/* Hidden audio fallback when no video */}
-          {!resolvedVideoSrc ? (
+          {/* Use the song's audio when supplied, with video as a visual background. */}
+          {resolvedAudioSrc || !resolvedVideoSrc ? (
             // oxlint-disable-next-line jsx-a11y/media-has-caption
             <audio
               ref={mediaRef as RefObject<HTMLAudioElement | null>}

@@ -7,6 +7,7 @@ export const createPerspective = createServerFn({ method: "POST" })
       actionToken?: string;
       audioSrc?: string;
       imageSrc?: string;
+      videoSrc?: string;
       perspective?: string;
       topicId?: string;
       topicName?: string;
@@ -24,6 +25,7 @@ export const createPerspective = createServerFn({ method: "POST" })
         actionToken: data.actionToken?.trim() ?? "",
         audioSrc: data.audioSrc?.trim() || undefined,
         imageSrc: data.imageSrc?.trim() || undefined,
+        videoSrc: data.videoSrc?.trim() || undefined,
         perspective: data.perspective ?? "",
         topicId: data.topicId?.trim() ?? "",
         topicName: data.topicName?.trim() ?? "",
@@ -38,6 +40,7 @@ export const updatePerspective = createServerFn({ method: "POST" })
       actionToken?: string;
       audioSrc?: string;
       imageSrc?: string;
+      videoSrc?: string;
       perspective?: string;
       perspectiveId?: string;
       topicId?: string;
@@ -57,6 +60,7 @@ export const updatePerspective = createServerFn({ method: "POST" })
           data.audioSrc === undefined ? undefined : (data.audioSrc?.trim() ?? ""),
         imageSrc:
           data.imageSrc === undefined ? undefined : (data.imageSrc?.trim() ?? ""),
+        videoSrc: data.videoSrc === undefined ? undefined : data.videoSrc.trim(),
         perspective: data.perspective ?? "",
         perspectiveId: data.perspectiveId?.trim() ?? "",
         topicId: data.topicId?.trim() ?? "",

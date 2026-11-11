@@ -4,11 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  buildPerspectiveBackgroundStyle,
-  PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS,
-  PerspectiveBackground,
-} from "@/components/PerspectiveBackground";
+import { PerspectiveBackground } from "@/components/PerspectiveBackground";
+import { PerspectiveVideoBackground } from "@/components/PerspectiveVideoBackground";
 import { PlaybackTimeline } from "@/components/PlaybackTimeline";
 import { PerspectiveModeNav } from "@/components/PerspectiveModeNav";
 import { PerspectiveActions } from "@/components/PerspectiveActions";
@@ -147,10 +144,6 @@ export const PerspectiveListener = ({
     () => resolvePerspectiveBackgroundImageSrc(perspective),
     [perspective],
   );
-  const videoBackgroundStyle = useMemo(
-    () => buildPerspectiveBackgroundStyle(),
-    [],
-  );
   const commitCurrentTime = useCallback((time: number, forceRender = false) => {
     if (!Number.isFinite(time)) return;
     const next = Math.max(0, time);
@@ -166,9 +159,13 @@ export const PerspectiveListener = ({
       const video = videoRef.current;
       if (!video || !resolvedVideoSrc) return;
 
-      const targetTime = Number.isFinite(audio.currentTime)
+      const audioTime = Number.isFinite(audio.currentTime)
         ? Math.max(0, audio.currentTime)
         : 0;
+      const targetTime =
+        Number.isFinite(video.duration) && video.duration > 0
+          ? audioTime % video.duration
+          : audioTime;
       try {
         if (Math.abs(video.currentTime - targetTime) > 0.15) {
           video.currentTime = targetTime;
@@ -524,30 +521,18 @@ export const PerspectiveListener = ({
       ref={listenerRef}
       className="relative flex h-dvh w-full flex-col overflow-y-auto pb-[var(--perspective-actions-height,8rem)]"
     >
+      <PerspectiveBackground
+        imageSrc={resolvedVideoSrc ? undefined : backgroundImageSrc}
+        overlayClassName="bg-black/25"
+        positionClassName="fixed"
+      />
       {resolvedVideoSrc ? (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
-          style={videoBackgroundStyle}
-        >
-          {/* oxlint-disable-next-line jsx-a11y/media-has-caption -- muted visual companion to the extracted audio track */}
-          <video
-            ref={videoRef}
-            className={`h-full w-full object-cover ${PERSPECTIVE_BACKGROUND_MEDIA_FILTER_CLASS}`}
-            src={resolvedVideoSrc}
-            muted
-            playsInline
-            preload="none"
-          />
-          <div className="absolute inset-0 bg-black/25" />
-        </div>
-      ) : (
-        <PerspectiveBackground
-          imageSrc={backgroundImageSrc}
-          overlayClassName="bg-black/25"
-          positionClassName="fixed"
+        <PerspectiveVideoBackground
+          src={resolvedVideoSrc}
+          videoRef={videoRef}
+          autoPlay={false}
         />
-      )}
+      ) : null}
       <div className="relative z-10 flex h-[calc(100dvh-var(--perspective-actions-height,8rem))] w-full shrink-0 flex-col overflow-hidden">
         <div className="relative z-10 flex w-screen flex-1 min-h-0 items-center justify-center overflow-hidden [scrollbar-gutter:stable]">
           <div className="h-full w-screen overflow-y-auto scrollbar-transparent">
