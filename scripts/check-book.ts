@@ -1,5 +1,6 @@
 // Local smoke test: creates and removes only its own uniquely named chapter.
 import { SQL } from "bun";
+import { bookAuthorPath, bookChapterPath, bookPath } from "../src/lib/book";
 const db = new SQL(
   process.env.DATABASE_URL ||
     `postgres://${encodeURIComponent(process.env.POSTGRES_USER || "postgres")}:${encodeURIComponent(process.env.POSTGRES_PASSWORD || "postgres")}@${process.env.POSTGRES_HOST || "postgres"}:${process.env.POSTGRES_PORT || 5432}/${process.env.POSTGRES_DB || "postgres"}`,
@@ -41,11 +42,13 @@ try {
   const chapterId = made.data.chapterId;
   const settings = await db`SELECT slug FROM book_settings`;
   const book = settings[0].slug;
+  const chapterPath = `/b/${book}/c${slug}/`;
   const rows = await db`SELECT topic_id FROM chapters WHERE id=${chapterId}`;
   topicId = rows[0].topic_id;
-  const authorPage = await fetch(`${origin}/${book}/write?draft=${chapterId}`, {
-    headers: { Cookie: cookie },
-  });
+  const authorPage = await fetch(
+    `${origin}${bookAuthorPath(book)}?draft=${chapterId}`,
+    { headers: { Cookie: cookie } },
+  );
   assert(
     authorPage.ok,
     `author draft page ${authorPage.status}: ${(await authorPage.text()).slice(-2500)}`,
@@ -89,8 +92,34 @@ try {
     revision: saved.data.revision,
   });
   assert(published.response.ok, `publish: ${JSON.stringify(published.data)}`);
+  assert(bookChapterPath(book, slug) === chapterPath, "canonical chapter URL");
+  const landing = await fetch(origin + bookPath(book));
+  assert(
+    (await landing.text()).includes(`href="${chapterPath}"`),
+    "book links to its chapter",
+  );
+  for (const [oldPath, newPath] of [
+    [`/${book}/c/${slug}`, chapterPath],
+    [`/c/${slug}`, chapterPath],
+    [`/${book}/sign-in?token=smoke`, `${bookPath(book)}/sign-in?token=smoke`],
+    [
+      `/${book}/checkout/return?session_id=smoke`,
+      `${bookPath(book)}/checkout/return?session_id=smoke`,
+    ],
+  ]) {
+    const response = await fetch(origin + oldPath, { redirect: "manual" });
+    const location = response.headers.get("location");
+    assert(
+      response.status >= 300 && response.status < 400,
+      `redirect ${oldPath}`,
+    );
+    assert(
+      location && new URL(location, origin).href === origin + newPath,
+      `destination for ${oldPath}`,
+    );
+  }
   for (const path of [
-    `/${book}/c/${slug}`,
+    chapterPath,
     `/t/${slug}`,
     `/p/${perspectiveId}`,
     `/api/t/${slug}`,
@@ -108,12 +137,12 @@ try {
   await db`INSERT INTO book_reader_sessions(hash,reader_id,expires_at) VALUES (${createHash("sha256").update(readerToken).digest("hex")},${readerId},NOW()+INTERVAL '1 hour')`;
   const orders =
     await db`INSERT INTO book_orders(reader_id,amount_minor,paid) VALUES (${readerId},500,true) RETURNING id`;
-  const paidPage = await fetch(`${origin}/${book}/c/${slug}`, {
+  const paidPage = await fetch(origin + chapterPath, {
     headers: { Cookie: `book_reader=${readerToken}` },
   });
   assert((await paidPage.text()).includes(text), "buyer can read paid chapter");
   await db`UPDATE book_orders SET refunded_minor=amount_minor WHERE id=${orders[0].id}`;
-  const refundedPage = await fetch(`${origin}/${book}/c/${slug}`, {
+  const refundedPage = await fetch(origin + chapterPath, {
     headers: { Cookie: `book_reader=${readerToken}` },
   });
   assert(!(await refundedPage.text()).includes(text), "refunded buyer denied");
@@ -130,7 +159,7 @@ try {
     revision: freeSaved.data.revision,
   });
   assert(freePublished.response.ok, "publish free");
-  const freePage = await fetch(`${origin}/${book}/c/${slug}`);
+  const freePage = await fetch(origin + chapterPath);
   assert((await freePage.text()).includes(text), "free chapter visible");
   console.log(
     "Book smoke passed: login, draft privacy, concurrent edits, publishing, paywall alternate paths, free access.",

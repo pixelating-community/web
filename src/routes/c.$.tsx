@@ -17,6 +17,8 @@ import { NotFoundPage } from "@/components/NotFoundPage";
 import { PerspectiveListener } from "@/components/PerspectiveListener";
 import { SW } from "@/components/SW";
 import { WritePerspective } from "@/components/WritePerspective";
+import { bookChapterPath, bookPath } from "@/lib/book";
+import { loadBookPage } from "@/lib/bookPage.functions";
 import { shouldUseTimingEditor } from "@/lib/featureFlags";
 import { loadPerspectiveById } from "@/lib/getPerspectiveById.functions";
 import { loadChapterPayload as loadTopicPayload } from "@/lib/chapterPayloadRoute.functions";
@@ -129,7 +131,6 @@ export const Route = createFileRoute("/c/$")({
     const { topicName, mode, modeParam } = parsed;
 
     if (!topicName || !mode) {
-      const { loadBookPage } = await import("@/lib/bookPage.functions");
       const page = await loadBookPage({ data: { slug: "book" } });
       if (
         page &&
@@ -137,8 +138,8 @@ export const Route = createFileRoute("/c/$")({
       )
         throw redirect({
           href: topicName
-            ? `/${page.book.slug}/c/${encodeURIComponent(topicName)}`
-            : `/${page.book.slug}`,
+            ? bookChapterPath(page.book.slug, topicName)
+            : bookPath(page.book.slug),
           replace: true,
         });
       if (!topicName) return { topicName, mode, modeParam };

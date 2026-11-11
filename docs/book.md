@@ -1,15 +1,16 @@
 # Writing and selling the book
 
-This site has one book. Open `/book/write` and sign in using `BOOK_AUTHOR_KEY`
+This site has one book. Open `/b/book/write` and sign in using `BOOK_AUTHOR_KEY`
 (or the existing `EL_KEY` / `TS_KEY` when no dedicated key is configured).
 The author session lasts twelve hours. Reader purchases never grant editing access.
 
 ## Writing
 
 Set the book title, URL name, author, introduction, and optional USD price in the
-author area. The default public address is `/book`; `/c` also opens the book.
-Chapters use `/<book-name>/c/<chapter-name>`. `/book` remains an entry point after
-the URL name changes. Chapter URL names are chosen when creating a chapter.
+author area. The default public address is `/b/book`. Both `/b/book` and `/c`
+open the book after its URL name changes. Chapters use
+`/b/<book-name>/c<chapter-name>/`. Chapter URL names are chosen when creating a
+chapter.
 
 Create a chapter, add perspectives, and move them into reading order. **Save draft**
 stores private text; **Publish saved draft** publishes that exact version.

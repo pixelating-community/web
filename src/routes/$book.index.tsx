@@ -1,13 +1,11 @@
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
-import { BookApp } from "@/components/BookApp";
+import { bookPath } from "@/lib/book";
 import { loadBookPage } from "@/lib/bookPage.functions";
+
 export const Route = createFileRoute("/$book/")({
-  loader: async ({ params }) => {
+  loader: async ({ params, location }) => {
     const page = await loadBookPage({ data: { slug: params.book } });
     if (!page) throw notFound();
-    if (page.book.slug !== params.book)
-      throw redirect({ href: `/${page.book.slug}` });
-    return page;
+    throw redirect({ href: bookPath(page.book.slug) + location.searchStr });
   },
-  component: () => <BookApp page={Route.useLoaderData()} section="" />,
 });

@@ -32,6 +32,8 @@ import { Route as ApiPIdRouteImport } from './routes/api/p/$id'
 import { Route as ApiTTopicRouteImport } from './routes/api/t/$topic'
 import { Route as ApiTARouteImport } from './routes/api/t/a'
 import { Route as ApiTTokenRouteImport } from './routes/api/t/token'
+import { Route as BBookIndexRouteImport } from './routes/b.$book.index'
+import { Route as BBookSplatRouteImport } from './routes/b.$book.$'
 import { Route as CTopicStoreRouteImport } from './routes/c.$topic.store'
 import { Route as CTopicToolsRouteImport } from './routes/c.$topic.tools'
 import { Route as CTopicUlRouteImport } from './routes/c.$topic.ul'
@@ -163,6 +165,16 @@ const ApiTTokenRoute = ApiTTokenRouteImport.update({
   path: '/api/t/token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BBookIndexRoute = BBookIndexRouteImport.update({
+  id: '/b/$book/',
+  path: '/b/$book/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BBookSplatRoute = BBookSplatRouteImport.update({
+  id: '/b/$book/$',
+  path: '/b/$book/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CTopicStoreRoute = CTopicStoreRouteImport.update({
   id: '/c/$topic/store',
   path: '/c/$topic/store',
@@ -258,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/api/t/$topic': typeof ApiTTopicRoute
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
+  '/b/$book/$': typeof BBookSplatRoute
   '/c/$topic/store': typeof CTopicStoreRoute
   '/c/$topic/tools': typeof CTopicToolsRoute
   '/c/$topic/ul': typeof CTopicUlRoute
@@ -266,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/t/$topic/store': typeof TTopicStoreRoute
   '/t/$topic/tools': typeof TTopicToolsRoute
   '/t/$topic/ul': typeof TTopicUlRoute
+  '/b/$book/': typeof BBookIndexRoute
   '/api/p/$id/align': typeof ApiPIdAlignRoute
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
@@ -297,6 +311,7 @@ export interface FileRoutesByTo {
   '/api/t/$topic': typeof ApiTTopicRoute
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
+  '/b/$book/$': typeof BBookSplatRoute
   '/c/$topic/store': typeof CTopicStoreRoute
   '/c/$topic/tools': typeof CTopicToolsRoute
   '/c/$topic/ul': typeof CTopicUlRoute
@@ -305,6 +320,7 @@ export interface FileRoutesByTo {
   '/t/$topic/store': typeof TTopicStoreRoute
   '/t/$topic/tools': typeof TTopicToolsRoute
   '/t/$topic/ul': typeof TTopicUlRoute
+  '/b/$book': typeof BBookIndexRoute
   '/api/p/$id/align': typeof ApiPIdAlignRoute
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
@@ -337,6 +353,7 @@ export interface FileRoutesById {
   '/api/t/$topic': typeof ApiTTopicRoute
   '/api/t/a': typeof ApiTARoute
   '/api/t/token': typeof ApiTTokenRoute
+  '/b/$book/$': typeof BBookSplatRoute
   '/c/$topic/store': typeof CTopicStoreRoute
   '/c/$topic/tools': typeof CTopicToolsRoute
   '/c/$topic/ul': typeof CTopicUlRoute
@@ -345,6 +362,7 @@ export interface FileRoutesById {
   '/t/$topic/store': typeof TTopicStoreRoute
   '/t/$topic/tools': typeof TTopicToolsRoute
   '/t/$topic/ul': typeof TTopicUlRoute
+  '/b/$book/': typeof BBookIndexRoute
   '/api/p/$id/align': typeof ApiPIdAlignRoute
   '/api/p/$id/audio-mix': typeof ApiPIdAudioMixRoute
   '/api/p/$id/audio-snippets': typeof ApiPIdAudioSnippetsRoute
@@ -378,6 +396,7 @@ export interface FileRouteTypes {
     | '/api/t/$topic'
     | '/api/t/a'
     | '/api/t/token'
+    | '/b/$book/$'
     | '/c/$topic/store'
     | '/c/$topic/tools'
     | '/c/$topic/ul'
@@ -386,6 +405,7 @@ export interface FileRouteTypes {
     | '/t/$topic/store'
     | '/t/$topic/tools'
     | '/t/$topic/ul'
+    | '/b/$book/'
     | '/api/p/$id/align'
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
@@ -417,6 +437,7 @@ export interface FileRouteTypes {
     | '/api/t/$topic'
     | '/api/t/a'
     | '/api/t/token'
+    | '/b/$book/$'
     | '/c/$topic/store'
     | '/c/$topic/tools'
     | '/c/$topic/ul'
@@ -425,6 +446,7 @@ export interface FileRouteTypes {
     | '/t/$topic/store'
     | '/t/$topic/tools'
     | '/t/$topic/ul'
+    | '/b/$book'
     | '/api/p/$id/align'
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
@@ -456,6 +478,7 @@ export interface FileRouteTypes {
     | '/api/t/$topic'
     | '/api/t/a'
     | '/api/t/token'
+    | '/b/$book/$'
     | '/c/$topic/store'
     | '/c/$topic/tools'
     | '/c/$topic/ul'
@@ -464,6 +487,7 @@ export interface FileRouteTypes {
     | '/t/$topic/store'
     | '/t/$topic/tools'
     | '/t/$topic/ul'
+    | '/b/$book/'
     | '/api/p/$id/align'
     | '/api/p/$id/audio-mix'
     | '/api/p/$id/audio-snippets'
@@ -486,12 +510,14 @@ export interface RootRouteChildren {
   ApiTTopicRoute: typeof ApiTTopicRoute
   ApiTARoute: typeof ApiTARoute
   ApiTTokenRoute: typeof ApiTTokenRoute
+  BBookSplatRoute: typeof BBookSplatRoute
   CTopicStoreRoute: typeof CTopicStoreRoute
   CTopicToolsRoute: typeof CTopicToolsRoute
   CTopicUlRoute: typeof CTopicUlRoute
   TTopicStoreRoute: typeof TTopicStoreRoute
   TTopicToolsRoute: typeof TTopicToolsRoute
   TTopicUlRoute: typeof TTopicUlRoute
+  BBookIndexRoute: typeof BBookIndexRoute
   CTopicSupportClaimRoute: typeof CTopicSupportClaimRoute
   TTopicSupportClaimRoute: typeof TTopicSupportClaimRoute
 }
@@ -657,6 +683,20 @@ declare module '@tanstack/react-router' {
       path: '/api/t/token'
       fullPath: '/api/t/token'
       preLoaderRoute: typeof ApiTTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/b/$book/': {
+      id: '/b/$book/'
+      path: '/b/$book'
+      fullPath: '/b/$book/'
+      preLoaderRoute: typeof BBookIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/b/$book/$': {
+      id: '/b/$book/$'
+      path: '/b/$book/$'
+      fullPath: '/b/$book/$'
+      preLoaderRoute: typeof BBookSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/c/$topic/store': {
@@ -840,12 +880,14 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTTopicRoute: ApiTTopicRoute,
   ApiTARoute: ApiTARoute,
   ApiTTokenRoute: ApiTTokenRoute,
+  BBookSplatRoute: BBookSplatRoute,
   CTopicStoreRoute: CTopicStoreRoute,
   CTopicToolsRoute: CTopicToolsRoute,
   CTopicUlRoute: CTopicUlRoute,
   TTopicStoreRoute: TTopicStoreRoute,
   TTopicToolsRoute: TTopicToolsRoute,
   TTopicUlRoute: TTopicUlRoute,
+  BBookIndexRoute: BBookIndexRoute,
   CTopicSupportClaimRoute: CTopicSupportClaimRoute,
   TTopicSupportClaimRoute: TTopicSupportClaimRoute,
 }
